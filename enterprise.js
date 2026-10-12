@@ -241,7 +241,8 @@
     // labels never stand in for visitors at a specific destination.
     const nearbyAttractions=nearbyTourismAttractions(3);
     const tourismNearbyCount=nearbyAttractions.length;
-    const nearestTourismKm=tourismNearbyCount?Math.min(...nearbyAttractions.map(p=>number(p.distance)).filter(v=>v!=null)):null;
+    const attractionDistances=nearbyAttractions.map(p=>number(p.distance)).filter(v=>v!=null);
+    const nearestTourismKm=attractionDistances.length?Math.min(...attractionDistances):null;
     let tourismScore=0;
     if(nearestTourismKm!=null){
       const veryClose=nearestTourismKm<=1;
@@ -263,9 +264,9 @@
     // A matching import/trade observation is a weak external-market signal, not local sales.
     const positiveGrowth=evidence.some(row=>number(row.yoy_growth_pct)!=null&&number(row.yoy_growth_pct)>0);
     const tradeSignalScore=evidence.length?Math.min(12,4+Math.max(0,Math.min(4,evidence.length)-1)*2+(positiveGrowth?2:0)):0;
-    const marketContextAvailable=evidence.length>0||Boolean(currentLocation)||localLeads.length>0;
+    const marketContextAvailable=evidence.length>0||tourismNearbyCount>0||localLeads.length>0;
     const rawScore=resourceScore+skillScore+marketScore+buyerScore+capitalScore+scaleBonus+tourismScore+localLeadScore+tradeSignalScore;
-    const maxScore=118; // 36 + 18 + 8 + 12 + 5 + 5 + 16 + 10 + 12
+    const maxScore=122; // 36 + 18 + 8 + 12 + 5 + 5 + 16 + 10 + 12
     return {...opp,business_type:businessType(opp),resourceMatches,skillMatches,evidenceCount:evidence.length,locationMatches,
       locationScore:localLeadScore,localLeadCount:localLeads.length,tradeSignalScore,hasTradeSignal:evidence.length>0,
       buyerSegmentMatch:segmentMatches,
@@ -324,7 +325,7 @@
     $("recommendationStatus").textContent=statuses.join(" · ")||"IDE AWAL — PERLU DIUJI";
     $("recommendationStatus").className="pill "+(matches.length||nearbyPoints.length?"green":"gold");
     let display;
-    const hasContextSignals=Boolean(currentLocation)||all.some(o=>o.evidenceCount>0||o.locationScore>0||o.tourismScore>0);
+    const hasContextSignals=all.some(o=>o.evidenceCount>0||o.locationScore>0||o.tourismScore>0);
     if(chosenType==="all"&&!profile.resources.length&&!profile.skills.length&&!hasContextSignals){
       // Without a selected location, user inputs or matching trade signals, show a balanced starter set.
       display=["sell","grow","service"].flatMap(type=>all.filter(o=>o.business_type===type).slice(0,2))
