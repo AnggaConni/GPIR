@@ -48,6 +48,18 @@ Edit `config/markets.json` to set ISO-3 reporter markets. Optional environment v
 - Scores are exploratory, relative to the retrieved dataset, and should only guide further research.
 - Respect upstream dataset terms and attribution requirements.
 
+## Local Enterprise Opportunity Finder
+
+Open `enterprise.html` from the GitHub Pages site to explore microenterprise ideas matched to user-entered local resources, skills, startup budget, and target market.
+
+- `data/opportunity_catalog.json` contains curated hypotheses with illustrative capital bands, suggested low-cost validation tests, and risks.
+- The page matches these ideas against `data/data.json` trade signals when product descriptions align.
+- Users can record available local resources in browser-local storage and export/import a JSON copy.
+- Nearby mapped businesses can be searched on demand through OpenStreetMap/Overpass using coordinates or browser geolocation.
+- Inputs and inventory are not sent to a server or shared by this static prototype.
+
+**Evidence warning:** the UI fit score measures relevance to submitted inputs only. UN Comtrade values are reported imports, not local marketplace sell-through. Overpass locations do not prove the business is open or that it has stock. Catalogue ideas are hypotheses, not sales predictions. See [Local Enterprise Opportunity Finder documentation](docs/LOCAL_ENTERPRISE_OPPORTUNITY_FINDER.md) for source limitations, costs, validation gates, and roadmap.
+
 ## Integration
 The output schema in `data/data.json` includes `meta`, `countries`, and `items`; see `docs/HORIZON_SCANNING_INTEGRATION.md` for a pattern to consume the JSON feed.
 
