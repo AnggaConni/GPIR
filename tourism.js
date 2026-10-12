@@ -163,8 +163,8 @@ function normaliseWorksheet(raw, dataset){
   const wideYears=detectYearHeaders(headers);
   const longForm=yearIdx>=0 && valueIdx>=0;
   const records=[];
-  const baseIndices=new Set([countryIdx,yearIdx,valueIdx,indicatorIdx,unitIdx].filter(i=>i>=0));
-  headers.forEach((h,i)=>{const k=keyNorm(h);if(/^(indicatorcode|indicatorpreviouscode|reporterareacode|flag|flaglabel|notes|note|source|sourceurl|unitcode|obsstatus|observationstatus)$/.test(k))baseIndices.add(i);});
+  const baseIndices=new Set([countryIdx,yearIdx,valueIdx,indicatorIdx,unitIdx,...wideYears.map(y=>y.index)].filter(i=>i>=0));
+  headers.forEach((h,i)=>{const k=keyNorm(h);if(/^(indicatorcode|indicatorpreviouscode|reporterareacode|partnerareacode|flag|flaglabel|notes|note|source|sourceurl|unitcode|obsstatus|observationstatus)$/.test(k))baseIndices.add(i);});
   for(let ri=1;ri<grid.length;ri++){
     const row=grid[ri]||[];
     if(!row.some(v=>v!==null&&v!==""))continue;
