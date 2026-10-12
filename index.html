@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GPIR — Global Product Intelligence Radar</title>
+<meta name="description" content="Explore product-market opportunities using open global trade data.">
+<link rel="preconnect" href="https://unpkg.com"><link rel="preconnect" href="https://tile.openstreetmap.org">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#f4f6fa;--panel:#fff;--ink:#152238;--muted:#68778d;--line:#e3e8f0;--accent:#1666db;--teal:#0f988b;--navy:#13284a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+header{background:linear-gradient(115deg,#10264a,#1b4a7a 65%,#116d77);color:white;padding:26px max(20px,calc((100vw - 1440px)/2));display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:13px}.logo{display:grid;place-items:center;width:45px;height:45px;border:1px solid #ffffff66;border-radius:13px;background:#ffffff12;font-size:24px}.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-weight:700;font-size:10px;opacity:.78}.brand h1{font-size:22px;margin:2px 0;letter-spacing:-.03em}.brand p{margin:0;color:#c5d5ed;font-size:12px}.actions{display:flex;gap:8px;flex-wrap:wrap}button,.btn{border:1px solid var(--line);background:white;color:var(--ink);border-radius:9px;padding:9px 13px;font-weight:650;cursor:pointer;text-decoration:none;font-size:12px}header .btn{background:#ffffff13;border-color:#ffffff55;color:white}button:hover,.btn:hover{filter:brightness(.97)}main{max-width:1440px;margin:0 auto;padding:22px 20px 48px}.notice{background:#fff7e2;border:1px solid #f1d998;border-radius:10px;padding:11px 14px;color:#694a08;margin-bottom:16px;font-size:12px}.filters{display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:10px;background:var(--panel);border:1px solid var(--line);padding:13px;border-radius:14px;margin-bottom:15px;align-items:end}.field label{display:block;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 5px}.field input,.field select{width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff;color:var(--ink);font:inherit}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:15px}.kpi,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.kpi{padding:15px 17px}.kpi .label{font-size:11px;color:var(--muted);font-weight:650}.kpi strong{display:block;font-size:26px;letter-spacing:-.04em;margin:6px 0 1px}.kpi small{color:var(--muted);font-size:10px}.grid{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}.panel{overflow:hidden}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:15px 17px;border-bottom:1px solid var(--line)}.panel-head h2{font-size:14px;margin:0}.panel-head p{font-size:11px;color:var(--muted);margin:3px 0 0}.pill{font-size:10px;font-weight:700;background:#e9f4ff;color:#225d9f;border-radius:99px;padding:5px 8px}.pill.live{background:#e1f7ee;color:#0a7757}#map{height:350px;background:#e9eef2}.map-foot{padding:9px 14px;color:var(--muted);font-size:10px;border-top:1px solid var(--line)}.table-wrap{overflow:auto;max-height:350px}table{border-collapse:collapse;width:100%;font-size:12px}th{text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em;background:#fafbfd;position:sticky;top:0}td,th{padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap}tbody tr{cursor:pointer}tbody tr:hover{background:#f3f7fc}.product{font-weight:750}.sub{display:block;font-size:10px;color:var(--muted);font-weight:400}.score{font-weight:800;color:#137b68}.negative{color:#b45309}.lower{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.details{padding:18px;min-height:180px}.details h3{margin:0 0 7px}.details p{color:var(--muted);font-size:12px}.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.meta div{background:#f6f8fb;border-radius:9px;padding:10px}.meta span{display:block;color:var(--muted);font-size:10px}.meta b{display:block;margin-top:4px;font-size:13px}.bar{height:5px;border-radius:5px;background:#e8edf4;overflow:hidden;margin-top:8px}.bar i{display:block;background:var(--teal);height:100%}.source-list{padding:14px 17px;display:grid;gap:12px}.source{display:flex;align-items:start;gap:10px}.source-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:#eaf2fe;color:#1b5fc6;flex-shrink:0}.source b{font-size:12px}.source p{font-size:11px;color:var(--muted);margin:2px 0}.source a{font-size:11px;color:var(--accent)}footer{padding:24px 0 0;color:var(--muted);font-size:10px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.empty{padding:28px;text-align:center;color:var(--muted)}@media(max-width:900px){.grid,.lower{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}.kpis{grid-template-columns:1fr 1fr}}@media(max-width:520px){main{padding:13px 10px 30px}header{padding:20px 13px}.filters{grid-template-columns:1fr}.kpi{padding:12px}.kpi strong{font-size:22px}.brand h1{font-size:19px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="logo">⌁</div><div><div class="eyebrow">Horizon Scanning · Market Signals</div><h1>Global Product Intelligence Radar</h1><p>Discover product-market signals across the world</p></div></div><div class="actions"><a class="btn" href="https://comtradeapi.un.org/" target="_blank" rel="noopener">UN Comtrade ↗</a><a class="btn" href="https://api.worldbank.org/v2/" target="_blank" rel="noopener">World Bank ↗</a><button id="reload">Reload data ↻</button></div></header>
+<main>
+<div id="dataNotice" class="notice">Loading data status…</div>
+<section class="filters">
+<div class="field"><label for="search">Search product or HS code</label><input id="search" placeholder="e.g. electric vehicles, 8501"></div>
+<div class="field"><label for="country">Market</label><select id="country"><option value="">All markets</option></select></div>
+<div class="field"><label for="category">Product chapter</label><select id="category"><option value="">All chapters</option></select></div>
+<button id="reset">Reset filters</button>
+</section>
+<section class="kpis">
+<div class="kpi"><div class="label">PRODUCT–MARKET SIGNALS</div><strong id="kpiCount">—</strong><small>Available records in current view</small></div>
+<div class="kpi"><div class="label">MARKETS COVERED</div><strong id="kpiMarkets">—</strong><small>Countries represented in records</small></div>
+<div class="kpi"><div class="label">POSITIVE TRADE SIGNALS</div><strong id="kpiGrowth">—</strong><small>Records with positive reported growth</small></div>
+<div class="kpi"><div class="label">DATA FRESHNESS</div><strong id="kpiFresh">—</strong><small>Most recent observation year</small></div>
+</section>
+<section class="grid">
+<div class="panel"><div class="panel-head"><div><h2>Global market map</h2><p>Select a marker to inspect a product–market signal</p></div><span class="pill">TRADE SIGNALS</span></div><div id="map"></div><div class="map-foot">Map displays market locations, not geographic trade routes. Missing coordinates are excluded.</div></div>
+<div class="panel"><div class="panel-head"><div><h2>Opportunity ranking</h2><p>Sorted by transparent, data-based screening score</p></div><span class="pill" id="rankCount">0 records</span></div><div class="table-wrap"><table><thead><tr><th>Product / market</th><th>Latest value</th><th>Growth</th><th>Score</th></tr></thead><tbody id="rankBody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody></table></div></div>
+</section>
+<section class="lower">
+<div class="panel"><div class="panel-head"><div><h2>Signal evidence</h2><p>Selected product and market</p></div><span class="pill" id="evidencePill">NO SELECTION</span></div><div class="details" id="details"><h3>Select a record</h3><p>Choose a product-market row or map marker to inspect indicators, observation period, and original data source.</p></div></div>
+<div class="panel"><div class="panel-head"><div><h2>Data sources & interpretation</h2><p>Observed trade data, not global retail sales</p></div></div><div class="source-list">
+<div class="source"><div class="source-icon">⇄</div><div><b>UN Comtrade</b><p>Reported international merchandise imports and exports by HS product code, reporter and period. Data may be revised or delayed.</p><a href="https://comtradeapi.un.org/" target="_blank" rel="noopener">API documentation ↗</a></div></div>
+<div class="source"><div class="source-icon">◎</div><div><b>World Bank Indicators</b><p>Population and macroeconomic context are market proxies, not product-specific demand.</p><a href="https://api.worldbank.org/v2/" target="_blank" rel="noopener">API documentation ↗</a></div></div>
+<div class="source"><div class="source-icon">!</div><div><b>Opportunity score is a screening signal</b><p>It does not prove retail sales, profitability, unmet demand or product viability. Check tariffs, logistics, competition and regulations before acting.</p></div></div>
+</div></div>
+</section>
+<footer><span>GPIR · Open data product opportunity screening</span><span id="updatedAt">Data build: unknown</span></footer>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body></html>
