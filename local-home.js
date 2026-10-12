@@ -1,23 +1,24 @@
 (function(){
 "use strict";
-const $=id=>document.getElementById(id),CATALOG_URL="./data/opportunity_catalog.json";
+const $=id=>document.getElementById(id),CATALOG_URL="./data/opportunity_catalog.json",TOURISM_URL="./data/tourism_places.json";
 const POI_TTL=6*60*60*1000,GEOCODE_TTL=30*24*60*60*1000;
-const colors={retail:"#2563eb",market:"#d97706",food_buyer:"#b45309",supplier:"#7c3aed",maker:"#7c3aed",service:"#0891b2",institution:"#059669",other:"#64748b"};
-let catalog=[],map=null,markers=null,lines=null,userMarker=null,radiusCircle=null,areaRectangle=null,coords=null,placeLabel="",placeBounds=null,points=[],activeIdea=null,lastRequest=0;
+const colors={tourism:"#db2777",retail:"#2563eb",market:"#d97706",food_buyer:"#b45309",supplier:"#7c3aed",maker:"#7c3aed",service:"#0891b2",institution:"#059669",other:"#64748b"};
+let catalog=[],tourismSnapshot=[],map=null,markers=null,lines=null,userMarker=null,radiusCircle=null,areaRectangle=null,coords=null,placeLabel="",placeBounds=null,points=[],activeIdea=null,lastRequest=0;
 const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const num=v=>v==null||v===""||!Number.isFinite(Number(v))?null:Number(v);
 const money=v=>v==null?"—":new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(v);
 function cacheRead(key,ttl){for(const getStore of [()=>sessionStorage,()=>localStorage]){try{const store=getStore(),o=JSON.parse(store.getItem(key)||"null");if(o&&o.savedAt&&Date.now()-o.savedAt<ttl)return o.data;}catch(_){}}return null;}
 function cacheWrite(key,data){const s=JSON.stringify({savedAt:Date.now(),data});try{sessionStorage.setItem(key,s);}catch(_){}if(key.startsWith("gpir:geocode:"))try{localStorage.setItem(key,s);}catch(_){}}
 function labelType(t){return t==="grow"?"Tanam / budidaya":t==="service"?"Usaha jasa":"Jual produk / olahan";}
-function classify(el){const t=el.tags||{},shop=String(t.shop||"").toLowerCase(),a=String(t.amenity||"").toLowerCase(),craft=String(t.craft||"").toLowerCase(),office=String(t.office||"").toLowerCase(),land=String(t.landuse||"").toLowerCase();
+function classify(el){const t=el.tags||{},shop=String(t.shop||"").toLowerCase(),a=String(t.amenity||"").toLowerCase(),craft=String(t.craft||"").toLowerCase(),office=String(t.office||"").toLowerCase(),land=String(t.landuse||"").toLowerCase(),tourism=String(t.tourism||"").toLowerCase(),historic=String(t.historic||"").toLowerCase(),natural=String(t.natural||"").toLowerCase(),leisure=String(t.leisure||"").toLowerCase();
+ if(["attraction","museum","gallery","viewpoint","theme_park","zoo","aquarium","artwork","picnic_site"].includes(tourism)||["monument","memorial","ruins","castle","archaeological_site"].includes(historic)||["beach","waterfall","hot_spring","cave_entrance"].includes(natural)||["park","garden"].includes(leisure))return "tourism";
  if(a==="marketplace")return "market";
  if(["restaurant","cafe","fast_food","food_court","bakery","ice_cream"].includes(a))return "food_buyer";
  if(["car_repair","motorcycle_repair","bicycle_repair","tailor","electronics_repair","shoemaker"].includes(craft)||["car_repair","bicycle","motorcycle"].includes(shop)||["car_repair","repair"].includes(a))return "service";
  if(["farmland","orchard","plant_nursery"].includes(land)||["agrarian","farm"].includes(shop)||shop==="wholesale"||office==="wholesale")return "supplier";
  if(craft||["company","commercial"].includes(office))return "maker";if(shop)return "retail";
  if(["school","hospital","clinic","community_centre","hotel","guest_house"].includes(a))return "institution";return "other";}
-function poiLabel(cat){return ({retail:"Toko / retail",market:"Pasar / marketplace",food_buyer:"Usaha kuliner",supplier:"Pemasok / pertanian",maker:"Pengrajin / usaha",service:"Jasa / bengkel",institution:"Institusi / fasilitas",other:"Titik usaha/fasilitas"})[cat]||cat;}
+function poiLabel(cat){return ({tourism:"Atraksi wisata / budaya",retail:"Toko / retail",market:"Pasar / marketplace",food_buyer:"Usaha kuliner",supplier:"Pemasok / pertanian",maker:"Pengrajin / usaha",service:"Jasa / bengkel",institution:"Institusi / fasilitas",other:"Titik usaha/fasilitas"})[cat]||cat;}
 function km(a,b,c,d){const r=x=>x*Math.PI/180,dl=r(c-a),dn=r(d-b),x=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2;return 6371*2*Math.asin(Math.sqrt(x));}
 function kmLabel(n){return n==null?"jarak tidak tersedia":n<1?Math.round(n*1000)+" m":n.toFixed(1)+" km";}
 function initMap(){if(!window.L){$("homeLocalMap").innerHTML='<div class="empty">Peta gagal dimuat. Rekomendasi usaha tetap tersedia.</div>';return;}
