@@ -384,6 +384,8 @@ async function loadDataset(){
     $("footerStatus").textContent="Data sheet: "+item.workbook+" · "+(raw.generated_at||"timestamp sumber tidak tersedia");
   }catch(error){
     state.records=[];enableStats(false);
+    updateSMEContext();
+    $("statObservations").textContent="—";$("statCountries").textContent="—";$("statYears").textContent="—";$("statUnit").textContent="—";
     setStatus("Gagal membaca dataset: "+error.message+". Periksa file di GitHub Pages atau coba dataset lain.","error");
     $("statsBody").innerHTML='<tr><td colspan="6" class="empty">Dataset gagal dimuat. Coba kembali atau pilih worksheet yang lebih kecil.</td></tr>';
     $("statsChart").innerHTML='<text x="450" y="125" text-anchor="middle">Dataset tidak dapat dimuat.</text>';
