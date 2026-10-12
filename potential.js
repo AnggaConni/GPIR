@@ -425,6 +425,7 @@ function zoomLocal(){if(state.localBounds)state.map.fitBounds(state.localBounds,
 function zoomGlobal(){if(state.globalBounds)state.map.fitBounds(state.globalBounds,{padding:[40,40],maxZoom:5});else if(state.origin)state.map.setView([state.origin.lat,state.origin.lon],3);}
 function clearOrigin(){
  state.analyzeSequence++;
+ $("analyzeBtn").disabled=false;$("analyzeBtn").textContent="Analisis titik ↗";
  state.origin=null;state.pois=[];state.marketSignals=[];state.opportunities=[];
  if(state.originMarker){state.map.removeLayer(state.originMarker);state.originMarker=null;}
  state.poiLayer.clearLayers();state.linkLayer.clearLayers();state.marketLayer.clearLayers();
@@ -455,8 +456,8 @@ async function init(){
  $("zoomLocalBtn").addEventListener("click",zoomLocal);
  $("zoomGlobalBtn").addEventListener("click",zoomGlobal);
  $("resetMapBtn").addEventListener("click",()=>state.map.setView([18,10],2));
- $("exampleCassavaBtn").addEventListener("click",()=>{$("resourceInput").value="singkong";$("opportunitySelect").value="cassava-snacks";if(!state.origin)setOrigin({lat:4.6951,lng:96.7494},false,"Demo Aceh (contoh)");state.map.setView([4.6951,96.7494],7);analyzePoint();});
- $("exampleCraftBtn").addEventListener("click",()=>{$("resourceInput").value="bambu, rotan, kerajinan";$("opportunitySelect").value="bamboo-rattan-craft";if(!state.origin)setOrigin({lat:-7.7956,lng:110.3695},false,"Demo Yogyakarta (contoh)");state.map.setView([state.origin.lat,state.origin.lon],8);analyzePoint();});
+ $("exampleCassavaBtn").addEventListener("click",()=>{$("resourceInput").value="singkong";$("opportunitySelect").value="cassava-snacks";setOrigin({lat:4.6951,lng:96.7494},false,"Demo Aceh (contoh)");state.map.setView([4.6951,96.7494],7);analyzePoint();});
+ $("exampleCraftBtn").addEventListener("click",()=>{$("resourceInput").value="bambu, rotan, kerajinan";$("opportunitySelect").value="bamboo-rattan-craft";setOrigin({lat:-7.7956,lng:110.3695},false,"Demo Yogyakarta (contoh)");state.map.setView([-7.7956,110.3695],8);analyzePoint();});
  ["resourceInput","opportunitySelect","marketSelect"].forEach(id=>$(id).addEventListener("change",()=>{if(state.origin)analyzePoint();}));
  ["showTourism","showLocal","showInternational"].forEach(id=>$(id).addEventListener("change",refreshLayers));
  try{
