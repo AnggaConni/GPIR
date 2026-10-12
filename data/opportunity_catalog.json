@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "note": "Curated starter hypotheses for local microenterprise exploration. Not sales rankings or validated market demand.",
+  "note": "Curated business hypotheses. The UI separates selling products, cultivation and services. Supplier/buyer links open search pages and are not verified stock, actual buyers or sales forecasts.",
   "opportunities": [
     {
       "id": "coconut-value-added",
-      "title": "Coconut value-added products",
+      "title": "Olahan kelapa skala mikro",
       "products": [
         "coconut sugar",
         "coconut oil",
@@ -48,11 +48,40 @@
         "food safety and labelling",
         "export standards and shipping costs"
       ],
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "sell",
+      "action_summary": "Mulai dari satu produk sederhana yang sesuai bahan tersedia: minyak/gula kelapa, atau produk sabut/tempurung.",
+      "buy_from": [
+        "Petani atau pengepul kelapa setempat",
+        "Toko kemasan pangan dan alat ukur dasar"
+      ],
+      "sell_to": [
+        "Warung/toko sembako",
+        "Usaha kuliner atau pengolah makanan",
+        "Pembeli kerajinan jika memakai sabut/tempurung"
+      ],
+      "channels": [
+        "Uji titip-jual di 3–5 warung",
+        "Pre-order melalui WhatsApp"
+      ],
+      "map_categories": [
+        "market",
+        "retail",
+        "food_buyer"
+      ],
+      "local_input_search": "pengepul kelapa pemasok kemasan pangan",
+      "online_input_search": "kemasan pangan food grade alat olah kelapa",
+      "local_buyer_search": "toko sembako usaha kuliner",
+      "international_search": "coconut products importer",
+      "start_steps": [
+        "Pilih satu produk sesuai bahan dan alat yang tersedia.",
+        "Hitung bahan, hasil jadi, tenaga, energi, kemasan dan ongkir.",
+        "Minta 3 calon pembeli menilai sampel/harga sebelum membeli alat."
+      ]
     },
     {
       "id": "cassava-snacks",
-      "title": "Cassava and root-crop snacks",
+      "title": "Camilan singkong dan umbi",
       "products": [
         "cassava chips",
         "tapioca flour",
@@ -94,11 +123,40 @@
         "competitive pricing",
         "packaging and reseller margins"
       ],
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "sell",
+      "action_summary": "Buat batch kecil keripik/kerupuk dengan satu ukuran kemasan, lalu ukur yang benar-benar terjual dan dipesan ulang.",
+      "buy_from": [
+        "Petani/pengepul singkong lokal",
+        "Grosir minyak, bumbu dan kemasan makanan"
+      ],
+      "sell_to": [
+        "Warung, kantin dan toko oleh-oleh",
+        "Warung makan atau reseller kecil",
+        "Pembeli langsung di lingkungan"
+      ],
+      "channels": [
+        "Titip-jual skala kecil",
+        "Pre-order via WhatsApp"
+      ],
+      "map_categories": [
+        "market",
+        "retail",
+        "food_buyer"
+      ],
+      "local_input_search": "supplier singkong toko kemasan makanan",
+      "online_input_search": "standing pouch makanan sealer",
+      "local_buyer_search": "warung kantin toko oleh-oleh",
+      "international_search": "cassava snack wholesale buyers",
+      "start_steps": [
+        "Pilih 1 resep dan 1–2 ukuran kemasan.",
+        "Hitung biaya bahan, minyak/energi, susut, kemasan dan komisi.",
+        "Tawarkan batch kecil ke 3 toko; catat penjualan dan repeat order."
+      ]
     },
     {
       "id": "coffee-cacao",
-      "title": "Coffee or cacao micro-batches",
+      "title": "Kopi atau kakao batch kecil",
       "products": [
         "roasted coffee",
         "ground coffee",
@@ -141,11 +199,40 @@
         "seasonality and storage",
         "quality consistency and certifications for export"
       ],
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "sell",
+      "action_summary": "Mulai dengan produk asal yang jelas dan batch terbatas; hindari membeli mesin sebelum ada pembeli uji atau pre-order.",
+      "buy_from": [
+        "Petani/koperasi dan roaster lokal untuk sampel",
+        "Pemasok pouch/label atau jasa sangrai"
+      ],
+      "sell_to": [
+        "Kedai kopi dan toko lokal",
+        "Pembeli yang menghargai asal produk",
+        "Toko oleh-oleh/reseller khusus"
+      ],
+      "channels": [
+        "Sampel ke 5 kedai/pembeli",
+        "Pre-order batch mingguan"
+      ],
+      "map_categories": [
+        "food_buyer",
+        "retail",
+        "market"
+      ],
+      "local_input_search": "petani kopi koperasi kakao pemasok kemasan",
+      "online_input_search": "pouch kopi valve label kemasan",
+      "local_buyer_search": "kedai kopi toko oleh-oleh",
+      "international_search": "specialty coffee cocoa importers",
+      "start_steps": [
+        "Bandingkan 3 lot bahan atau produk jadi.",
+        "Minta 5 pembeli menilai rasa, ukuran dan harga.",
+        "Pre-sell batch pertama; hitung margin per kemasan."
+      ]
     },
     {
       "id": "dried-spices",
-      "title": "Dried herbs, spices and simple blends",
+      "title": "Rempah kering dan bumbu siap pakai",
       "products": [
         "dried ginger",
         "turmeric powder",
@@ -199,11 +286,40 @@
         "commodity price fluctuations",
         "food import/export requirements"
       ],
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "sell",
+      "action_summary": "Pilih satu rempah yang pasokannya stabil, lalu uji kemasan kecil untuk warung makan atau dapur usaha.",
+      "buy_from": [
+        "Petani/pasar induk/pengepul rempah lokal",
+        "Pemasok kemasan food grade"
+      ],
+      "sell_to": [
+        "Warung makan, katering dan pedagang bumbu",
+        "Toko sembako",
+        "Pengolah makanan kecil"
+      ],
+      "channels": [
+        "Tawarkan sampel kepada 5 dapur usaha",
+        "Pre-order mingguan"
+      ],
+      "map_categories": [
+        "market",
+        "retail",
+        "food_buyer"
+      ],
+      "local_input_search": "pengepul rempah supplier kemasan makanan",
+      "online_input_search": "kemasan bumbu food grade timbangan digital",
+      "local_buyer_search": "restoran katering pedagang bumbu",
+      "international_search": "spice importers food ingredient buyers",
+      "start_steps": [
+        "Periksa kelembapan, kebersihan dan sumber bahan.",
+        "Tanya 5 usaha kuliner tentang jenis, kemasan dan pembelian mingguan.",
+        "Hitung hasil kering, energi, kemasan dan harga per gram."
+      ]
     },
     {
       "id": "fish-shelf-stable",
-      "title": "Shelf-stable fish and seafood products",
+      "title": "Ikan kering atau olahan tahan simpan",
       "products": [
         "dried fish",
         "smoked fish",
@@ -248,11 +364,40 @@
         "seasonal catch and cold-chain access",
         "local permits and seafood export requirements"
       ],
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "sell",
+      "action_summary": "Pilih satu produk sesuai ketersediaan ikan dan fasilitas aman; periksa kebersihan, proses dan masa simpan sebelum menjual.",
+      "buy_from": [
+        "Nelayan/koperasi/pengepul ikan lokal",
+        "Pemasok garam, kemasan dan alat higienis"
+      ],
+      "sell_to": [
+        "Pedagang ikan dan pasar setempat",
+        "Warung makan/katering",
+        "Konsumen produk ikan olahan"
+      ],
+      "channels": [
+        "Tanya 5 pedagang sebelum produksi",
+        "Pre-order atau kerja sama dengan pengolah yang layak"
+      ],
+      "map_categories": [
+        "market",
+        "retail",
+        "food_buyer"
+      ],
+      "local_input_search": "pengepul ikan supplier garam kemasan pangan",
+      "online_input_search": "kemasan vakum food grade timbangan",
+      "local_buyer_search": "pasar ikan usaha kuliner seafood",
+      "international_search": "seafood importers dried fish",
+      "start_steps": [
+        "Catat pasokan harian, harga dan potensi bahan tidak terjual.",
+        "Tanya 5 pedagang tentang ukuran, harga dan volume pembelian.",
+        "Pastikan proses higienis, kemasan dan izin sebelum dijual."
+      ]
     },
     {
       "id": "fruit-preservation",
-      "title": "Dried fruit, jam or puree from surplus fruit",
+      "title": "Olahan buah surplus",
       "products": [
         "dried fruit",
         "fruit jam",
@@ -299,11 +444,40 @@
         "yield loss during drying",
         "food registration and labelling"
       ],
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "sell",
+      "action_summary": "Gunakan buah surplus yang masih layak; bandingkan buah kering, selai atau puree berdasarkan rendemen dan biaya energi.",
+      "buy_from": [
+        "Petani/pasar/pedagang buah saat surplus",
+        "Pemasok gula dan kemasan pangan"
+      ],
+      "sell_to": [
+        "Warung/toko oleh-oleh/kedai minuman",
+        "Pembuat kue dan katering",
+        "Konsumen lokal melalui pesanan"
+      ],
+      "channels": [
+        "Batch kecil dari buah surplus",
+        "Pre-order ke 3 toko"
+      ],
+      "map_categories": [
+        "market",
+        "retail",
+        "food_buyer"
+      ],
+      "local_input_search": "petani buah pemasok kemasan pangan",
+      "online_input_search": "kemasan selai food grade alat pengering makanan",
+      "local_buyer_search": "toko oleh-oleh kedai minuman pembuat kue",
+      "international_search": "dried fruit fruit puree importers",
+      "start_steps": [
+        "Catat volume/harga buah surplus selama dua minggu.",
+        "Ukur berat bahan sebelum/sesudah proses dan biaya hasil jadi.",
+        "Uji sampel dengan 3 toko dan pastikan masa simpan/label."
+      ]
     },
     {
       "id": "bamboo-rattan-craft",
-      "title": "Bamboo, rattan and repairable household goods",
+      "title": "Kerajinan bambu/rotan berbasis pesanan",
       "products": [
         "baskets",
         "storage goods",
@@ -353,11 +527,41 @@
         "labour time underestimated",
         "breakage and bulky shipping"
       ],
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "sell",
+      "action_summary": "Buat 2–3 prototipe sederhana dan produksi setelah ada pesanan agar uang tidak tertahan dalam stok.",
+      "buy_from": [
+        "Pemasok bambu/rotan legal dan berkelanjutan",
+        "Toko perkakas, bahan finishing dan kemasan"
+      ],
+      "sell_to": [
+        "Toko kerajinan/toko oleh-oleh",
+        "Kafe/penginapan/usaha dekorasi",
+        "Pembeli rumahan dan reseller"
+      ],
+      "channels": [
+        "Katalog foto WhatsApp/Instagram",
+        "Pre-order dengan uang muka"
+      ],
+      "map_categories": [
+        "retail",
+        "market",
+        "maker",
+        "food_buyer"
+      ],
+      "local_input_search": "pemasok bambu rotan toko perkakas",
+      "online_input_search": "alat anyaman finishing kayu perlengkapan kerajinan",
+      "local_buyer_search": "toko kerajinan toko oleh-oleh penginapan",
+      "international_search": "bamboo rattan homeware importers",
+      "start_steps": [
+        "Pilih bahan dari sumber legal dan buat 3 prototipe.",
+        "Foto dan hitung waktu kerja serta biaya kemasan/kirim.",
+        "Tanya 10 calon pembeli; minta uang muka sebelum produksi banyak."
+      ]
     },
     {
       "id": "textile-craft-micro",
-      "title": "Local textiles, sewing and made-to-order crafts",
+      "title": "Jasa jahit, aksesori tekstil dan suvenir pesanan",
       "products": [
         "small textile accessories",
         "custom souvenirs",
@@ -408,11 +612,41 @@
         "underpricing labour",
         "design copying and delivery deadlines"
       ],
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "service",
+      "action_summary": "Jual keterampilan yang sudah dikuasai: permak, jahit sederhana, aksesori, atau suvenir made-to-order.",
+      "buy_from": [
+        "Toko kain, benang, resleting dan perlengkapan jahit",
+        "Pemasok bahan berdasarkan pesanan"
+      ],
+      "sell_to": [
+        "Warga, sekolah dan komunitas lokal",
+        "Toko suvenir/penyelenggara acara",
+        "UMKM yang perlu merchandise"
+      ],
+      "channels": [
+        "Pesanan per item dengan uang muka",
+        "Katalog contoh dan referral"
+      ],
+      "map_categories": [
+        "retail",
+        "maker",
+        "service",
+        "market"
+      ],
+      "local_input_search": "toko kain benang perlengkapan jahit",
+      "online_input_search": "perlengkapan jahit bahan aksesori tekstil",
+      "local_buyer_search": "toko kain penjahit toko suvenir",
+      "international_search": "handmade textile accessories wholesale",
+      "start_steps": [
+        "Daftar 3 layanan yang benar-benar mampu dikerjakan.",
+        "Hitung jam kerja, bahan dan revisi untuk satu pesanan.",
+        "Mulai dari pesanan berbayar; jangan lupakan upah diri sendiri."
+      ]
     },
     {
       "id": "local-aggregation",
-      "title": "Local produce aggregation and market link service",
+      "title": "Jasa pengumpulan pesanan hasil tani",
       "products": [
         "order aggregation",
         "pre-order group sales",
@@ -471,6 +705,456 @@
         "spoilage and delivery coordination",
         "quality variation"
       ],
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "service",
+      "action_summary": "Hubungkan produsen dengan pembeli melalui pre-order dan koordinasi pengiriman; jangan membeli stok spekulatif di awal.",
+      "buy_from": [
+        "Petani/nelayan atau kelompok produsen",
+        "Krat/kemasan dan perlengkapan pencatatan sesuai kebutuhan"
+      ],
+      "sell_to": [
+        "Warung makan/katering/toko buah-sayur",
+        "Pembeli rutin lokal",
+        "Rumah tangga lewat pesanan kelompok"
+      ],
+      "channels": [
+        "Daftar barang/harga harian via WhatsApp",
+        "Kumpulkan pesanan sebelum ambil barang"
+      ],
+      "map_categories": [
+        "market",
+        "retail",
+        "food_buyer",
+        "supplier"
+      ],
+      "local_input_search": "kelompok tani koperasi pasar tradisional",
+      "online_input_search": "krat panen perlengkapan packing hasil tani",
+      "local_buyer_search": "warung makan katering toko sayur",
+      "international_search": "produce wholesale buyers",
+      "start_steps": [
+        "Petakan 5 pemasok dan 5 calon pembeli; verifikasi harga/volume.",
+        "Ambil pesanan dulu, baru koordinasikan barang dan kirim.",
+        "Catat transportasi, barang rusak, keterlambatan pembayaran dan margin jasa."
+      ]
+    },
+    {
+      "id": "grow-fast-greens",
+      "title": "Budidaya sayur cepat panen",
+      "business_type": "grow",
+      "products": [
+        "kangkung",
+        "bayam",
+        "sawi",
+        "daun bawang",
+        "leafy vegetables"
+      ],
+      "resource_keywords": [
+        "lahan",
+        "pekarangan",
+        "tanah",
+        "soil",
+        "land",
+        "kebun",
+        "garden",
+        "air",
+        "water",
+        "benih",
+        "seed",
+        "petani",
+        "farmer",
+        "hortikultura"
+      ],
+      "skill_keywords": [
+        "menanam",
+        "berkebun",
+        "farming",
+        "irigasi",
+        "hortikultura",
+        "gardening",
+        "panen"
+      ],
+      "demand_keywords": [
+        "vegetables",
+        "leafy vegetables",
+        "spinach",
+        "onions"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 300000,
+      "capital_max_idr": 2500000,
+      "market_fit": [
+        "local",
+        "both"
+      ],
+      "map_categories": [
+        "market",
+        "retail",
+        "food_buyer"
+      ],
+      "action_summary": "Tanam 1–2 jenis sayur yang cocok dengan air, lahan dan musim. Jangan memperluas sebelum jumlah pembeli dan harga panen diketahui.",
+      "rationale": "Budidaya sayur cepat panen dapat diuji kecil jika lahan/pekarangan, air dan waktu perawatan benar-benar tersedia.",
+      "buy_from": [
+        "Kios pertanian untuk benih yang sesuai musim",
+        "Petani/kelompok tani untuk belajar kalender tanam",
+        "Pemasok media tanam dan alat sederhana"
+      ],
+      "sell_to": [
+        "Warung sayur dan pedagang pasar",
+        "Warung makan/katering",
+        "Rumah tangga yang mau pesan sebelum panen"
+      ],
+      "channels": [
+        "Tanya pembeli sebelum tanam",
+        "Pre-order mingguan via WhatsApp"
+      ],
+      "local_input_search": "kios pertanian benih sayur pupuk",
+      "online_input_search": "benih sayur sesuai musim alat siram",
+      "local_buyer_search": "pedagang sayur pasar warung makan",
+      "international_search": "leafy vegetable importers",
+      "start_steps": [
+        "Pastikan lahan, air dan waktu perawatan tersedia.",
+        "Tanya 5 pembeli soal jenis, harga dan jumlah beli per minggu.",
+        "Mulai satu bedeng kecil; catat biaya dan hasil yang benar-benar terjual."
+      ],
+      "risks": [
+        "Cuaca, hama, air dan gagal panen",
+        "Harga berubah; jangan menanam tanpa calon pembeli",
+        "Gunakan sarana produksi sesuai label dan aturan"
+      ],
+      "export_note": "Untuk usaha mikro, pasar lokal lebih realistis untuk diuji dahulu; ekspor sayuran segar butuh volume, rantai dingin dan aturan karantina.",
+      "evidence_type": "opportunity_hypothesis"
+    },
+    {
+      "id": "grow-plant-nursery",
+      "title": "Pembibitan tanaman dan bibit pekarangan",
+      "business_type": "grow",
+      "products": [
+        "bibit sayur",
+        "bibit cabai",
+        "bibit tanaman buah",
+        "seedlings",
+        "plant nursery"
+      ],
+      "resource_keywords": [
+        "pekarangan",
+        "lahan",
+        "garden",
+        "land",
+        "benih",
+        "seed",
+        "tanaman",
+        "plant",
+        "pot",
+        "polybag",
+        "kompos",
+        "air",
+        "water"
+      ],
+      "skill_keywords": [
+        "menyemai",
+        "pembibitan",
+        "berkebun",
+        "gardening",
+        "farming",
+        "propagasi"
+      ],
+      "demand_keywords": [
+        "seedlings",
+        "nursery plants",
+        "plants"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 250000,
+      "capital_max_idr": 2000000,
+      "market_fit": [
+        "local",
+        "both"
+      ],
+      "map_categories": [
+        "retail",
+        "supplier",
+        "market",
+        "institution"
+      ],
+      "action_summary": "Mulai dari 20–50 bibit yang cocok dengan musim, lalu tambah jenis hanya berdasarkan pesanan.",
+      "rationale": "Pembibitan skala kecil dapat memanfaatkan ruang terbatas jika ada air, media, ketelatenan dan pembeli yang bisa diverifikasi.",
+      "buy_from": [
+        "Toko benih/kios pertanian",
+        "Pemasok media semai, polybag dan pot sederhana",
+        "Petani/penyuluh untuk saran varietas dan musim"
+      ],
+      "sell_to": [
+        "Pekebun rumahan",
+        "Petani kecil/kelompok tani",
+        "Sekolah atau komunitas kebun setelah kebutuhan dikonfirmasi"
+      ],
+      "channels": [
+        "Pre-order berdasarkan jenis/umur bibit",
+        "Jual langsung ke lingkungan sekitar"
+      ],
+      "local_input_search": "kios benih polybag media tanam",
+      "online_input_search": "tray semai polybag bibit benih sayur",
+      "local_buyer_search": "toko tanaman kelompok tani komunitas berkebun",
+      "international_search": "plant nursery wholesale buyers",
+      "start_steps": [
+        "Pilih 1–2 jenis bibit yang cocok di daerah Anda.",
+        "Mulai 20–50 bibit dan catat bibit hidup, biaya dan waktu kerja.",
+        "Tawarkan daftar bibit sebelum menambah variasi."
+      ],
+      "risks": [
+        "Bibit mati, varietas salah atau waktu tanam keliru",
+        "Kebutuhan siram harian dan pembeli musiman",
+        "Periksa aturan karantina bila melintasi wilayah/negara"
+      ],
+      "export_note": "Perdagangan tanaman antarnegara dapat memerlukan karantina dan sertifikat fitosanitari; jangan menganggap ekspor sebagai langkah awal.",
+      "evidence_type": "opportunity_hypothesis"
+    },
+    {
+      "id": "sell-compost",
+      "title": "Kompos dari sisa organik setempat",
+      "business_type": "sell",
+      "products": [
+        "kompos matang",
+        "organic compost",
+        "media tanam campuran"
+      ],
+      "resource_keywords": [
+        "limbah organik",
+        "sisa kebun",
+        "daun",
+        "serasah",
+        "kompos",
+        "compost",
+        "kotoran ternak",
+        "manure",
+        "sampah organik"
+      ],
+      "skill_keywords": [
+        "mengompos",
+        "composting",
+        "berkebun",
+        "farming",
+        "pengelolaan sampah"
+      ],
+      "demand_keywords": [
+        "fertilizer",
+        "compost",
+        "organic fertilizer"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 250000,
+      "capital_max_idr": 1800000,
+      "market_fit": [
+        "local",
+        "both"
+      ],
+      "map_categories": [
+        "retail",
+        "supplier",
+        "market"
+      ],
+      "action_summary": "Ubah sisa organik bersih menjadi kompos matang jika tersedia ruang dan proses aman; uji mutu sebelum menjual.",
+      "rationale": "Dapat memanfaatkan sisa kebun, namun waktu proses, kontaminasi, bau, ruang dan kualitas harus dihitung.",
+      "buy_from": [
+        "Sumber sisa kebun bersih dengan izin pemilik",
+        "Karung, sarung tangan dan alat dasar",
+        "Pekebun untuk uji pemakaian"
+      ],
+      "sell_to": [
+        "Toko tanaman/kios pertanian",
+        "Pekebun rumahan dan kelompok tani",
+        "Pengelola taman jika benar-benar membeli"
+      ],
+      "channels": [
+        "Uji batch kecil dan mutu",
+        "Jual kemasan kecil setelah matang"
+      ],
+      "local_input_search": "toko pertanian supplier karung kompos",
+      "online_input_search": "karung kompos alat pengolahan kompos",
+      "local_buyer_search": "toko tanaman kios pertanian",
+      "international_search": "organic compost wholesale buyers",
+      "start_steps": [
+        "Pastikan bahan bersih dan tempat tidak mencemari air/mengganggu tetangga.",
+        "Pelajari ciri kompos matang dan keluarkan plastik/bahan berbahaya.",
+        "Uji ke pekebun dan cek kesediaan membayar sebelum menaikkan volume."
+      ],
+      "risks": [
+        "Kompos belum matang atau terkontaminasi",
+        "Butuh ruang dan waktu lebih lama dari dugaan",
+        "Permintaan harus dikonfirmasi ke pembeli"
+      ],
+      "export_note": "Ekspor kompos bukan jalur awal yang disarankan; berat, aturan dan mutu perlu diperiksa.",
+      "evidence_type": "opportunity_hypothesis"
+    },
+    {
+      "id": "service-repair",
+      "title": "Jasa perbaikan dan perawatan sederhana",
+      "business_type": "service",
+      "products": [
+        "servis ringan sepeda",
+        "perawatan alat sederhana",
+        "jasa perbaikan kecil",
+        "maintenance service"
+      ],
+      "resource_keywords": [
+        "alat",
+        "tools",
+        "bengkel",
+        "mechanic",
+        "montir",
+        "elektronik",
+        "electronics",
+        "sepeda",
+        "bicycle",
+        "motor",
+        "mesin",
+        "repair"
+      ],
+      "skill_keywords": [
+        "memperbaiki",
+        "reparasi",
+        "repair",
+        "servis",
+        "maintenance",
+        "montir",
+        "mekanik",
+        "troubleshooting"
+      ],
+      "demand_keywords": [
+        "repair service",
+        "maintenance",
+        "repair"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 200000,
+      "capital_max_idr": 3000000,
+      "market_fit": [
+        "local"
+      ],
+      "map_categories": [
+        "service",
+        "retail",
+        "market"
+      ],
+      "action_summary": "Jual jasa yang sudah dikuasai dan bisa dilakukan dengan aman—misalnya servis ringan atau perbaikan kecil. Jangan mengambil pekerjaan di luar kompetensi.",
+      "rationale": "Usaha jasa bisa mengurangi kebutuhan stok, tetapi harus sesuai keterampilan, alat, keselamatan dan reputasi.",
+      "buy_from": [
+        "Toko alat/suku cadang sesuai layanan",
+        "Pemasok atau distributor komponen",
+        "Mitra spesialis untuk pekerjaan di luar kompetensi"
+      ],
+      "sell_to": [
+        "Rumah tangga dan pekerja sekitar",
+        "Toko kecil/UMKM yang butuh perawatan",
+        "Komunitas lokal dengan kebutuhan rutin"
+      ],
+      "channels": [
+        "Daftar layanan dan tarif transparan",
+        "Booking melalui WhatsApp"
+      ],
+      "local_input_search": "toko alat suku cadang bengkel",
+      "online_input_search": "peralatan servis dasar sesuai layanan",
+      "local_buyer_search": "toko kos usaha kecil sekitar",
+      "international_search": "local repair services",
+      "start_steps": [
+        "Daftar hanya pekerjaan yang benar-benar dikuasai.",
+        "Tanya 5 pelanggan potensial dan 3 pesaing tentang harga/waktu.",
+        "Tulis estimasi biaya, batas pekerjaan dan tanggung jawab sebelum mulai."
+      ],
+      "risks": [
+        "Jangan menangani pekerjaan berisiko tanpa kompetensi/alat",
+        "Waktu, komponen dan pekerjaan ulang menggerus margin",
+        "Periksa izin/aturan profesi yang berlaku"
+      ],
+      "export_note": "Fokuskan jasa ini pada klien lokal; data impor barang bukan bukti permintaan jasa.",
+      "evidence_type": "opportunity_hypothesis"
+    },
+    {
+      "id": "service-local-delivery",
+      "title": "Jasa antar dan pesanan bersama warga/UMKM",
+      "business_type": "service",
+      "products": [
+        "antar belanja lokal",
+        "group buying",
+        "pengantaran hasil tani",
+        "local delivery"
+      ],
+      "resource_keywords": [
+        "sepeda motor",
+        "motor",
+        "kendaraan",
+        "vehicle",
+        "transport",
+        "antar",
+        "delivery",
+        "pasar",
+        "market",
+        "petani",
+        "farmer",
+        "telepon",
+        "smartphone"
+      ],
+      "skill_keywords": [
+        "logistik",
+        "logistics",
+        "koordinasi",
+        "coordination",
+        "penjualan",
+        "sales",
+        "whatsapp",
+        "administrasi",
+        "administration",
+        "rute"
+      ],
+      "demand_keywords": [
+        "food",
+        "fresh produce",
+        "retail",
+        "delivery service"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 150000,
+      "capital_max_idr": 1500000,
+      "market_fit": [
+        "local"
+      ],
+      "map_categories": [
+        "market",
+        "retail",
+        "food_buyer",
+        "supplier"
+      ],
+      "action_summary": "Gabungkan beberapa pesanan dalam satu rute dan sepakati ongkir sejak awal agar biaya perjalanan tidak ditanggung sendiri.",
+      "rationale": "Model jasa ini bisa dimulai tanpa menyimpan stok jika akses transportasi aman dan ada pelanggan berulang.",
+      "buy_from": [
+        "Mitra warung/pasar/pemasok yang sudah punya produk",
+        "Perlengkapan kirim sederhana",
+        "Bahan/barang dibiayai sesuai kesepakatan pelanggan"
+      ],
+      "sell_to": [
+        "Warga yang butuh antar belanja",
+        "Warung makan/katering dengan jadwal belanja",
+        "Petani/pedagang yang butuh pengantaran lokal"
+      ],
+      "channels": [
+        "Pesanan terjadwal via WhatsApp",
+        "Gabungkan pesanan per rute"
+      ],
+      "local_input_search": "pasar warung grosir pemasok lokal",
+      "online_input_search": "tas pengiriman perlengkapan kurir",
+      "local_buyer_search": "warung makan katering permukiman",
+      "international_search": "local delivery service",
+      "start_steps": [
+        "Tentukan satu radius dan layanan yang aman.",
+        "Tanya 5 calon pengguna berapa ongkir yang mau dibayar.",
+        "Uji selama seminggu; catat jarak, bahan bakar, waktu, pembatalan dan laba per rute."
+      ],
+      "risks": [
+        "Keselamatan berkendara dan perlindungan barang",
+        "Pesanan kecil berjauhan dapat menghabiskan margin",
+        "Sepakati tanggung jawab jika barang terlambat/rusak"
+      ],
+      "export_note": "Jasa ini berorientasi lokal dan tidak memerlukan ekspor barang.",
       "evidence_type": "opportunity_hypothesis"
     }
   ]

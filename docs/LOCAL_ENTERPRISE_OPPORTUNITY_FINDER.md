@@ -11,7 +11,7 @@ The feature is a decision-support aid. It does not promise that a product will s
 ## Current implementation
 
 - `enterprise.html`: Indonesian-first, responsive interface and source/cost explainer.
-- `enterprise.js`: rule-based idea-fit matching, GPIR trade feed matching, optional Overpass discovery, local inventory management.
+- `enterprise.js`: rule-based idea-fit matching, explicit product/cultivation/service recommendations, location search, permission-based first-load geolocation, nearby OSM/Overpass lookup with browser cache, a local relationship-flow visual, marketplace search links and local inventory management.
 - `data/opportunity_catalog.json`: curated hypotheses, product ideas, resource/skill keywords, illustrative starting-capital bands, first validation test, and risk prompts.
 - `data/data.json`: scheduled UN Comtrade feed. Current schema contains `meta`, `countries`, and `items`; public macro data are deliberately not duplicated into this file.
 - `market-context.js`: async browser-side World Bank enrichment, with graceful fallback if the API or network is unavailable.
@@ -22,9 +22,9 @@ The feature is a decision-support aid. It does not promise that a product will s
 1. **Quota-limited trade layer:** `pipeline/fetch_data.py` fetches UN Comtrade annual imports to `data/data.json`. This scheduled Python collector is reserved for the source that benefits from controlled, keyed, cached requests. It represents reported cross-border trade—not retail sell-through.
 2. **Open country context:** `market-context.js` requests the no-key World Bank Indicators API directly from the browser (country coordinates, GDP per capita and population). It runs asynchronously, has a 12-hour browser-session cache, and does not make the trade collector wait on macro data. It is context, not product demand evidence.
 2. **Opportunity hypotheses:** `data/opportunity_catalog.json` stores hand-curated business ideas with the resources they typically require, a low-capital starting path, a buyer-validation task and risks.
-3. **Local context layer:** users enter district, province, skills and known resources. They can optionally search nearby mapped businesses through the public Overpass API using coordinates or browser geolocation.
+3. **Local context layer:** on first open, the browser requests geolocation permission. If allowed, the page queries mapped places nearby and caches results in the browser session. If denied, users can search for a district/city/address and choose a search radius. Location queries are sent to OpenStreetMap services, not the GPIR server. The public [Nominatim service policy](https://operations.osmfoundation.org/policies/nominatim/) requires explicit search rather than autocomplete, caching and usage limits. Attribution: [OpenStreetMap copyright/licence](https://www.openstreetmap.org/copyright).
 4. **Community resource inventory:** resource, quantity, unit, availability and indicative price can be entered by the user. The starter stores it in that browser's localStorage and can export/import JSON. It is not sent to the repository or shared with other users.
-5. **Matching and evidence layer:** a simple transparent fit score ranks which ideas match the submitted resources, skills, capital tier and selected market. Matched trade rows are displayed separately. A match is not a sales forecast.
+5. **Matching and evidence layer:** an input-fit score ranks ideas against self-reported resources, skills, capital and target market. Nearby mapped places are a separate lead/channel hint; annual trade rows are a separate country-level import signal. Neither proves sales or buyer intent. The relationship flow connects local input → product/service → candidate buyers → mapped local leads → candidate trade-market research.
 6. **Future shared service (optional):** if communities need cross-device/shared supplier data, add a backend such as Supabase with authentication, role-based row-level security, explicit consent, audit trail, and a moderation workflow. Do not put community-written records into a public repository by default.
 
 ## Score semantics
@@ -133,4 +133,4 @@ Keep fit score separate from market evidence. Add verified buyer quotes, trial o
 
 ## Local testing
 
-Open `enterprise.html` from GitHub Pages or serve the repository locally over HTTP. Inventory uses browser localStorage. Nearby search requires a browser with internet access and the public Overpass service to be available.
+Open `enterprise.html` from GitHub Pages or serve the repository locally over HTTP. Geolocation requires a secure context (GitHub Pages HTTPS or localhost) and user permission. If denied, search for a location manually. Inventory uses browser localStorage. Public OSM service results can be incomplete; check places on the ground. Supplier/buyer links open query pages, not proof of stock, price, reliability or export feasibility.
