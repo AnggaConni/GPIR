@@ -29,8 +29,29 @@ html[dir="rtl"] body{text-align:right}html[dir="rtl"] .language-picker{direction
 
 .home-flow-step.is-active{border-color:#60a5fa;box-shadow:0 0 0 2px #60a5fa99,0 0 20px #60a5fa55;background:linear-gradient(150deg,#eff6ff,#f0fdf4);animation:gpirHomeGlow 1.8s ease-in-out infinite}.home-rec-card.is-selected{border-color:#60a5fa;box-shadow:0 0 0 2px #60a5fa66,0 0 18px #60a5fa33}@keyframes gpirHomeGlow{0%,100%{box-shadow:0 0 0 2px #60a5fa66,0 0 12px #60a5fa22}50%{box-shadow:0 0 0 3px #60a5fa99,0 0 22px #60a5fa66}}@media(prefers-reduced-motion:reduce){.home-flow-step.is-active{animation:none}}
 
-/* Two primary entry points: solve an SME question or explore a location-to-market potential map. */
-.entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 16px}.entry-card{display:flex;align-items:center;gap:14px;min-width:0;padding:17px 19px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(115deg,#fff,#f6f9ff);box-shadow:0 8px 28px #0c214208;text-decoration:none;color:var(--ink);transition:transform .18s ease,box-shadow .18s ease}.entry-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px #0c214214}.entry-card.potential{background:linear-gradient(115deg,#fff,#effaf7)}.entry-icon{flex:0 0 46px;height:46px;border-radius:13px;display:grid;place-items:center;background:#e8f0ff;color:#205fc1;font-size:23px}.entry-card.potential .entry-icon{background:#d9f5ee;color:#087c70}.entry-copy{flex:1;min-width:0}.entry-copy .eyebrow{color:#2563a6;opacity:1}.entry-copy h2{font-size:17px;letter-spacing:-.025em;margin:3px 0 4px}.entry-copy p{font-size:11px;line-height:1.45;color:var(--muted);margin:0}.entry-arrow{flex:0 0 auto;font-size:19px;color:#526f9a}.entry-card.potential .entry-arrow{color:#087c70}@media(max-width:680px){.entry-grid{grid-template-columns:1fr;gap:9px}.entry-card{padding:14px}.entry-copy h2{font-size:15px}}
+/* Primary workspaces: stronger contrast, clearer task descriptions and generous click targets. */
+.entry-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:0 0 20px}
+.entry-card{position:relative;display:grid;grid-template-columns:58px minmax(0,1fr) 28px;align-items:start;gap:16px;min-width:0;min-height:202px;padding:24px 25px;border:1px solid #cbd8e8;border-top:5px solid #2563eb;border-radius:16px;background:linear-gradient(135deg,#fff 0%,#eef5ff 100%);box-shadow:0 7px 22px #17365b12;text-decoration:none;color:var(--ink);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.entry-card:hover{transform:translateY(-3px);border-color:#7da8e8;box-shadow:0 14px 32px #17365b20}
+.entry-card:focus-visible{outline:3px solid #f59e0b;outline-offset:3px}
+.entry-card.potential{border-top-color:#0f988b;background:linear-gradient(135deg,#fff 0%,#e8faf5 100%)}
+.entry-icon{width:58px;height:58px;border-radius:16px;display:grid;place-items:center;background:#dbeafe;color:#174ea6;font-size:29px;font-weight:800}
+.entry-card.potential .entry-icon{background:#c9f3e8;color:#076b60}
+.entry-copy{min-width:0}
+.entry-copy .eyebrow{display:inline-flex;align-items:center;gap:6px;color:#1d4f91;opacity:1;font-size:10px;letter-spacing:.12em}
+.entry-card.potential .entry-copy .eyebrow{color:#08796e}
+.entry-copy h2{font-size:22px;line-height:1.2;letter-spacing:-.035em;margin:7px 0 9px;color:#10233f}
+.entry-copy p{font-size:13px;line-height:1.55;color:#43536a;margin:0}
+.entry-detail{display:block;margin-top:13px;padding-top:12px;border-top:1px solid #d7e2f0;color:#354b67;font-size:12px;line-height:1.5}
+.entry-detail strong{color:#152d4c}
+.entry-card.potential .entry-detail{border-top-color:#c9e9e0;color:#365b56}
+.entry-card.potential .entry-detail strong{color:#075e54}
+.entry-arrow{align-self:start;justify-self:end;display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:#1d4ed8;color:#fff;font-size:19px;font-weight:800}
+.entry-card.potential .entry-arrow{background:#087f73;color:#fff}
+.entry-cta{display:block;margin-top:14px;font-size:12px;font-weight:800;color:#174ea6}
+.entry-card.potential .entry-cta{color:#08796e}
+@media(max-width:900px){.entry-card{grid-template-columns:48px minmax(0,1fr) 26px;gap:12px;padding:20px;min-height:218px}.entry-icon{width:48px;height:48px;font-size:25px}.entry-copy h2{font-size:19px}}
+@media(max-width:680px){.entry-grid{grid-template-columns:1fr;gap:12px;margin-bottom:17px}.entry-card{grid-template-columns:48px minmax(0,1fr) 26px;min-height:0;padding:18px}.entry-copy h2{font-size:19px}.entry-copy p{font-size:13px}.entry-detail{font-size:12px}.entry-cta{margin-top:11px}}
 </style>
 </head>
 <body>
@@ -44,13 +65,27 @@ html[dir="rtl"] body{text-align:right}html[dir="rtl"] .language-picker{direction
 <div id="dataNotice" class="notice">Loading data status…</div>
 
 <section class="entry-grid" aria-label="Choose a GPIR workspace">
-  <a class="entry-card" href="./enterprise.html">
+  <a class="entry-card" href="./enterprise.html" aria-label="Open Local SME Finder: discover business ideas suited to your local resources, skills and capital">
     <span class="entry-icon" aria-hidden="true">↗</span>
-    <span class="entry-copy"><span class="eyebrow">01 · BUSINESS PLANNING</span><h2>Local SME Finder</h2><p>Temukan usaha yang cocok dengan sumber daya, keterampilan, modal, lokasi, dan target pembeli. Cocok untuk mulai atau mengembangkan SME.</p></span><span class="entry-arrow" aria-hidden="true">→</span>
+    <span class="entry-copy">
+      <span class="eyebrow">01 · BUSINESS PLANNING</span>
+      <h2>Local SME Finder</h2>
+      <p>Find practical small-business ideas that match your location, available resources, skills, startup capital and potential buyers.</p>
+      <span class="entry-detail"><strong>Use it to:</strong> explore nearby markets and suppliers, compare ideas to sell, grow or offer as a service, and see why each idea may fit your situation.</span>
+      <span class="entry-cta">Explore business ideas <span aria-hidden="true">→</span></span>
+    </span>
+    <span class="entry-arrow" aria-hidden="true">→</span>
   </a>
-  <a class="entry-card potential" href="./potential.html">
+  <a class="entry-card potential" href="./potential.html" aria-label="Open Potential Explorer: explore places and connections on a world map">
     <span class="entry-icon" aria-hidden="true">⌖</span>
-    <span class="entry-copy"><span class="eyebrow">02 · WORLD MAP EXPLORATION</span><h2>Potential Explorer</h2><p>Drop pin di peta dunia, lalu telusuri hubungan ke atraksi wisata, ekosistem usaha lokal, dan sinyal impor internasional.</p></span><span class="entry-arrow" aria-hidden="true">→</span>
+    <span class="entry-copy">
+      <span class="eyebrow">02 · WORLD MAP EXPLORATION</span>
+      <h2>Potential Explorer</h2>
+      <p>Place and move pins on a world map to explore location-based opportunities and connections between nearby places and global market signals.</p>
+      <span class="entry-detail"><strong>Use it to:</strong> map a location, discover tourism and local-business points of interest, and inspect links to international import signals.</span>
+      <span class="entry-cta">Explore the opportunity map <span aria-hidden="true">→</span></span>
+    </span>
+    <span class="entry-arrow" aria-hidden="true">→</span>
   </a>
 </section>
 
