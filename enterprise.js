@@ -84,7 +84,7 @@
   }
   function matchingTradeRows(opp, profile, limit = 50) {
     if (!tradeItems.length) return [];
-    const terms = [...opp.demand_keywords, ...opp.products, ...opp.resource_keywords];
+    const terms = opp ? [...opp.demand_keywords, ...opp.products, ...opp.resource_keywords] : catalog.flatMap(item => [...item.demand_keywords, ...item.products, ...item.resource_keywords]);
     const profileTerms = profile ? profile.resources : [];
     const allTerms = [...new Set([...terms, ...profileTerms])].map(clean).filter(t => t.length >= 4);
     const unique = new Map();
