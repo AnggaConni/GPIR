@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "note": "Curated business hypotheses. The UI separates selling products, cultivation and services. Supplier/buyer links open search pages and are not verified stock, actual buyers or sales forecasts.",
+  "note": "Curated business hypotheses. The UI separates selling products, cultivation and services. Supplier/buyer links open search pages and are not verified stock, actual buyers or sales forecasts. Tourism fit is a planning hypothesis. It receives local ranking influence only when an explicitly mapped attraction lies within 3 km; it is not evidence of visitor numbers or demand.",
   "opportunities": [
     {
       "id": "coconut-value-added",
@@ -67,7 +67,8 @@
       "map_categories": [
         "market",
         "retail",
-        "food_buyer"
+        "food_buyer",
+        "tourism"
       ],
       "local_input_search": "pengepul kelapa pemasok kemasan pangan",
       "online_input_search": "kemasan pangan food grade alat olah kelapa",
@@ -77,7 +78,10 @@
         "Pilih satu produk sesuai bahan dan alat yang tersedia.",
         "Hitung bahan, hasil jadi, tenaga, energi, kemasan dan ongkir.",
         "Minta 3 calon pembeli menilai sampel/harga sebelum membeli alat."
-      ]
+      ],
+      "tourism_fit": "high",
+      "tourism_buyer_hypothesis": "Tourist kiosks, local-food shops, cafés and guesthouses",
+      "tourism_validation_test": "Offer a small, traceable local product; interview 5 shops and test packaging before stocking."
     },
     {
       "id": "cassava-snacks",
@@ -142,7 +146,8 @@
       "map_categories": [
         "market",
         "retail",
-        "food_buyer"
+        "food_buyer",
+        "tourism"
       ],
       "local_input_search": "supplier singkong toko kemasan makanan",
       "online_input_search": "standing pouch makanan sealer",
@@ -152,7 +157,10 @@
         "Pilih 1 resep dan 1–2 ukuran kemasan.",
         "Hitung biaya bahan, minyak/energi, susut, kemasan dan komisi.",
         "Tawarkan batch kecil ke 3 toko; catat penjualan dan repeat order."
-      ]
+      ],
+      "tourism_fit": "high",
+      "tourism_buyer_hypothesis": "Warung oleh-oleh, cafés, homestays and direct visitors",
+      "tourism_validation_test": "Test 1–2 snack sizes with 3 nearby retailers and track paid sales/reorders."
     },
     {
       "id": "coffee-cacao",
@@ -218,7 +226,8 @@
       "map_categories": [
         "food_buyer",
         "retail",
-        "market"
+        "market",
+        "tourism"
       ],
       "local_input_search": "petani kopi koperasi kakao pemasok kemasan",
       "online_input_search": "pouch kopi valve label kemasan",
@@ -228,7 +237,10 @@
         "Bandingkan 3 lot bahan atau produk jadi.",
         "Minta 5 pembeli menilai rasa, ukuran dan harga.",
         "Pre-sell batch pertama; hitung margin per kemasan."
-      ]
+      ],
+      "tourism_fit": "high",
+      "tourism_buyer_hypothesis": "Cafés, local roasters, souvenir shops and experience-tour operators",
+      "tourism_validation_test": "Offer a traceable small batch or tasting only after checking supply and local buyers."
     },
     {
       "id": "dried-spices",
@@ -305,7 +317,8 @@
       "map_categories": [
         "market",
         "retail",
-        "food_buyer"
+        "food_buyer",
+        "tourism"
       ],
       "local_input_search": "pengepul rempah supplier kemasan makanan",
       "online_input_search": "kemasan bumbu food grade timbangan digital",
@@ -315,7 +328,10 @@
         "Periksa kelembapan, kebersihan dan sumber bahan.",
         "Tanya 5 usaha kuliner tentang jenis, kemasan dan pembelian mingguan.",
         "Hitung hasil kering, energi, kemasan dan harga per gram."
-      ]
+      ],
+      "tourism_fit": "high",
+      "tourism_buyer_hypothesis": "Local-food shops, cooking classes and culinary-tour operators",
+      "tourism_validation_test": "Test a small, labelled pack with nearby food businesses; verify rules and shelf life."
     },
     {
       "id": "fish-shelf-stable",
@@ -383,7 +399,8 @@
       "map_categories": [
         "market",
         "retail",
-        "food_buyer"
+        "food_buyer",
+        "tourism"
       ],
       "local_input_search": "pengepul ikan supplier garam kemasan pangan",
       "online_input_search": "kemasan vakum food grade timbangan",
@@ -393,7 +410,10 @@
         "Catat pasokan harian, harga dan potensi bahan tidak terjual.",
         "Tanya 5 pedagang tentang ukuran, harga dan volume pembelian.",
         "Pastikan proses higienis, kemasan dan izin sebelum dijual."
-      ]
+      ],
+      "tourism_fit": "medium",
+      "tourism_buyer_hypothesis": "Beach-area eateries, fish shops and visitor-oriented food stores",
+      "tourism_validation_test": "Only test where safe processing, refrigeration and legal requirements are met."
     },
     {
       "id": "fruit-preservation",
@@ -463,7 +483,8 @@
       "map_categories": [
         "market",
         "retail",
-        "food_buyer"
+        "food_buyer",
+        "tourism"
       ],
       "local_input_search": "petani buah pemasok kemasan pangan",
       "online_input_search": "kemasan selai food grade alat pengering makanan",
@@ -473,7 +494,10 @@
         "Catat volume/harga buah surplus selama dua minggu.",
         "Ukur berat bahan sebelum/sesudah proses dan biaya hasil jadi.",
         "Uji sampel dengan 3 toko dan pastikan masa simpan/label."
-      ]
+      ],
+      "tourism_fit": "high",
+      "tourism_buyer_hypothesis": "Souvenir shops, cafés, breakfast venues and local gift boxes",
+      "tourism_validation_test": "Test shelf-stable samples with 3 outlets; measure yield, energy, packaging and repeat orders."
     },
     {
       "id": "bamboo-rattan-craft",
@@ -547,7 +571,8 @@
         "retail",
         "market",
         "maker",
-        "food_buyer"
+        "food_buyer",
+        "tourism"
       ],
       "local_input_search": "pemasok bambu rotan toko perkakas",
       "online_input_search": "alat anyaman finishing kayu perlengkapan kerajinan",
@@ -557,7 +582,10 @@
         "Pilih bahan dari sumber legal dan buat 3 prototipe.",
         "Foto dan hitung waktu kerja serta biaya kemasan/kirim.",
         "Tanya 10 calon pembeli; minta uang muka sebelum produksi banyak."
-      ]
+      ],
+      "tourism_fit": "high",
+      "tourism_buyer_hypothesis": "Souvenir shops, hotels, decorators and visitors seeking local crafts",
+      "tourism_validation_test": "Show 2–3 prototypes and produce against paid pre-orders, not speculative stock."
     },
     {
       "id": "textile-craft-micro",
@@ -632,7 +660,8 @@
         "retail",
         "maker",
         "service",
-        "market"
+        "market",
+        "tourism"
       ],
       "local_input_search": "toko kain benang perlengkapan jahit",
       "online_input_search": "perlengkapan jahit bahan aksesori tekstil",
@@ -642,7 +671,10 @@
         "Daftar 3 layanan yang benar-benar mampu dikerjakan.",
         "Hitung jam kerja, bahan dan revisi untuk satu pesanan.",
         "Mulai dari pesanan berbayar; jangan lupakan upah diri sendiri."
-      ]
+      ],
+      "tourism_fit": "high",
+      "tourism_buyer_hypothesis": "Craft shops, visitor centres, tour operators and cultural venues",
+      "tourism_validation_test": "Trial a small demonstration or made-to-order item with a local artisan group."
     },
     {
       "id": "local-aggregation",
@@ -725,7 +757,8 @@
         "market",
         "retail",
         "food_buyer",
-        "supplier"
+        "supplier",
+        "tourism"
       ],
       "local_input_search": "kelompok tani koperasi pasar tradisional",
       "online_input_search": "krat panen perlengkapan packing hasil tani",
@@ -735,7 +768,10 @@
         "Petakan 5 pemasok dan 5 calon pembeli; verifikasi harga/volume.",
         "Ambil pesanan dulu, baru koordinasikan barang dan kirim.",
         "Catat transportasi, barang rusak, keterlambatan pembayaran dan margin jasa."
-      ]
+      ],
+      "tourism_fit": "medium",
+      "tourism_buyer_hypothesis": "Accommodation, cafés, restaurants and local experience operators",
+      "tourism_validation_test": "Confirm buyer quantities first, then aggregate from verified local producers."
     },
     {
       "id": "grow-fast-greens",
@@ -789,7 +825,8 @@
       "map_categories": [
         "market",
         "retail",
-        "food_buyer"
+        "food_buyer",
+        "tourism"
       ],
       "action_summary": "Tanam 1–2 jenis sayur yang cocok dengan air, lahan dan musim. Jangan memperluas sebelum jumlah pembeli dan harga panen diketahui.",
       "rationale": "Budidaya sayur cepat panen dapat diuji kecil jika lahan/pekarangan, air dan waktu perawatan benar-benar tersedia.",
@@ -822,7 +859,10 @@
         "Gunakan sarana produksi sesuai label dan aturan"
       ],
       "export_note": "Untuk usaha mikro, pasar lokal lebih realistis untuk diuji dahulu; ekspor sayuran segar butuh volume, rantai dingin dan aturan karantina.",
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "tourism_fit": "medium",
+      "tourism_buyer_hypothesis": "Restaurants, cafés and lodgings that want regular local produce",
+      "tourism_validation_test": "Get weekly purchase specifications before planting additional volume."
     },
     {
       "id": "grow-plant-nursery",
@@ -874,7 +914,8 @@
         "retail",
         "supplier",
         "market",
-        "institution"
+        "institution",
+        "tourism"
       ],
       "action_summary": "Mulai dari 20–50 bibit yang cocok dengan musim, lalu tambah jenis hanya berdasarkan pesanan.",
       "rationale": "Pembibitan skala kecil dapat memanfaatkan ruang terbatas jika ada air, media, ketelatenan dan pembeli yang bisa diverifikasi.",
@@ -907,7 +948,10 @@
         "Periksa aturan karantina bila melintasi wilayah/negara"
       ],
       "export_note": "Perdagangan tanaman antarnegara dapat memerlukan karantina dan sertifikat fitosanitari; jangan menganggap ekspor sebagai langkah awal.",
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "tourism_fit": "medium",
+      "tourism_buyer_hypothesis": "Guesthouses, garden attractions, local households and landscaping services",
+      "tourism_validation_test": "Check native-plant guidance and pre-orders; avoid collecting protected plants from the wild."
     },
     {
       "id": "sell-compost",
@@ -984,7 +1028,10 @@
         "Permintaan harus dikonfirmasi ke pembeli"
       ],
       "export_note": "Ekspor kompos bukan jalur awal yang disarankan; berat, aturan dan mutu perlu diperiksa.",
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "tourism_fit": "low",
+      "tourism_buyer_hypothesis": "Nurseries, gardens and landscaping businesses",
+      "tourism_validation_test": "Treat tourism as secondary; validate product quality and local demand directly."
     },
     {
       "id": "service-repair",
@@ -1067,7 +1114,10 @@
         "Periksa izin/aturan profesi yang berlaku"
       ],
       "export_note": "Fokuskan jasa ini pada klien lokal; data impor barang bukan bukti permintaan jasa.",
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "tourism_fit": "low",
+      "tourism_buyer_hypothesis": "Local residents and businesses, not tourists by default",
+      "tourism_validation_test": "Tourism is not used as a demand signal unless an actual relevant buyer is identified."
     },
     {
       "id": "service-local-delivery",
@@ -1122,7 +1172,8 @@
         "market",
         "retail",
         "food_buyer",
-        "supplier"
+        "supplier",
+        "tourism"
       ],
       "action_summary": "Gabungkan beberapa pesanan dalam satu rute dan sepakati ongkir sejak awal agar biaya perjalanan tidak ditanggung sendiri.",
       "rationale": "Model jasa ini bisa dimulai tanpa menyimpan stok jika akses transportasi aman dan ada pelanggan berulang.",
@@ -1155,7 +1206,297 @@
         "Sepakati tanggung jawab jika barang terlambat/rusak"
       ],
       "export_note": "Jasa ini berorientasi lokal dan tidak memerlukan ekspor barang.",
-      "evidence_type": "opportunity_hypothesis"
+      "evidence_type": "opportunity_hypothesis",
+      "tourism_fit": "medium",
+      "tourism_buyer_hypothesis": "Souvenir shops, small hotels, food producers and activity operators",
+      "tourism_validation_test": "Pilot a booked delivery route and verify delivery fees, packaging and liability."
+    },
+    {
+      "id": "tourism-souvenir-bundle",
+      "title": "Paket oleh-oleh lokal berbasis pesanan",
+      "products": [
+        "local snack gift box",
+        "small craft gift set",
+        "locally made souvenir bundle"
+      ],
+      "resource_keywords": [
+        "oleh-oleh",
+        "souvenir",
+        "kerajinan",
+        "craft",
+        "snack",
+        "camilan",
+        "kopi",
+        "coffee",
+        "batik",
+        "tenun",
+        "weaving",
+        "local food",
+        "makanan lokal",
+        "kemasan"
+      ],
+      "skill_keywords": [
+        "packaging",
+        "pengemasan",
+        "curation",
+        "kurasi",
+        "branding",
+        "merek",
+        "photography",
+        "fotografi",
+        "sales",
+        "penjualan"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 300000,
+      "capital_max_idr": 3500000,
+      "market_fit": [
+        "local",
+        "both"
+      ],
+      "demand_keywords": [
+        "souvenir",
+        "gift box",
+        "local snack",
+        "handmade",
+        "batik",
+        "coffee",
+        "local food"
+      ],
+      "rationale": "Paket kecil dari produk legal dan bersumber jelas dapat membantu wisatawan membawa pulang produk lokal. Penjualan tetap harus dibuktikan melalui pre-order dan toko mitra.",
+      "first_test": "Pilih 3 produk yang boleh dipasarkan, hitung biaya kemasan dan margin, lalu minta 10 calon pembeli atau 2 toko melakukan pre-order berbayar.",
+      "risks": [
+        "Persetujuan perajin/pemilik motif dan atribusi budaya",
+        "Masa simpan, label pangan dan izin produk",
+        "Kemasan dapat menaikkan biaya dan sampah; hitung ongkir"
+      ],
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "sell",
+      "action_summary": "Kurasi 2–4 produk lokal yang benar-benar dibuat setempat, lalu tawarkan paket kecil berbasis pre-order—bukan membeli stok banyak.",
+      "buy_from": [
+        "Perajin dan produsen pangan lokal yang terverifikasi",
+        "Pemasok kemasan aman, label dan bahan pelindung"
+      ],
+      "sell_to": [
+        "Toko oleh-oleh dan pusat informasi pengunjung",
+        "Akomodasi, pemandu dan operator pengalaman lokal",
+        "Wisatawan melalui pre-order atau toko mitra"
+      ],
+      "channels": [
+        "Tawarkan contoh ke 2 toko/akomodasi yang dekat dengan atraksi",
+        "Gunakan pre-order; catat produk paling sering dibayar dan dipesan ulang"
+      ],
+      "map_categories": [
+        "tourism",
+        "retail",
+        "market",
+        "maker",
+        "food_buyer"
+      ],
+      "local_input_search": "produsen lokal perajin oleh-oleh kemasan",
+      "online_input_search": "kotak kraft food grade label kemasan oleh-oleh",
+      "local_buyer_search": "toko oleh-oleh pusat informasi wisata hotel lokal",
+      "international_search": "local artisan souvenir gift box wholesale",
+      "start_steps": [
+        "Verifikasi asal barang, izin penggunaan motif/cerita, dan persetujuan perajin.",
+        "Hitung biaya produk, kemasan, upah, komisi toko dan ongkir.",
+        "Uji pre-order kecil; catat penjualan berbayar, retur, dan pesanan ulang."
+      ],
+      "tourism_fit": "high",
+      "tourism_buyer_hypothesis": "Toko oleh-oleh, penginapan, operator tur dan wisatawan",
+      "tourism_validation_test": "Tunjukkan contoh paket ke 2 toko/akomodasi dan cari pre-order berbayar sebelum membeli stok."
+    },
+    {
+      "id": "craft-workshop-experience",
+      "title": "Lokakarya kerajinan bersama perajin lokal",
+      "products": [
+        "batik or weaving mini-workshop",
+        "pottery or carving demonstration",
+        "hands-on local craft session"
+      ],
+      "resource_keywords": [
+        "batik",
+        "tenun",
+        "weaving",
+        "bambu",
+        "bamboo",
+        "rotan",
+        "rattan",
+        "kerajinan",
+        "craft",
+        "gerabah",
+        "pottery",
+        "ukiran",
+        "carving",
+        "studio",
+        "workshop"
+      ],
+      "skill_keywords": [
+        "mengajar",
+        "teaching",
+        "demonstration",
+        "demonstrasi",
+        "craft",
+        "kerajinan",
+        "weaving",
+        "menenun",
+        "batik",
+        "pottery",
+        "safety",
+        "keselamatan",
+        "hospitality",
+        "keramahtamahan"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 500000,
+      "capital_max_idr": 5000000,
+      "market_fit": [
+        "local",
+        "both"
+      ],
+      "demand_keywords": [
+        "craft workshop",
+        "cultural experience",
+        "batik",
+        "weaving",
+        "pottery",
+        "artisan"
+      ],
+      "rationale": "Pengunjung dapat membayar pengalaman singkat selain membeli produk. Kegiatan hanya layak jika perajin setempat setuju, mendapatkan imbalan adil, dan kapasitas serta keselamatan sudah dipastikan.",
+      "first_test": "Bersama satu perajin, rancang sesi 45–90 menit, tetapkan upah/kapasitas dan biaya bahan, lalu uji dengan kelompok kecil yang dipesan sebelumnya.",
+      "risks": [
+        "Persetujuan komunitas, hak budaya dan motif sakral",
+        "Keselamatan alat/bahan, aksesibilitas dan asuransi/aturan setempat",
+        "Pembagian pendapatan dan beban kerja harus disepakati"
+      ],
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "service",
+      "action_summary": "Buat pengalaman 45–90 menit bersama perajin yang bersedia, dengan harga, kapasitas, upah perajin dan keselamatan yang jelas.",
+      "buy_from": [
+        "Perajin/kelompok perajin setempat sebagai mitra dan pemilik pengetahuan",
+        "Bahan latihan, alat pelindung, perlengkapan kebersihan dan reservasi"
+      ],
+      "sell_to": [
+        "Pemandu dan operator tur lokal",
+        "Penginapan, museum/desa wisata dan pusat pengunjung yang bersedia bermitra",
+        "Kelompok sekolah atau wisatawan yang memesan sesi"
+      ],
+      "channels": [
+        "Susun satu sesi pilot dengan harga dan pembagian pendapatan yang disetujui",
+        "Uji lewat satu mitra; ukur biaya bahan, jam kerja dan ulasan peserta"
+      ],
+      "map_categories": [
+        "tourism",
+        "maker",
+        "retail",
+        "institution"
+      ],
+      "local_input_search": "kelompok perajin lokal workshop kerajinan",
+      "online_input_search": "bahan latihan alat pelindung kerajinan",
+      "local_buyer_search": "operator tur lokal desa wisata museum penginapan",
+      "international_search": "local craft workshop cultural experience partners",
+      "start_steps": [
+        "Minta persetujuan perajin dan sepakati hak atas cerita/motif serta pembagian pendapatan.",
+        "Hitung durasi, kapasitas aman, biaya bahan, upah, transportasi dan pembatalan.",
+        "Adakan satu pilot berbasis reservasi; hanya lanjut jika perajin dan peserta sepakat."
+      ],
+      "tourism_fit": "high",
+      "tourism_buyer_hypothesis": "Operator tur, penginapan, museum/desa wisata dan kelompok pengunjung",
+      "tourism_validation_test": "Jalankan satu sesi reservasi bersama perajin dan catat pendapatan bersih serta umpan balik peserta."
+    },
+    {
+      "id": "local-tour-guide-experience",
+      "title": "Jasa pemandu jalan kaki atau cerita lokal",
+      "products": [
+        "guided neighbourhood walk",
+        "local food and craft walk",
+        "heritage interpretation session"
+      ],
+      "resource_keywords": [
+        "pengetahuan lokal",
+        "local knowledge",
+        "sejarah",
+        "history",
+        "budaya",
+        "culture",
+        "cerita lokal",
+        "storytelling",
+        "bahasa",
+        "language",
+        "jalur jalan kaki",
+        "walking route",
+        "wisata"
+      ],
+      "skill_keywords": [
+        "pemandu",
+        "guide",
+        "storytelling",
+        "bercerita",
+        "bahasa",
+        "language",
+        "first aid",
+        "pertolongan pertama",
+        "navigation",
+        "navigasi",
+        "hospitality",
+        "keramahtamahan",
+        "customer service"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 250000,
+      "capital_max_idr": 2500000,
+      "market_fit": [
+        "local",
+        "both"
+      ],
+      "demand_keywords": [
+        "local guide",
+        "walking tour",
+        "heritage tour",
+        "food tour",
+        "cultural tour"
+      ],
+      "rationale": "Jasa berbasis cerita tempat dapat dimulai dengan biaya alat rendah, tetapi harus mengutamakan ketepatan informasi, keselamatan, izin yang berlaku dan manfaat untuk komunitas lokal.",
+      "first_test": "Rancang satu rute pendek yang aman, verifikasi cerita dengan sumber/komunitas, hitung durasi dan biaya, lalu uji reservasi dengan 3–5 peserta.",
+      "risks": [
+        "Informasi sejarah/budaya harus diverifikasi dan tidak menampilkan pengetahuan sensitif tanpa izin",
+        "Keselamatan rute, cuaca, aksesibilitas, izin dan kewajiban lokal",
+        "Permintaan musiman; jangan mengandalkan pengunjung yang tidak terkonfirmasi"
+      ],
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "service",
+      "action_summary": "Mulai dari satu rute pendek dan cerita yang sudah diverifikasi; uji hanya melalui reservasi dan jangan menjanjikan akses ke situs yang tidak diizinkan.",
+      "buy_from": [
+        "Peta/rute dan sumber informasi terverifikasi",
+        "Perlengkapan keselamatan dasar, komunikasi dan sistem reservasi"
+      ],
+      "sell_to": [
+        "Pengunjung yang meminta pengalaman lokal",
+        "Penginapan atau operator tur sebagai mitra rujukan",
+        "Sekolah/komunitas melalui kegiatan terjadwal"
+      ],
+      "channels": [
+        "Uji 1 rute bersama calon mitra akomodasi/pemandu resmi",
+        "Gunakan reservasi berbayar; ukur waktu, ongkos, kapasitas dan feedback"
+      ],
+      "map_categories": [
+        "tourism",
+        "institution",
+        "food_buyer",
+        "retail"
+      ],
+      "local_input_search": "pemandu wisata lokal pelatihan pertolongan pertama",
+      "online_input_search": "alat pertolongan pertama botol minum peta wisata",
+      "local_buyer_search": "operator tur lokal penginapan desa wisata",
+      "international_search": "local walking tour cultural guide partners",
+      "start_steps": [
+        "Verifikasi fakta, minta persetujuan bila memakai cerita/ruang komunitas, dan cek aturan pemanduan lokal.",
+        "Pilih rute pendek yang aman; hitung waktu, transportasi, kapasitas dan biaya operasional.",
+        "Uji reservasi dengan grup kecil dan minta feedback sebelum menambah jadwal."
+      ],
+      "tourism_fit": "high",
+      "tourism_buyer_hypothesis": "Wisatawan melalui mitra penginapan, operator tur dan kegiatan komunitas",
+      "tourism_validation_test": "Uji satu rute dengan reservasi berbayar; cek keselamatan, kepuasan dan margin setelah biaya."
     }
   ]
 }
