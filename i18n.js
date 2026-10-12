@@ -1,13 +1,13 @@
 (function(){
 "use strict";
 const LANGS={
- id:{name:"Bahasa Indonesia",dir:"ltr",title:"GPIR — Radar Intelijen Produk Global"},
- en:{name:"English",dir:"ltr",title:"GPIR — Global Product Intelligence Radar"},
- es:{name:"Español",dir:"ltr",title:"GPIR — Radar global de inteligencia de productos"},
- fr:{name:"Français",dir:"ltr",title:"GPIR — Radar mondial d’intelligence produit"},
- ar:{name:"العربية",dir:"rtl",title:"GPIR — رادار ذكاء المنتجات العالمي"},
- zh:{name:"中文",dir:"ltr",title:"GPIR — 全球产品情报雷达"},
- ru:{name:"Русский",dir:"ltr",title:"GPIR — Глобальный радар продуктовой аналитики"}
+ id:{name:"Bahasa Indonesia",dir:"ltr",title:"GPIR — Radar Intelijen Produk Global",localTitle:"GPIR — Pencari Peluang Usaha Lokal"},
+ en:{name:"English",dir:"ltr",title:"GPIR — Global Product Intelligence Radar",localTitle:"GPIR — Local Enterprise Opportunity Finder"},
+ es:{name:"Español",dir:"ltr",title:"GPIR — Radar global de inteligencia de productos",localTitle:"GPIR — Buscador de oportunidades empresariales locales"},
+ fr:{name:"Français",dir:"ltr",title:"GPIR — Radar mondial d’intelligence produit",localTitle:"GPIR — Recherche d’opportunités locales"},
+ ar:{name:"العربية",dir:"rtl",title:"GPIR — رادار ذكاء المنتجات العالمي",localTitle:"GPIR — مستكشف فرص الأعمال المحلية"},
+ zh:{name:"中文",dir:"ltr",title:"GPIR — 全球产品情报雷达",localTitle:"GPIR — 本地创业机会查找器"},
+ ru:{name:"Русский",dir:"ltr",title:"GPIR — Глобальный радар продуктовой аналитики",localTitle:"GPIR — Поиск возможностей для местного бизнеса"}
 };
 const KEY="gpir.uiLanguage.v1";
 const norm=s=>String(s==null?"":s).replace(/\s+/g," ").trim();
@@ -243,7 +243,7 @@ function applyLanguage(lang){
  document.documentElement.lang=lang==="zh"?"zh-CN":lang;document.documentElement.dir=LANGS[lang].dir;
  try{localStorage.setItem(KEY,lang);}catch(_){}
  const select=document.getElementById("gpirLanguage");if(select)select.value=lang;
- document.title=LANGS[lang].title;translateTextNodes(document.body);translateAttributes(document.body);
+ document.title=document.getElementById("findBtn")?LANGS[lang].localTitle:LANGS[lang].title;translateTextNodes(document.body);translateAttributes(document.body);
  document.documentElement.dataset.gpirLanguage=lang;
  document.dispatchEvent(new CustomEvent("gpir:languagechange",{detail:{language:lang}}));
 }
