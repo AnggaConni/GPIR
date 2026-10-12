@@ -28,6 +28,9 @@ html[dir="rtl"] body{text-align:right}html[dir="rtl"] .language-picker{direction
 @media(max-width:620px){.language-picker{width:100%;justify-content:space-between;order:-1}.language-picker select{flex:1;max-width:none}.language-picker button{min-height:39px}}
 
 .home-flow-step.is-active{border-color:#60a5fa;box-shadow:0 0 0 2px #60a5fa99,0 0 20px #60a5fa55;background:linear-gradient(150deg,#eff6ff,#f0fdf4);animation:gpirHomeGlow 1.8s ease-in-out infinite}.home-rec-card.is-selected{border-color:#60a5fa;box-shadow:0 0 0 2px #60a5fa66,0 0 18px #60a5fa33}@keyframes gpirHomeGlow{0%,100%{box-shadow:0 0 0 2px #60a5fa66,0 0 12px #60a5fa22}50%{box-shadow:0 0 0 3px #60a5fa99,0 0 22px #60a5fa66}}@media(prefers-reduced-motion:reduce){.home-flow-step.is-active{animation:none}}
+
+/* Two primary entry points: solve an SME question or explore a location-to-market potential map. */
+.entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 16px}.entry-card{display:flex;align-items:center;gap:14px;min-width:0;padding:17px 19px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(115deg,#fff,#f6f9ff);box-shadow:0 8px 28px #0c214208;text-decoration:none;color:var(--ink);transition:transform .18s ease,box-shadow .18s ease}.entry-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px #0c214214}.entry-card.potential{background:linear-gradient(115deg,#fff,#effaf7)}.entry-icon{flex:0 0 46px;height:46px;border-radius:13px;display:grid;place-items:center;background:#e8f0ff;color:#205fc1;font-size:23px}.entry-card.potential .entry-icon{background:#d9f5ee;color:#087c70}.entry-copy{flex:1;min-width:0}.entry-copy .eyebrow{color:#2563a6;opacity:1}.entry-copy h2{font-size:17px;letter-spacing:-.025em;margin:3px 0 4px}.entry-copy p{font-size:11px;line-height:1.45;color:var(--muted);margin:0}.entry-arrow{flex:0 0 auto;font-size:19px;color:#526f9a}.entry-card.potential .entry-arrow{color:#087c70}@media(max-width:680px){.entry-grid{grid-template-columns:1fr;gap:9px}.entry-card{padding:14px}.entry-copy h2{font-size:15px}}
 </style>
 </head>
 <body>
@@ -36,9 +39,20 @@ html[dir="rtl"] body{text-align:right}html[dir="rtl"] .language-picker{direction
   <select id="gpirLanguage" aria-label="Choose interface language">
     <option value="id">Bahasa Indonesia</option><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="ar">العربية</option><option value="zh">中文</option><option value="ru">Русский</option>
   </select><button id="gpirLanguageAuto" type="button" title="Detect language from browser settings">Auto</button>
-</div><a class="btn" href="./enterprise.html">Local SME Finder ↗</a><a class="btn" href="./tourism.html">Tourism SME Explorer ↗</a><a class="btn" href="https://comtradeapi.un.org/" target="_blank" rel="noopener">UN Comtrade ↗</a><a class="btn" href="https://api.worldbank.org/v2/" target="_blank" rel="noopener">World Bank ↗</a><button id="reload">Reload data ↻</button></div></header>
+</div><a class="btn" href="./enterprise.html">Local SME Finder ↗</a><a class="btn" href="./tourism.html">Potential Explorer ↗</a><a class="btn" href="https://comtradeapi.un.org/" target="_blank" rel="noopener">UN Comtrade ↗</a><a class="btn" href="https://api.worldbank.org/v2/" target="_blank" rel="noopener">World Bank ↗</a><button id="reload">Reload data ↻</button></div></header>
 <main>
 <div id="dataNotice" class="notice">Loading data status…</div>
+
+<section class="entry-grid" aria-label="Choose a GPIR workspace">
+  <a class="entry-card" href="./enterprise.html">
+    <span class="entry-icon" aria-hidden="true">↗</span>
+    <span class="entry-copy"><span class="eyebrow">01 · BUSINESS PLANNING</span><h2>Local SME Finder</h2><p>Temukan usaha yang cocok dengan sumber daya, keterampilan, modal, lokasi, dan target pembeli. Cocok untuk mulai atau mengembangkan SME.</p></span><span class="entry-arrow" aria-hidden="true">→</span>
+  </a>
+  <a class="entry-card potential" href="./tourism.html">
+    <span class="entry-icon" aria-hidden="true">⌖</span>
+    <span class="entry-copy"><span class="eyebrow">02 · WORLD MAP EXPLORATION</span><h2>Potential Explorer</h2><p>Drop pin di peta dunia, lalu telusuri hubungan ke atraksi wisata, ekosistem usaha lokal, dan sinyal impor internasional.</p></span><span class="entry-arrow" aria-hidden="true">→</span>
+  </a>
+</section>
 
 <section class="home-local panel" id="homeLocalFinder" aria-labelledby="homeLocalTitle">
   <div class="home-local-heading">
