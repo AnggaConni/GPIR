@@ -4,6 +4,7 @@ An open-data starter to screen product–market opportunities using UN Comtrade 
 
 ## Features
 - Location-first homepage with permission-based geolocation, manual location search, nearby mapped places, and starter recommendations for selling, cultivation and services.
+- Integrated SME Finder ranking: user resources/skills and stage (start or grow), tourism proximity within 3 km, mapped buyer/supplier/retail leads within 5 km, and matching trade/import records all contribute to a transparent opportunity ranking.
 - Shared language selector for Indonesian, English, and the six official UN languages; users may choose manually or use browser-language detection.
 - Responsive global dashboard, interactive map, product search, country filters and opportunity rankings.
 - Python pipelines for quota-limited UN Comtrade trade data and scheduled tourism/heritage/context snapshots.
@@ -65,13 +66,18 @@ Edit `config/markets.json` to set ISO-3 reporter markets. Optional environment v
 
 ## Local Enterprise Opportunity Finder
 
-Open `enterprise.html` from the GitHub Pages site to explore microenterprise ideas matched to user-entered local resources, skills, startup budget, and target market.
+Open `enterprise.html` from GitHub Pages for the primary **Local SME Opportunity Finder**. It combines user-entered local resources, skills, budget, target buyer, and business stage with tourism and market context.
 
-- `data/opportunity_catalog.json` contains curated hypotheses with illustrative capital bands, suggested low-cost validation tests, and risks.
-- The page matches these ideas against `data/data.json` trade signals when product descriptions align.
-- Users can record available local resources in browser-local storage and export/import a JSON copy.
-- Nearby mapped businesses can be searched on demand through OpenStreetMap/Overpass using coordinates or browser geolocation.
-- Inputs and inventory are not sent to a server or shared by this static prototype.
+- The ranking gives stronger tourism relevance to ideas such as local guides, food stalls, souvenirs and craft experiences when a mapped attraction is within 3 km. This is a proximity signal, not a visitor count.
+- Without nearby tourism, ideas can still rank well through resource/skill fit, mapped local buyer/supplier leads, and matching UN Comtrade product-import signals.
+- The catalogue includes a small local food-stall idea and a craft/souvenir consignment kiosk alongside cultivation, processing and service ideas.
+- Start mode emphasizes low-cost tests; grow mode emphasizes repeat buyers, margin, quality consistency, capacity and cash flow.
+- `data/opportunity_catalog.json` contains curated business hypotheses, illustrative capital bands, buyer hypotheses, validation tests and risks.
+- Matching rows from `data/data.json` are trade/import statistics, not local retail sales, confirmed buyers, or sales forecasts.
+- Users can record resources in browser-local storage and export/import JSON. Nearby mapped places are queried on demand through OpenStreetMap/Overpass.
+- Inputs and inventory remain in the browser; this static prototype does not send the business profile to a GPIR server.
+
+The separate `tourism.html` page remains available for deeper UN Tourism worksheet exploration. It loads one selected worksheet at a time rather than all bulk JSON files on page load.
 
 **Evidence warning:** the UI fit score measures relevance to submitted inputs only. UN Comtrade values are reported imports, not local marketplace sell-through. Overpass locations do not prove the business is open or that it has stock. Catalogue ideas are hypotheses, not sales predictions. See [Local Enterprise Opportunity Finder documentation](docs/LOCAL_ENTERPRISE_OPPORTUNITY_FINDER.md) for source limitations, costs, validation gates, and roadmap.
 
