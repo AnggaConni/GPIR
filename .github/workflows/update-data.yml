@@ -1,0 +1,45 @@
+name: Update trade data
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 2 * * 1"
+  push:
+    paths:
+      - "scripts/**"
+      - "config/settings.json"
+      - "tests/**"
+      - "requirements.txt"
+      - ".github/workflows/update-data.yml"
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+      - name: Refresh data
+        env:
+          COMTRADE_API_KEY: ${{ secrets.COMTRADE_API_KEY }}
+          COMTRADE_PUBLIC: "true"
+        run: python scripts/build_data.py
+      - name: Commit changed data
+        run: |
+          if ! git diff --quiet -- data/data.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/data.json
+            git commit -m "chore(data): refresh trade opportunity signals"
+            git push
+          else
+            echo "No data changes detected."
+          fi
