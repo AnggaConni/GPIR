@@ -26,6 +26,14 @@
 html[dir="rtl"] body{text-align:right}html[dir="rtl"] .language-picker{direction:rtl}html[dir="rtl"] input,html[dir="rtl"] textarea{text-align:right}
 @media(max-width:620px){.language-picker{width:100%;justify-content:space-between;order:-1}.language-picker select{flex:1;max-width:none}.language-picker button{min-height:39px}}
 
+
+.pathway-section-title{scroll-margin-top:18px;border-radius:12px;padding:9px 11px;transition:background .25s,box-shadow .25s}
+.pathway-section-title.is-active{background:linear-gradient(90deg,#eff6ff,#f0fdf4);box-shadow:0 0 0 2px #60a5fa,0 0 18px #60a5fa66}
+.rec{transition:transform .18s,box-shadow .25s,border-color .25s}
+.rec.is-selected{border:1px solid #60a5fa;box-shadow:0 0 0 2px #60a5fa66,0 0 22px #60a5fa33;transform:translateY(-1px)}
+.flow-step.is-active{border-color:#60a5fa;box-shadow:0 0 0 2px #60a5fa99,0 0 22px #60a5fa66;background:linear-gradient(150deg,#eff6ff,#f0fdf4);animation:gpirGlow 1.8s ease-in-out infinite}
+@keyframes gpirGlow{0%,100%{box-shadow:0 0 0 2px #60a5fa66,0 0 12px #60a5fa22}50%{box-shadow:0 0 0 3px #60a5fa99,0 0 24px #60a5fa77}}
+@media(prefers-reduced-motion:reduce){.flow-step.is-active{animation:none}.rec,.pathway-section-title{transition:none}}
 </style>
 </head>
 <body>
@@ -48,15 +56,16 @@ html[dir="rtl"] body{text-align:right}html[dir="rtl"] .language-picker{direction
       <div class="field location-search-field"><label for="locationSearch">Cari lokasi pilihan</label><input id="locationSearch" type="search" autocomplete="off" placeholder="Contoh: Kecamatan Wonosari, Gunungkidul"><div class="hint">Cari hanya saat tombol ditekan; tidak ada autocomplete.</div></div>
       <button class="primary location-action" id="locationSearchBtn" type="button">Cari lokasi</button>
       <button id="geoBtn" class="location-action" type="button">◎ Deteksi lokasi saya</button>
-      <div class="field"><label for="radius">Radius analisis</label><select id="radius"><option value="1000">1 km</option><option value="3000" selected>3 km</option><option value="5000">5 km</option><option value="10000">10 km</option></select></div>
-      <button id="nearbyBtn" class="location-action" type="button">Perbarui titik sekitar</button>
+      <div class="field"><label for="coverage">Cakupan peta</label><select id="coverage"><option value="nearby">Sekitar lokasi</option><option value="area">Seluruh kota/area terpilih</option></select></div>
+      <div class="field"><label for="radius">Radius analisis</label><select id="radius"><option value="1000">1 km</option><option value="3000" selected>3 km</option><option value="5000">5 km</option><option value="10000">10 km</option><option value="15000">15 km</option></select></div>
+      <button id="nearbyBtn" class="location-action" type="button">Perbarui peta</button>
     </div>
     <div class="location-summary"><div><span class="tiny">Area aktif</span><strong id="locationName">Belum dipilih</strong></div><p id="locationStatus" role="status" aria-live="polite">Browser akan meminta izin lokasi. Jika ditolak, cari nama kecamatan/kota secara manual.</p></div>
     <input id="lat" type="hidden"><input id="lon" type="hidden">
     <p class="privacy-note">Lokasi perangkat hanya dipakai setelah browser memberi izin. Koordinat/kueri diteruskan ke layanan OpenStreetMap untuk pencarian, bukan ke server GPIR. Geocoding publik memiliki batas penggunaan dan cache. <a href="https://operations.osmfoundation.org/policies/nominatim/" target="_blank" rel="noopener noreferrer">Kebijakan geocoding ↗</a></p>
   </section>
 
-  <div class="section-title"><div><h2>2 · Ceritakan kondisi usaha Anda</h2><p>Mulai dari kecamatan/kota kecil, modal mikro, keterampilan, dan sumber daya yang benar-benar tersedia.</p></div><span class="pill">LOCAL-FIRST · OPEN DATA</span></div>
+  <div class="section-title"><div><h2>2 · Ceritakan kondisi usaha Anda</h2><p>Untuk usaha mikro, kecil, dan menengah (UMKM/SME). Pilih skala, modal, keterampilan, sumber daya, serta calon pembelinya.</p></div><span class="pill">LOCAL-FIRST · OPEN DATA</span></div>
   <div class="layout">
     <section class="panel">
       <div class="panel-head"><div><h2>Profil usaha</h2><p>Informasi ini digunakan untuk menyesuaikan ide, bukan dibagikan ke server.</p></div><span class="pill gray">INPUT PENGGUNA</span></div>
@@ -64,8 +73,10 @@ html[dir="rtl"] body{text-align:right}html[dir="rtl"] .language-picker{direction
         <div class="form-grid">
           <div class="field"><label for="district">Kecamatan / kota kecil</label><input id="district" placeholder="Contoh: Wonosari"></div>
           <div class="field"><label for="province">Kabupaten / provinsi</label><input id="province" placeholder="Contoh: Gunungkidul, DIY"></div>
-          <div class="field"><label for="capital">Modal awal</label><select id="capital"><option value="micro">Sangat terbatas (usaha mikro)</option><option value="small">Usaha kecil / peralatan dasar</option><option value="growth">Produksi / pengolahan lebih besar</option></select></div>
-          <div class="field"><label for="targetMarket">Target pasar</label><select id="targetMarket"><option value="both">Pasar lokal + kemungkinan ekspor</option><option value="local">Lokal / regional dahulu</option><option value="international">Pasar internasional</option></select></div>
+          <div class="field"><label for="capital">Modal awal tersedia</label><select id="capital"><option value="micro">Sangat terbatas · usaha mikro</option><option value="small">Modal usaha kecil</option><option value="medium">Modal pengembangan usaha menengah</option></select></div>
+          <div class="field"><label for="businessScale">Skala usaha yang ingin dibangun</label><select id="businessScale"><option value="micro">Mikro / usaha rumahan</option><option value="small">Kecil / UMKM berkembang</option><option value="medium">Menengah / SME supplier</option><option value="scalable">Mulai kecil, lalu scale-up</option></select></div>
+          <div class="field"><label for="targetMarket">Cakupan pasar</label><select id="targetMarket"><option value="both">Lokal + kemungkinan ekspor</option><option value="local">Lokal / regional dahulu</option><option value="international">Internasional</option></select></div>
+          <div class="field"><label for="buyerSegment">Calon pelanggan utama</label><select id="buyerSegment"><option value="mixed">Campuran / belum ditentukan</option><option value="consumers">Konsumen rumah tangga</option><option value="msme">UMKM: mikro, kecil, menengah</option><option value="business">Perusahaan, institusi, grosir</option><option value="export">Importir / distributor luar negeri</option></select></div>
           <div class="field full"><label for="resources">Sumber daya yang tersedia</label><textarea id="resources" placeholder="Contoh: kelapa, singkong, ikan, bambu, kakao, rempah, limbah pertanian…"></textarea><div class="hint">Pisahkan dengan koma. Cantumkan hanya sumber daya yang benar-benar ada atau bisa diperoleh.</div></div>
           <div class="field full"><label for="skills">Keterampilan / aset yang dimiliki</label><textarea id="skills" placeholder="Contoh: memasak, menjahit, pengeringan, sepeda motor untuk distribusi, ruang kosong, kelompok tani…"></textarea></div>
         </div>
@@ -101,7 +112,7 @@ html[dir="rtl"] body{text-align:right}html[dir="rtl"] .language-picker{direction
     <div class="stat"><span>Sinyal perdagangan</span><strong id="tradeMatches">0</strong><small>Item GPIR yang cocok</small></div>
   </div>
   <div id="recommendations" class="rec-list"><div class="panel empty">Memuat rekomendasi usaha…</div></div>
-  <div class="section-title"><div><h2>4 · Visualisasi rantai peluang</h2><p>Hubungan input lokal → produk/jasa → calon pembeli → titik sekitar → sinyal pasar luar. Garis bukan kontrak dagang.</p></div><span class="pill">RELATIONSHIP MAP</span></div>
+  <div class="section-title pathway-section-title" id="pathwaySection"><div><h2>4 · Visualisasi rantai peluang</h2><p>Hubungan input lokal → produk/jasa → calon pembeli → titik sekitar → sinyal pasar luar. Garis bukan kontrak dagang.</p></div><span class="pill">RELATIONSHIP MAP</span></div>
   <section class="panel relationship-panel"><div class="panel-head"><div><h2 id="relationshipTitle">Pilih satu rekomendasi</h2><p id="relationshipSummary">Alur akan menyesuaikan pilihan usaha dan titik terpetakan.</p></div><span id="relationshipStatus" class="pill gray">MENUNGGU PILIHAN</span></div><div id="relationshipVisual" class="relationship-flow"><div class="empty">Peta rantai peluang akan muncul di sini.</div></div><div class="evidence-note">Garis menunjukkan logika rekomendasi. Titik OpenStreetMap adalah petunjuk lokasi, bukan bukti buyer aktif. Sinyal impor adalah statistik negara, bukan daftar importir.</div></section>
 
 
