@@ -140,7 +140,27 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
 
     generated_at = utc_now()
     output_dir.mkdir(parents=True, exist_ok=True)
-    # Stage extraction and all JSON output outside the published snapshot.
+    final_json = output_dir / "sheets"
+    final_manifest = output_dir / "manifest.json"
+    staged_json = output_dir / "sheets.next"
+    staged_manifest = output_dir / "manifest.json.tmp"
+    backup_json = output_dir / "sheets.previous"
+    backup_manifest = output_dir / "manifest.json.previous"
+
+    # Recover a prior snapshot if a previous process was interrupted during promotion.
+    if not final_json.exists() and backup_json.exists():
+        backup_json.replace(final_json)
+    if not final_manifest.exists() and backup_manifest.exists():
+        backup_manifest.replace(final_manifest)
+
+    for path in (staged_json, staged_manifest):
+        if path.is_dir():
+            shutil.rmtree(path)
+        elif path.exists():
+            path.unlink()
+
+    # Extract and convert in an isolated temporary area. Excel workbooks themselves
+    # are not copied into the published output: only JSON sheets and a manifest remain.
     with tempfile.TemporaryDirectory(prefix="gpir-un-tourism-") as temp_root:
         staging = Path(temp_root)
         temp_extract = staging / "extracted"
@@ -171,49 +191,44 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
             },
             "worksheets": report
         }
-        manifest_tmp = staging / "manifest.json"
-        manifest_tmp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2) + "\\n"
+        # Stage the final files on the output filesystem, so directory replacement
+        # does not depend on /tmp and the repository sharing the same mount.
+        shutil.copytree(temp_json, staged_json)
+        staged_manifest.write_text(manifest_text, encoding="utf-8")
 
-        final_extract, final_json = output_dir / "extracted", output_dir / "sheets"
-        old_extract, old_json = output_dir / "extracted.previous", output_dir / "sheets.previous"
-        old_manifest = output_dir / "manifest.json.previous"
-        manifest_path = output_dir / "manifest.json"
-        manifest_tmp_path = output_dir / "manifest.json.tmp"
-        for old in (old_extract, old_json, old_manifest):
-            if old.exists():
-                if old.is_dir():
-                    shutil.rmtree(old)
-                else:
-                    old.unlink()
-        # Move the prior snapshot aside, then restore all prior components if promotion fails.
-        if final_extract.exists():
-            final_extract.replace(old_extract)
+    # Keep backups until both outputs have been promoted successfully.
+    if backup_json.exists():
+        shutil.rmtree(backup_json)
+    if backup_manifest.exists():
+        backup_manifest.unlink()
+    if final_json.exists():
+        final_json.replace(backup_json)
+    if final_manifest.exists():
+        final_manifest.replace(backup_manifest)
+    try:
+        staged_json.replace(final_json)
+        staged_manifest.replace(final_manifest)
+    except Exception:
         if final_json.exists():
-            final_json.replace(old_json)
-        if manifest_path.exists():
-            manifest_path.replace(old_manifest)
-        try:
-            temp_extract.replace(final_extract)
-            temp_json.replace(final_json)
-            manifest_tmp_path.write_text(manifest_tmp.read_text(encoding="utf-8"), encoding="utf-8")
-            manifest_tmp_path.replace(manifest_path)
-        except Exception:
-            shutil.rmtree(final_extract, ignore_errors=True)
             shutil.rmtree(final_json, ignore_errors=True)
-            manifest_tmp_path.unlink(missing_ok=True)
-            if old_extract.exists():
-                old_extract.replace(final_extract)
-            if old_json.exists():
-                old_json.replace(final_json)
-            if old_manifest.exists():
-                old_manifest.replace(manifest_path)
-            raise
-        shutil.rmtree(old_extract, ignore_errors=True)
-        shutil.rmtree(old_json, ignore_errors=True)
-        old_manifest.unlink(missing_ok=True)
-    LOG.info("Exported %d worksheets from %d workbooks to %s", len(report), len(workbooks), output_dir / "sheets")
-    return manifest
+        if staged_json.exists():
+            shutil.rmtree(staged_json, ignore_errors=True)
+        staged_manifest.unlink(missing_ok=True)
+        if backup_json.exists():
+            backup_json.replace(final_json)
+        if backup_manifest.exists():
+            backup_manifest.replace(final_manifest)
+        raise
+    shutil.rmtree(backup_json, ignore_errors=True)
+    backup_manifest.unlink(missing_ok=True)
 
+    # Remove artefacts written by older importer versions; they aren't needed by the UI.
+    legacy_extract = output_dir / "extracted"
+    if legacy_extract.exists():
+        shutil.rmtree(legacy_extract, ignore_errors=True)
+    LOG.info("Exported %d worksheets from %d workbooks to %s", len(report), len(workbooks), final_json)
+    return manifest
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
