@@ -7,19 +7,24 @@ const fmtMoney=v=>v==null||!Number.isFinite(Number(v))?"—":new Intl.NumberForm
 const fmtPct=v=>v==null||!Number.isFinite(Number(v))?"—":(Number(v)>0?"+":"")+Number(v).toFixed(1)+"%";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const num=v=>v==null||v===""||!Number.isFinite(Number(v))?null:Number(v);
-function normalize(raw){
+function normalize(raw,marketContext=null){
  const rows=Array.isArray(raw)?raw:(raw.records||raw.items||raw.data||[]);
  const meta=raw.meta||raw.metadata||{};
+ const contextCountries=marketContext&&marketContext.countries?marketContext.countries:{};
  return rows.map((r,i)=>{
   const product=r.product||{},market=r.market||{},trade=r.trade||{},assessment=r.assessment||{},evidence=r.evidence||{};
-  return {...r,_id:r.id||[product.hs_code||r.product_code,market.country_iso3||r.market_iso3,trade.period||r.latest_year,i].join("-"),
+  const iso=market.country_iso3||r.market_iso3||"";
+  const ctx=contextCountries[iso]||{};
+  return {...r,_id:r.id||[product.hs_code||r.product_code,iso,trade.period||r.latest_year,i].join("-"),
    _productName:product.name||r.product_name||"Unknown product",_hs:String(product.hs_code??r.product_code??r.hs_code??""),
-   _country:market.country_name||r.market_name||"Unknown market",_iso:market.country_iso3||r.market_iso3||"",
+   _country:market.country_name||r.market_name||ctx.name||"Unknown market",_iso:iso,
    _period:String(trade.period??r.latest_year??r.period??""),_value:num(trade.value_usd??r.latest_import_usd??r.value_usd??r.primaryValue),
    _growth:num(trade.yoy_growth_pct??r.yoy_growth_pct),_score:num(assessment.opportunity_score??r.opportunity_score),
    _source:evidence.source||r.source_name||r.source||"Unknown source",_sourceUrl:evidence.source_url||r.source_url||"",
    _status:evidence.data_status||r.data_mode||meta.mode||"unknown",
-   _lat:num(market.latitude??market.lat??r.market_latitude??r.latitude),_lon:num(market.longitude??market.lon??r.market_longitude??r.longitude),
+   _lat:num(market.latitude??market.lat??r.market_latitude??r.latitude??ctx.latitude),_lon:num(market.longitude??market.lon??r.market_longitude??r.longitude??ctx.longitude),
+   _gdpPerCapita:num(ctx.gdp_per_capita_usd),_gdpPerCapitaYear:ctx.gdp_per_capita_year||null,
+   _population:num(ctx.population),_populationYear:ctx.population_year||null,
    _quantity:num(trade.quantity??r.quantity),_cagr:num(trade.three_year_cagr_pct??r.cagr_pct),
    _series:Array.isArray(trade.series)?trade.series:(Array.isArray(r.series)?r.series:[]),_classification:r.classification||""};
  }).filter(r=>r._productName||r._hs);
@@ -67,20 +72,46 @@ function renderMarkers(){
 function selectRecord(r){if(!r)return;selected=r;showDetails(r);document.querySelectorAll("#rankBody tr").forEach(tr=>tr.style.background=tr.dataset.id===r._id?"#eaf2fc":"");}
 function showDetails(r){
  $("evidencePill").textContent=(r._status||"unknown").replaceAll("_"," ").toUpperCase();
- $("details").innerHTML='<h3>'+esc(r._productName)+'</h3><p>HS '+esc(r._hs)+' · '+esc(r._country)+' · observation '+esc(r._period||"unknown period")+'</p><div class="meta"><div><span>Reported trade value</span><b>'+fmtMoney(r._value)+'</b></div><div><span>Year-on-year growth</span><b>'+fmtPct(r._growth)+'</b></div><div><span>3-year CAGR</span><b>'+fmtPct(r._cagr)+'</b></div><div><span>Opportunity score</span><b>'+(score(r)==null?"Not available":score(r).toFixed(0)+"/100")+'</b></div><div><span>Source</span><b>'+esc(r._source)+'</b></div><div><span>Quantity</span><b>'+(r._quantity==null?"Not reported":r._quantity.toLocaleString())+'</b></div></div>'+(r._sourceUrl?'<p><a href="'+esc(r._sourceUrl)+'" target="_blank" rel="noopener">Open source record ↗</a></p>':"")+'<p>Interpretation: import growth can indicate rising cross-border demand, but does not establish retail sales or profitability.</p>';
+ const macro=[];
+ if(r._gdpPerCapita!=null)macro.push('<div><span>GDP per capita · World Bank</span><b>'+fmtMoney(r._gdpPerCapita)+(r._gdpPerCapitaYear?' ('+esc(r._gdpPerCapitaYear)+')':'')+'</b></div>');
+ if(r._population!=null)macro.push('<div><span>Population · World Bank</span><b>'+Number(r._population).toLocaleString()+(r._populationYear?' ('+esc(r._populationYear)+')':'')+'</b></div>');
+ $("details").innerHTML='<h3>'+esc(r._productName)+'</h3><p>HS '+esc(r._hs)+' · '+esc(r._country)+' · observation '+esc(r._period||"unknown period")+'</p><div class="meta"><div><span>Reported trade value</span><b>'+fmtMoney(r._value)+'</b></div><div><span>Year-on-year growth</span><b>'+fmtPct(r._growth)+'</b></div><div><span>3-year CAGR</span><b>'+fmtPct(r._cagr)+'</b></div><div><span>Opportunity score</span><b>'+(score(r)==null?"Not available":score(r).toFixed(0)+"/100")+'</b></div><div><span>Source</span><b>'+esc(r._source)+'</b></div><div><span>Quantity</span><b>'+(r._quantity==null?"Not reported":r._quantity.toLocaleString())+'</b></div>'+macro.join("")+'</div>'+(r._sourceUrl?'<p><a href="'+esc(r._sourceUrl)+'" target="_blank" rel="noopener">Open source record ↗</a></p>':"")+'<p>Interpretation: import growth can indicate rising cross-border demand, but does not establish retail sales or profitability. World Bank indicators are country-level context only.</p>';
  if(r._lat!=null&&r._lon!=null&&map)map.setView([r._lat,r._lon],Math.max(map.getZoom(),3));
 }
 async function loadData(){
- $("dataNotice").textContent="Loading data…";
+ $("dataNotice").textContent="Loading trade feed…";
+ const contextPromise=window.GPIRMarketContext?window.GPIRMarketContext.load():Promise.resolve(null);
  try{
   const res=await fetch(DATA_URL+"?t="+Date.now(),{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);
-  const raw=await res.json();allRows=normalize(raw);
+  const raw=await res.json();
+  allRows=normalize(raw,null);
+  setupFilters();applyFilters();
   const meta=raw.meta||raw.metadata||{},status=String(meta.status||meta.data_status||meta.mode||"unknown");
   const isDemo=status.toLowerCase().includes("demo")||status.toLowerCase().includes("sample")||allRows.some(r=>r._status==="demo");
-  $("dataNotice").textContent=isDemo?"DEMO DATA — These are illustrative values, not verified statistics. Run the pipeline to replace them with fetched trade data.":allRows.length?("DATA STATUS: "+status.replaceAll("_"," ").toUpperCase()+" — Import data is trade statistics, not retail sales. Check coverage and source periods."): "NO DATA YET — Pipeline has not populated data/data.json. Run the GitHub Actions workflow or configure the UN Comtrade API key.";
+  const baseNotice=isDemo?"DEMO DATA — These are illustrative values, not verified statistics. Run the pipeline to replace them with fetched trade data.":allRows.length?("DATA STATUS: "+status.replaceAll("_"," ").toUpperCase()+" — Annual import data are trade statistics, not retail sales."): "NO DATA YET — Pipeline has not populated data/data.json. Run the GitHub Actions workflow or configure the UN Comtrade API key.";
+  $("dataNotice").textContent=baseNotice+" Loading country context separately from the World Bank API…";
   $("dataNotice").style.background=isDemo?"#fff7e2":"#eef6ff";$("dataNotice").style.borderColor=isDemo?"#f1d998":"#c9ddf7";$("dataNotice").style.color=isDemo?"#694a08":"#204f82";
-  setupFilters();applyFilters();$("updatedAt").textContent="Build: "+(raw.generated_at||meta.generated_at||"unknown")+" · Mode: "+status;
- }catch(e){allRows=[];filtered=[];render();$("dataNotice").textContent="Could not load data/data.json ("+e.message+"). Check that the JSON file exists in the deployed branch."; $("dataNotice").style.background="#feeceb";$("dataNotice").style.color="#9a2424";}
+  $("updatedAt").textContent="Trade build: "+(raw.generated_at||meta.generated_at||"unknown")+" · Mode: "+status;
+  // Keep the trade dashboard usable while public macro context loads in parallel.
+  let context=null;
+  try{context=await contextPromise;}catch(error){console.warn("World Bank context unavailable",error);}
+  const contextCount=context&&context.countries?Object.keys(context.countries).length:0;
+  if(contextCount){
+   const selectedCountry=$("country").value;
+   allRows=normalize(raw,context);setupFilters();
+   if(selectedCountry&&[...$("country").options].some(o=>o.value===selectedCountry))$("country").value=selectedCountry;
+   applyFilters();
+  }
+  const contextNote=contextCount
+   ? " World Bank context loaded directly in this browser ("+contextCount+" country records; cached for 12 hours)."
+   : " World Bank context unavailable; trade data still works without it.";
+  $("dataNotice").textContent=baseNotice+contextNote;
+  $("updatedAt").textContent="Trade build: "+(raw.generated_at||meta.generated_at||"unknown")+" · Mode: "+status+" · Context: "+(contextCount?"World Bank/browser":"unavailable");
+ }catch(e){
+  allRows=[];filtered=[];render();
+  $("dataNotice").textContent="Could not load data/data.json ("+e.message+"). Check that the JSON file exists in the deployed branch.";
+  $("dataNotice").style.background="#feeceb";$("dataNotice").style.color="#9a2424";
+ }
 }
 $("search").addEventListener("input",applyFilters);$("country").addEventListener("change",applyFilters);$("category").addEventListener("change",applyFilters);$("reload").addEventListener("click",loadData);$("reset").addEventListener("click",()=>{$("search").value="";$("country").value="";$("category").value="";applyFilters()});
 initMap();loadData();
