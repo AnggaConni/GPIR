@@ -531,7 +531,9 @@
     if(lat==null||lon==null){$("locationStatus").textContent="Koordinat lokasi tidak tersedia.";return;}
     currentLocationLabel=item.display_name||query;$("locationName").textContent=currentLocationLabel;
     $("lat").value=lat.toFixed(6);$("lon").value=lon.toFixed(6);parseAddress(item.address);currentLocation={lat,lon};
-    $("locationStatus").textContent="Lokasi pilihan aktif. Mencari titik sekitar…";updateMapCenter(lat,lon);await searchNearby();
+    selectedAreaBounds=parseBounds(item.boundingbox);
+    $("locationStatus").textContent=$("coverage").value==="area"?"Area pilihan aktif; menyiapkan peta seluruh area…":"Lokasi pilihan aktif. Mencari titik sekitar…";
+    updateMapCenter(lat,lon);await searchNearby();
   }
   function useBrowserLocation(options={}){
     const automatic=!!options.automatic;
@@ -593,9 +595,11 @@
   renderInventory();initMap();loadFeeds();
   const params=new URLSearchParams(window.location.search);
   const qLat=number(params.get("lat")),qLon=number(params.get("lon")),qLocation=params.get("location")||"";
-  const qRadius=Number(params.get("radius")),qType=params.get("type")||"all";
-  if([1000,3000,5000,10000].includes(qRadius))$("radius").value=String(qRadius);
+  const qRadius=Number(params.get("radius")),qType=params.get("type")||"all",qScope=params.get("scope")||"nearby",qBounds=params.get("bounds");
+  if([1000,3000,5000,10000,15000].includes(qRadius))$("radius").value=String(qRadius);
   if(["all","sell","grow","service"].includes(qType))$("businessTypeFilter").value=qType;
+  if(["nearby","area"].includes(qScope))$("coverage").value=qScope;
+  if(qBounds){try{selectedAreaBounds=parseBounds(qBounds.split(",").map(Number));}catch(_){selectedAreaBounds=null;}}
   if(qLat!=null&&qLon!=null&&qLat>=-90&&qLat<=90&&qLon>=-180&&qLon<=180){
     currentLocation={lat:qLat,lon:qLon};currentLocationLabel=qLocation||("Lokasi terpilih ("+qLat.toFixed(3)+", "+qLon.toFixed(3)+")");
     $("locationName").textContent=currentLocationLabel;$("locationSearch").value=qLocation;$("lat").value=qLat;$("lon").value=qLon;
