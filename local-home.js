@@ -48,13 +48,13 @@ function updateMap(){if(!map||!coords)return;const radius=Number($("homeRadius")
  if($("homeCoverage").value==="area"&&validBounds(placeBounds)){areaRectangle=L.rectangle([[placeBounds.south,placeBounds.west],[placeBounds.north,placeBounds.east]],{color:"#2563eb",weight:2,dashArray:"6 4",fillColor:"#60a5fa",fillOpacity:.04}).addTo(map);map.fitBounds(areaRectangle.getBounds(),{padding:[12,12],maxZoom:11});}
  else{radiusCircle=L.circle([coords.lat,coords.lon],{radius,color:"#dc2626",weight:1,dashArray:"5 5",fillColor:"#dc2626",fillOpacity:.035}).addTo(map);map.setView([coords.lat,coords.lon],radius<=1000?14:radius<=3000?13:radius<=10000?11:10);}}
 function finderUrl(type){const u=new URL("./enterprise.html",window.location.href);if(coords){u.searchParams.set("lat",coords.lat);u.searchParams.set("lon",coords.lon);u.searchParams.set("location",placeLabel);}u.searchParams.set("radius",$("homeRadius").value||"3000");u.searchParams.set("scope",$("homeCoverage").value||"nearby");if(placeBounds)u.searchParams.set("bounds",[placeBounds.south,placeBounds.north,placeBounds.west,placeBounds.east].join(","));u.searchParams.set("type",type||$("homeTypeFilter").value||"all");return u.pathname+u.search;}
-function updateLocation(lat,lon,label,bounds=null){coords={lat,lon};placeLabel=label||"Lokasi terpilih";placeBounds=validBounds(bounds)?bounds:null;$("homeLocationName").textContent=placeLabel;updateMap();renderRecommendations();}
+function updateLocation(lat,lon,label,bounds=null){coords={lat,lon};placeLabel=label||"Lokasi terpilih";placeBounds=validBounds(bounds)?bounds:null;$("homeLocationName").textContent=placeLabel;updateMap();updateTourismStatus();renderRecommendations();}
 function ideaType(o){return o.business_type||(o.id==="local-aggregation"||o.id==="textile-craft-micro"?"service":"sell");}
 function typeFilter(){return $("homeTypeFilter").value||"all";}
 function selectedIdea(){return catalog.find(o=>o.id===activeIdea)||null;}
 function relevantCategories(){const o=selectedIdea();return new Set(o&&o.map_categories||[]);}
 function renderPoints(elements){if(!coords)return;const unique=new Map();(elements||[]).forEach(el=>{const t=el.tags||{},lat=num(el.lat!=null?el.lat:el.center&&el.center.lat),lon=num(el.lon!=null?el.lon:el.center&&el.center.lon),cat=classify(el),key=el.type+"/"+el.id;unique.set(key,{raw:el,key,name:t.name||t.brand||t.operator||"Lokasi tanpa nama",cat,lat,lon,dist:lat==null||lon==null?null:km(coords.lat,coords.lon,lat,lon)});});
- points=[...unique.values()].sort((a,b)=>(a.dist??9999)-(b.dist??9999));drawPoints();renderRecommendations();}
+ points=[...unique.values()].sort((a,b)=>(a.dist??9999)-(b.dist??9999));drawPoints();updateTourismStatus();renderRecommendations();}
 function drawPoints(){if(!map||!markers||!lines||!coords)return;markers.clearLayers();lines.clearLayers();const cats=relevantCategories();
  const mapPoints=points.length<=350?points:points.filter((p,i)=>i%Math.ceil(points.length/350)===0).slice(0,350);mapPoints.forEach((p,i)=>{if(p.lat==null||p.lon==null)return;const rel=cats.has(p.cat);
   if(i<35)L.polyline([[coords.lat,coords.lon],[p.lat,p.lon]],{color:rel?"#0d9488":(colors[p.cat]||colors.other),weight:rel?2:1,opacity:rel?.65:.25,dashArray:rel?"":"4 5"}).addTo(lines);
@@ -62,10 +62,10 @@ function drawPoints(){if(!map||!markers||!lines||!coords)return;markers.clearLay
  });
  updateMap();$("homePoiCount").textContent=points.length+" titik";
 }
-function renderRecommendations(){if(!catalog.length)return;const filter=typeFilter();const scored=catalog.map(o=>({...o,business_type:ideaType(o),localCount:points.filter(p=>(o.map_categories||[]).includes(p.cat)).length}));
+function renderRecommendations(){if(!catalog.length)return;const filter=typeFilter();const tourismCount=nearbyTourismAttractions(3).length;const scored=catalog.map(o=>{const localCount=points.filter(p=>(o.map_categories||[]).includes(p.cat)&&(p.cat!=="tourism"||(p.dist!=null&&p.dist<=3))).length;const tourismBonus=tourismCount>0?(o.tourism_fit==="high"?6:o.tourism_fit==="medium"?3:0):0;return {...o,business_type:ideaType(o),localCount,tourismNearbyCount:tourismCount,tourismBonus,rankingScore:localCount+tourismBonus};});
  let display;
- if(filter==="all"){display=["sell","grow","service"].map(t=>scored.filter(o=>o.business_type===t).sort((a,b)=>b.localCount-a.localCount)[0]).filter(Boolean);}
- else display=scored.filter(o=>o.business_type===filter).sort((a,b)=>b.localCount-a.localCount).slice(0,3);
+ if(filter==="all"){display=["sell","grow","service"].map(t=>scored.filter(o=>o.business_type===t).sort((a,b)=>b.rankingScore-a.rankingScore)[0]).filter(Boolean);}
+ else display=scored.filter(o=>o.business_type===filter).sort((a,b)=>b.rankingScore-a.rankingScore).slice(0,3);
  if(!coords)$("homeLocationStatus").textContent="Contoh ide ditampilkan. Deteksi lokasi atau cari lokasi pilihan untuk memetakan tempat sekitar.";
  $("homeRecommendations").innerHTML=display.map(o=>{const t=o.business_type,tag=t==="grow"?"grow":t==="service"?"service":"sell",title=o.title,prod=(o.products||[]).slice(0,3).join(" · ");
   const buy=(o.buy_from||["Pemasok yang dapat diverifikasi"]).slice(0,2).join(" · "),buyers=(o.sell_to||["Wawancarai calon pembeli"]).slice(0,2).join(" · ");
