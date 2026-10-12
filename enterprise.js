@@ -574,6 +574,16 @@
       return {raw:el,key:el.type+"/"+el.id,name,type:type.label,category:type.category,color:type.color,lat:lat2,lon:lon2,distance:lat2==null||lon2==null?null:distanceKm(lat,lon,lat2,lon2)};
     }).sort((a,b)=>(a.distance??9999)-(b.distance??9999));
     const unique=new Map();normalized.forEach(p=>unique.set(p.key,p));nearbyPoints=[...unique.values()].sort((a,b)=>(a.distance??9999)-(b.distance??9999));
+    const snapshotAreaMode=$("coverage")&&$("coverage").value==="area"&&validBounds(selectedAreaBounds),snapshotRadius=Number($("radius").value||3000);
+    tourismSnapshot.filter(item=>item&&item.kind==="tourist_attraction"&&number(item.lat)!=null&&number(item.lon)!=null).forEach(item=>{
+      const itemLat=Number(item.lat),itemLon=Number(item.lon),distance=distanceKm(lat,lon,itemLat,itemLon);
+      const inside=snapshotAreaMode?itemLat>=selectedAreaBounds.south&&itemLat<=selectedAreaBounds.north&&itemLon>=selectedAreaBounds.west&&itemLon<=selectedAreaBounds.east:distance<=snapshotRadius/1000;
+      if(!inside)return;
+      if(nearbyPoints.some(p=>p.category==="tourism"&&clean(p.name)===clean(item.name)&&p.distance!=null&&Math.abs(p.distance-distance)<0.12))return;
+      const source=String(item.source||"Tourism snapshot");
+      nearbyPoints.push({raw:{type:"snapshot",id:item.external_id||item.id,tags:{name:item.name||"Unnamed attraction",source},url:item.url||"",source_url:item.source_url||""},key:"snapshot:"+item.id,name:item.name||"Unnamed attraction",type:"Atraksi wisata / budaya · "+source,category:"tourism",color:POI_COLORS.tourism,lat:itemLat,lon:itemLon,distance,source});
+    });
+    nearbyPoints.sort((a,b)=>(a.distance??9999)-(b.distance??9999));
     updateTourismStatus();
     const active=lastRecommendations.find(o=>o.id===activeOpportunityId),wanted=active?(active.map_categories||[]):[];
     const relevant= p=>wanted.includes(p.category)&&(p.category!=="tourism"||(p.distance!=null&&p.distance<=3));
@@ -596,11 +606,12 @@
     $("poiResults").innerHTML=nearbyPoints.length?nearbyPoints.slice(0,60).map(p=>{
       const isRelevant=relevant(p),q=[p.name,currentLocationLabel].filter(Boolean).join(" ");
       const mapsUrl="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);
-      const osmType=({node:"node",way:"way",relation:"relation"})[p.raw.type]||"node",osmUrl="https://www.openstreetmap.org/"+osmType+"/"+encodeURIComponent(p.raw.id);
+      const isSnapshot=p.raw.type==="snapshot",osmType=({node:"node",way:"way",relation:"relation"})[p.raw.type]||"node";
+      const osmUrl=isSnapshot?(safeHttpUrl(p.raw.url)||mapsUrl):"https://www.openstreetmap.org/"+osmType+"/"+encodeURIComponent(p.raw.id);
       const website=safeHttpUrl(p.raw.tags&&p.raw.tags.website);
       return '<div class="poi-item"><div class="poi-primary"><b>'+esc(p.name)+'</b><span class="poi-meta">'+esc(p.type)+' · '+esc(distanceLabel(p.distance))+'</span></div>'+
       (isRelevant?'<span class="relevance">Kategori cocok</span>':'<span class="tiny">'+esc(p.category)+'</span>')+
-      '<div class="poi-actions"><button type="button" data-zoom-poi="'+esc(p.key)+'">Lihat di peta</button><a href="'+esc(mapsUrl)+'" target="_blank" rel="noopener noreferrer">Buka Maps ↗</a><a href="'+esc(osmUrl)+'" target="_blank" rel="noopener noreferrer">Data OSM ↗</a>'+
+      '<div class="poi-actions"><button type="button" data-zoom-poi="'+esc(p.key)+'">Lihat di peta</button><a href="'+esc(mapsUrl)+'" target="_blank" rel="noopener noreferrer">Buka Maps ↗</a><a href="'+esc(osmUrl)+'" target="_blank" rel="noopener noreferrer">'+(isSnapshot?'Sumber':'Data OSM')+' ↗</a>'+
       (website?'<a href="'+esc(website)+'" target="_blank" rel="noopener noreferrer">Website ↗</a>':"")+'</div></div>';
     }).join(""):'<div class="empty">Belum ada titik. Coba radius lebih luas. Tidak adanya titik OSM bukan bukti tidak ada usaha/pembeli.</div>';
     $("poiResults").querySelectorAll("[data-zoom-poi]").forEach(btn=>btn.addEventListener("click",()=>{
