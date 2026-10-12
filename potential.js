@@ -4,6 +4,8 @@ const $=id=>document.getElementById(id);
 const CATALOG_URL="./data/opportunity_catalog.json";
 const TRADE_URL="./data/data.json";
 const DESIGNATED_SITES_URL="./data/designated_sites.json";
+const TOURISM_PLACES_URL="./data/tourism_places.json";
+const TOURISM_AREAS_URL="./config/tourism_areas.json";
 const DESIGNATED_CACHE_TTL=12*60*60*1000;
 const DESIGNATED_DATASETS=[
  {id:"whc001",category:"world_heritage",designation:"UNESCO World Heritage Site",url:"https://data.unesco.org/explore/dataset/whc001/api/"},
@@ -34,7 +36,7 @@ const COLORS={tourism:"#db2777",market:"#d97706",food_buyer:"#b45309",retail:"#2
 const state={
  map:null,origin:null,originMarker:null,poiLayer:null,linkLayer:null,marketLayer:null,
  catalog:[],tradeRows:[],tradeFeed:null,tradePromise:null,countryContext:null,contextPromise:null,
- designatedSites:[],designatedPromise:null,
+ designatedSites:[],designatedPromise:null,tourismPlaces:[],tourismPromise:null,
  pois:[],marketSignals:[],opportunities:[],active:false,analyzeSequence:0,lastOverpassAt:0,
  localBounds:null,globalBounds:null,marketBounds:{},lastTerms:[],dataStatus:"pending"
 };
@@ -123,14 +125,61 @@ async function fetchLiveDesignatedDataset(definition){
 function siteCountryList(site){
  return String(site.country||"Country not specified").split(/[;,]/).map(v=>v.trim()).filter(Boolean);
 }
-function siteLabel(site){return site.name+" — "+site.country+" · "+site.designation;}
+function siteLabel(site){return site.name+" — "+site.country+" · "+(site.designation||site.source||"");}
+function destinationSource(){return $("destinationSourceFilter").value||"tourism";}
+function currentDestinationItems(){return destinationSource()==="unesco"?state.designatedSites:state.tourismPlaces;}
+function destinationCategoryLabels(){
+ return {
+  travel_guide:"Travel guide / destination",
+  tourist_attraction:"Tourist attraction",
+  cultural_attraction:"Cultural attraction",
+  nature_attraction:"Nature attraction",
+  visitor_attraction:"Visitor attraction",
+  arts_and_crafts:"Arts & crafts",
+  point_of_interest:"Point of interest",
+  world_heritage:"World Heritage Site",
+  geopark:"UNESCO Global Geopark",
+  biosphere_reserve:"UNESCO Biosphere Reserve"
+ };
+}
+function populateDestinationFilters(){
+ const source=destinationSource(),categorySelect=$("designationFilter"),countrySelect=$("designationCountryFilter");
+ const oldCategory=categorySelect.value,oldCountry=countrySelect.value;
+ if(source==="unesco"){
+  categorySelect.innerHTML='<option value="all">Semua situs UNESCO</option><option value="world_heritage">World Heritage Site</option><option value="geopark">Global Geopark</option><option value="biosphere_reserve">Biosphere Reserve</option>';
+ }else{
+  const options=[
+   ["all","Semua destinasi wisata"],
+   ["travel_guide","Travel guide / destination"],
+   ["tourist_attraction","Tourist attraction"],
+   ["cultural_attraction","Cultural attraction"],
+   ["nature_attraction","Nature attraction"],
+   ["visitor_attraction","Visitor attraction"],
+   ["arts_and_crafts","Arts & crafts"]
+  ];
+  categorySelect.innerHTML=options.map(([value,label])=>'<option value="'+value+'">'+label+'</option>').join("");
+ }
+ if([...categorySelect.options].some(o=>o.value===oldCategory))categorySelect.value=oldCategory;
+ else categorySelect.value="all";
+ const items=currentDestinationItems();
+ const countries=[...new Set(items.flatMap(siteCountryList).filter(name=>name&&name!=="Country not specified"))].sort((a,b)=>a.localeCompare(b));
+ countrySelect.innerHTML='<option value="all">Semua negara</option>'+countries.map(name=>'<option value="'+esc(name)+'">'+esc(name)+'</option>').join("");
+ if(countries.some(name=>clean(name)===clean(oldCountry)))countrySelect.value=countries.find(name=>clean(name)===clean(oldCountry));
+ else countrySelect.value="all";
+ const note=$("destinationSourceNote");
+ if(note){
+  note.innerHTML=source==="unesco"
+   ? 'Situs resmi UNESCO dengan titik koordinat referensi. <a href="https://data.unesco.org/" target="_blank" rel="noopener noreferrer">UNESCO DataHub ↗</a>'
+   : 'Katalog titik wisata/panduan wisata berkoordinat; cakupan mengikuti data sumber. <a href="https://www.untourism.int/tourism-statistics/tourism-statistics-database" target="_blank" rel="noopener noreferrer">UN Tourism Statistics ↗</a> menyediakan statistik negara/region, bukan koordinat atraksi.';
+ }
+}
 function designatedSiteMatches(query=""){
  const q=clean(query),category=$("designationFilter").value,country=$("designationCountryFilter").value;
- return state.designatedSites.filter(site=>{
+ return currentDestinationItems().filter(site=>{
   if(category!=="all"&&site.category!==category)return false;
   if(country!=="all"&&!siteCountryList(site).some(name=>clean(name)===clean(country)))return false;
   if(!q)return true;
-  return clean(site.name).includes(q)||clean(site.country).includes(q)||clean(site.designation).includes(q)||clean(siteLabel(site)).includes(q);
+  return clean(site.name).includes(q)||clean(site.country).includes(q)||clean(site.designation||"").includes(q)||clean(siteLabel(site)).includes(q)||clean(site.source||"").includes(q);
  }).sort((a,b)=>a.country.localeCompare(b.country)||a.name.localeCompare(b.name));
 }
 function designatedSiteStatus(message,tone="neutral"){
@@ -145,29 +194,62 @@ function closeDesignatedSiteOptions(){
 function renderDesignatedSiteOptions(open=true){
  const list=$("designatedSiteOptions"),input=$("designatedSiteSearch");
  if(!list||!input)return;
- const matches=designatedSiteMatches(input.value);
- const shown=matches.slice(0,80);
- list.innerHTML=shown.length?shown.map(site=>'<button type="button" class="destination-option" role="option" data-designated-site="'+esc(site.id)+'"><span class="destination-option-title">'+esc(site.name)+'</span><span class="destination-option-meta">'+esc(site.country)+' · '+esc(site.designation)+'</span></button>').join(""):'<div class="destination-option-empty">'+(state.designatedSites.length?"Tidak ada destinasi yang cocok. Ubah jenis/negara atau kata pencarian.":"Katalog destinasi belum tersedia. Coba muat ulang atau gunakan Cari lokasi.")+'</div>';
+ const source=destinationSource(),items=currentDestinationItems(),matches=designatedSiteMatches(input.value),shown=matches.slice(0,80);
+ list.innerHTML=shown.length?shown.map(site=>'<button type="button" class="destination-option" role="option" data-destination-id="'+esc(site.id)+'"><span class="destination-option-title">'+esc(site.name)+'</span><span class="destination-option-meta">'+esc(site.country)+' · '+esc(site.designation||site.source||"Tourism destination")+'</span></button>').join(""):'<div class="destination-option-empty">'+(items.length?"Tidak ada destinasi yang cocok. Ubah jenis/negara atau kata pencarian.":source==="unesco"?"Katalog UNESCO belum tersedia. Coba pencarian lokasi biasa.":"Katalog wisata belum tersedia. Coba pencarian lokasi biasa.")+'</div>';
  list.hidden=!open;
  input.setAttribute("aria-expanded",open?"true":"false");
- list.querySelectorAll("[data-designated-site]").forEach(button=>button.addEventListener("click",()=>goToDesignatedSite(button.dataset.designatedSite)));
- if(matches.length>shown.length)designatedSiteStatus("Menampilkan "+shown.length+" dari "+matches.length+" hasil. Tambahkan kata pencarian atau pilih negara untuk mempersempit daftar.");
- else if(state.designatedSites.length)designatedSiteStatus(matches.length+" destinasi cocok · pilih salah satu untuk memindahkan pin.");
-}
-function populateDesignatedCountries(){
- const select=$("designationCountryFilter"),current=select.value;
- const countries=[...new Set(state.designatedSites.flatMap(siteCountryList).filter(name=>name&&name!=="Country not specified"))].sort((a,b)=>a.localeCompare(b));
- select.innerHTML='<option value="all">Semua negara</option>'+countries.map(name=>'<option value="'+esc(name)+'">'+esc(name)+'</option>').join("");
- if(countries.includes(current))select.value=current;
+ list.querySelectorAll("[data-destination-id]").forEach(button=>button.addEventListener("click",()=>goToDesignatedSite(button.dataset.destinationId)));
+ if(matches.length>shown.length)designatedSiteStatus("Menampilkan "+shown.length+" dari "+matches.length+" hasil. Tambahkan kata pencarian atau pilih negara.");
+ else if(items.length)designatedSiteStatus(matches.length+" destinasi cocok · pilih salah satu untuk memindahkan pin.", "success");
+ else if(source==="tourism")designatedSiteStatus("Katalog wisata tidak tersedia saat ini. Kolom Cari lokasi tetap dapat digunakan.","error");
+ else designatedSiteStatus("Katalog UNESCO belum tersedia. Kolom Cari lokasi tetap dapat digunakan.","error");
 }
 function goToDesignatedSite(id){
- const site=state.designatedSites.find(item=>item.id===id);if(!site)return;
+ const site=currentDestinationItems().find(item=>item.id===id);if(!site)return;
  $("designatedSiteSearch").value=site.name;
  $("locationSearch").value=site.name+", "+site.country;
  closeDesignatedSiteOptions();
- const zoom=site.category==="world_heritage"?11:site.category==="geopark"?9:9;
- setOrigin({lat:site.lat,lng:site.lon},true,site.name+" · "+site.designation+" · "+site.country);
+ const source=destinationSource();
+ const zoom=source==="unesco"?(site.category==="world_heritage"?11:9):(site.category==="travel_guide"?11:13);
+ const label=site.name+" · "+(site.designation||site.source||"Tourism destination")+" · "+site.country;
+ setOrigin({lat:site.lat,lng:site.lon},true,label);
  state.map.setView([site.lat,site.lon],zoom);
+}
+async function ensureTourismPlaces(){
+ if(state.tourismPlaces.length)return state.tourismPlaces;
+ if(state.tourismPromise)return state.tourismPromise;
+ state.tourismPromise=(async()=>{
+  designatedSiteStatus("Memuat katalog Tourism destinations…");
+  const cached=cacheRead("gpir:tourism-places:v1",DESIGNATED_CACHE_TTL);
+  if(Array.isArray(cached)&&cached.length){
+   state.tourismPlaces=cached;
+  }else{
+   const results=await Promise.allSettled([
+    fetch(TOURISM_PLACES_URL,{cache:"no-cache",headers:{Accept:"application/json"}}).then(response=>{if(!response.ok)throw new Error("Tourism catalogue HTTP "+response.status);return response.json();}),
+    fetch(TOURISM_AREAS_URL,{cache:"no-cache",headers:{Accept:"application/json"}}).then(response=>{if(!response.ok)throw new Error("Tourism area index HTTP "+response.status);return response.json();})
+   ]);
+   const payload=results[0].status==="fulfilled"?results[0].value:null;
+   const areaPayload=results[1].status==="fulfilled"?results[1].value:null;
+   const areaMap=new Map(((areaPayload&&areaPayload.areas)||[]).map(area=>[String(area.id),area]));
+   const rows=payload&&Array.isArray(payload.items)?payload.items:[];
+   state.tourismPlaces=rows.map(row=>{
+    const area=areaMap.get(String(row.seed_area_id||""))||{};
+    const lat=num(row.lat),lon=num(row.lon);
+    if(!row.id||!row.name||lat==null||lon==null||lat<-90||lat>90||lon<-180||lon>180)return null;
+    return {
+     id:String(row.id),name:String(row.name),country:String(row.country||area.country||row.seed_area_name||"Country not specified"),
+     country_code:String(row.country_code||area.iso2||""),lat,lon,
+     category:String(row.category||"travel_guide"),designation:row.category==="travel_guide"?"Travel guide / destination":"Tourism destination",
+     source:String(row.source||"Tourism places catalogue"),url:String(row.url||""),source_url:String(row.source_url||""),
+     seed_area_name:String(row.seed_area_name||area.name||""),kind:String(row.kind||"tourism_destination")
+    };
+   }).filter(Boolean).sort((a,b)=>a.country.localeCompare(b.country)||a.name.localeCompare(b.name));
+   if(state.tourismPlaces.length)cacheWrite("gpir:tourism-places:v1",state.tourismPlaces);
+   else if(results[0].status==="rejected")throw results[0].reason;
+  }
+  return state.tourismPlaces;
+ })();
+ try{return await state.tourismPromise;}finally{state.tourismPromise=null;}
 }
 async function ensureDesignatedSites(){
  if(state.designatedSites.length)return state.designatedSites;
@@ -194,23 +276,34 @@ async function ensureDesignatedSites(){
   const unique=new Map();
   items.forEach(site=>{if(site&&site.id&&Number.isFinite(site.lat)&&Number.isFinite(site.lon))unique.set(site.id,site);});
   state.designatedSites=[...unique.values()].sort((a,b)=>a.country.localeCompare(b.country)||a.name.localeCompare(b.name));
-  populateDesignatedCountries();
   if(state.designatedSites.length){
-   designatedSiteStatus(state.designatedSites.length.toLocaleString()+" destinasi tersedia dari UNESCO DataHub. Filter menurut jenis situs dan negara, atau ketik nama.");
+   designatedSiteStatus(state.designatedSites.length.toLocaleString()+" situs tersedia dari UNESCO DataHub. Filter menurut jenis situs dan negara, atau ketik nama.");
   }else{
    designatedSiteStatus("Katalog situs UNESCO belum dapat dimuat. Pencarian lokasi biasa tetap tersedia.", "error");
   }
-  if(!$("designatedSiteOptions").hidden)renderDesignatedSiteOptions(true);
   return state.designatedSites;
  })();
  try{return await state.designatedPromise;}finally{state.designatedPromise=null;}
 }
+async function ensureDestinationSource(){
+ try{
+  const source=destinationSource();
+  if(source==="unesco")await ensureDesignatedSites();
+  else await ensureTourismPlaces();
+  populateDestinationFilters();
+  return currentDestinationItems();
+ }catch(error){
+  console.warn("Destination catalog load failed",error);
+  designatedSiteStatus("Katalog tidak dapat dimuat: "+error.message+". Gunakan Cari lokasi untuk mencari tempat.","error");
+  return [];
+ }
+}
 function initDesignatedSitePicker(){
  const input=$("designatedSiteSearch"),toggle=$("toggleDesignatedSiteOptions"),list=$("designatedSiteOptions");
- input.addEventListener("focus",()=>{ensureDesignatedSites().then(()=>renderDesignatedSiteOptions(true));});
+ input.addEventListener("focus",()=>{ensureDestinationSource().then(()=>renderDesignatedSiteOptions(true));});
  input.addEventListener("input",()=>{renderDesignatedSiteOptions(true);});
  input.addEventListener("keydown",event=>{
-  if(event.key==="ArrowDown"){event.preventDefault();renderDesignatedSiteOptions(true);const first=list.querySelector("[data-designated-site]");if(first)first.focus();return;}
+  if(event.key==="ArrowDown"){event.preventDefault();renderDesignatedSiteOptions(true);const first=list.querySelector("[data-destination-id]");if(first)first.focus();return;}
   if(event.key==="Escape"){closeDesignatedSiteOptions();return;}
   if(event.key!=="Enter")return;
   event.preventDefault();
@@ -222,11 +315,16 @@ function initDesignatedSitePicker(){
   if(query.length>=3){$("locationSearch").value=input.value;closeDesignatedSiteOptions();searchLocation();return;}
   renderDesignatedSiteOptions(true);
  });
- toggle.addEventListener("click",()=>{ensureDesignatedSites().then(()=>{if(list.hidden)renderDesignatedSiteOptions(true);else closeDesignatedSiteOptions();});});
+ toggle.addEventListener("click",()=>{ensureDestinationSource().then(()=>{if(list.hidden)renderDesignatedSiteOptions(true);else closeDesignatedSiteOptions();});});
+ $("destinationSourceFilter").addEventListener("change",()=>{
+  $("designatedSiteSearch").value="";
+  populateDestinationFilters();
+  ensureDestinationSource().then(()=>renderDesignatedSiteOptions(!list.hidden));
+ });
  ["designationFilter","designationCountryFilter"].forEach(id=>$(id).addEventListener("change",()=>renderDesignatedSiteOptions(!list.hidden)));
  document.addEventListener("click",event=>{if(!event.target.closest(".destination-combo"))closeDesignatedSiteOptions();});
  list.addEventListener("keydown",event=>{if(event.key==="Escape"){closeDesignatedSiteOptions();input.focus();}});
- ensureDesignatedSites().catch(error=>{console.warn("UNESCO site catalogue failed",error);designatedSiteStatus("Katalog UNESCO tidak tersedia. Gunakan Cari lokasi untuk mencari nama tempat.","error");});
+ ensureDestinationSource().then(()=>renderDesignatedSiteOptions(false)).catch(error=>{console.warn("Destination catalogue failed",error);designatedSiteStatus("Katalog tidak tersedia. Gunakan Cari lokasi untuk mencari nama tempat.","error");});
 }
 function initMap(){
  state.map=L.map("potentialMap",{worldCopyJump:true,minZoom:2,maxZoom:18,preferCanvas:true,zoomControl:true}).setView([18,10],2);
