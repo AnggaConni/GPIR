@@ -1,6 +1,16 @@
 {
-  "description": "Initial diversified reporter market set. Use ISO-3 codes; the pipeline resolves official UN Comtrade reporter codes dynamically.",
+  "description": "Initial diversified reporter market set, including the Netherlands (NLD) so international import-signal searches can test Dutch market observations. Use ISO-3 codes; the pipeline resolves official UN Comtrade reporter codes dynamically.",
   "markets": [
-    "USA", "CHN", "DEU", "JPN", "GBR", "IND", "KOR", "BRA", "IDN", "ARE"
+    "ARE",
+    "BRA",
+    "CHN",
+    "DEU",
+    "GBR",
+    "IDN",
+    "IND",
+    "JPN",
+    "KOR",
+    "NLD",
+    "USA"
   ]
 }
