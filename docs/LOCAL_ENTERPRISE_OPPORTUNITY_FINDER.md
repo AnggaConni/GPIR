@@ -136,3 +136,10 @@ Keep fit score separate from market evidence. Add verified buyer quotes, trial o
 ## Local testing
 
 Open `enterprise.html` from GitHub Pages or serve the repository locally over HTTP. Geolocation requires a secure context (GitHub Pages HTTPS or localhost) and user permission. If denied, search for a location manually. Inventory uses browser localStorage. Public OSM service results can be incomplete; check places on the ground. Supplier/buyer links open query pages, not proof of stock, price, reliability or export feasibility.
+
+
+## UX correction: matching, SMEs and map coverage
+- Profile submission clears any category filter from the homepage and ranks all business types against resource/skill relevance. Matching uses word/phrase boundaries to reduce accidental substring hits; a vehicle used for delivery should not be mistaken for repair skill.
+- The profile separates starting capital, intended enterprise scale (micro/small/medium/scale-up), geographic market, and buyer segment (households, MSMEs, business/institutional buyers, and importers/distributors).
+- Nearby map mode supports a 1–15 km radius. Whole-city/administrative mode requires a manual search for a city/area name and uses the returned bounding box for the Overpass query and map extent. Broad queries can be slower; nearby results are cached in the browser.
+- Active recommendation cards and the selected relationship step have a visible glow, respecting reduced-motion preferences.

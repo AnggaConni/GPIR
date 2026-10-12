@@ -72,3 +72,9 @@ The output schema in `data/data.json` includes `meta`, `countries`, and `items`;
 
 ## License
 Project code: MIT (see `LICENSE`). Upstream datasets remain subject to their own terms.
+
+
+### UX and SME scope updates
+- Profile separates available capital, business scale (micro/small/medium/scale-up), target market, and buyer segment (households, MSMEs, business/institutional buyers, and importers/distributors).
+- Submitting resources and skills clears any old category filter and matches across sell/grow/service ideas.
+- Whole-city map mode uses an explicitly searched city's/administrative area's bounding box; nearby mode remains a faster radius scan.

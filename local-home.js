@@ -3,7 +3,7 @@
 const $=id=>document.getElementById(id),CATALOG_URL="./data/opportunity_catalog.json";
 const POI_TTL=6*60*60*1000,GEOCODE_TTL=30*24*60*60*1000;
 const colors={retail:"#2563eb",market:"#d97706",food_buyer:"#b45309",supplier:"#7c3aed",maker:"#7c3aed",service:"#0891b2",institution:"#059669",other:"#64748b"};
-let catalog=[],map=null,markers=null,lines=null,userMarker=null,radiusCircle=null,coords=null,placeLabel="",points=[],activeIdea=null,lastRequest=0;
+let catalog=[],map=null,markers=null,lines=null,userMarker=null,radiusCircle=null,areaRectangle=null,coords=null,placeLabel="",placeBounds=null,points=[],activeIdea=null,lastRequest=0;
 const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const num=v=>v==null||v===""||!Number.isFinite(Number(v))?null:Number(v);
 const money=v=>v==null?"—":new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(v);
@@ -24,12 +24,14 @@ function initMap(){if(!window.L){$("homeLocalMap").innerHTML='<div class="empty"
  map=L.map("homeLocalMap",{scrollWheelZoom:false}).setView([-2.5,118],4);
  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
  markers=L.layerGroup().addTo(map);lines=L.layerGroup().addTo(map);}
-function updateMap(){if(!map||!coords)return;const radius=Number($("homeRadius").value||3000);if(userMarker)map.removeLayer(userMarker);if(radiusCircle)map.removeLayer(radiusCircle);
- userMarker=L.circleMarker([coords.lat,coords.lon],{radius:8,color:"#fff",weight:2,fillColor:"#dc2626",fillOpacity:1}).bindPopup("<b>Lokasi aktif</b><br>"+esc(placeLabel));
- radiusCircle=L.circle([coords.lat,coords.lon],{radius,color:"#dc2626",weight:1,dashArray:"5 5",fillColor:"#dc2626",fillOpacity:.035}).addTo(map);userMarker.addTo(map);
- map.setView([coords.lat,coords.lon],radius<=1000?14:radius<=3000?13:12);}
-function finderUrl(type){const u=new URL("./enterprise.html",window.location.href);if(coords){u.searchParams.set("lat",coords.lat);u.searchParams.set("lon",coords.lon);u.searchParams.set("location",placeLabel);}u.searchParams.set("radius",$("homeRadius").value||"3000");u.searchParams.set("type",type||$("homeTypeFilter").value||"all");return u.pathname+u.search;}
-function updateLocation(lat,lon,label){coords={lat,lon};placeLabel=label||"Lokasi terpilih";$("homeLocationName").textContent=placeLabel;updateMap();renderRecommendations();}
+function validBounds(b){return !!b&&[b.south,b.west,b.north,b.east].every(Number.isFinite)&&b.south<b.north&&b.west<b.east&&(b.north-b.south)*(b.east-b.west)<=1.2;}
+function parseBounds(raw){if(!Array.isArray(raw)||raw.length<4)return null;const b={south:Number(raw[0]),north:Number(raw[1]),west:Number(raw[2]),east:Number(raw[3])};return validBounds(b)?b:null;}
+function updateMap(){if(!map||!coords)return;const radius=Number($("homeRadius").value||3000);if(userMarker)map.removeLayer(userMarker);if(radiusCircle)map.removeLayer(radiusCircle);if(areaRectangle)map.removeLayer(areaRectangle);
+ userMarker=L.circleMarker([coords.lat,coords.lon],{radius:8,color:"#fff",weight:2,fillColor:"#dc2626",fillOpacity:1}).bindPopup("<b>Lokasi aktif</b><br>"+esc(placeLabel)).addTo(map);
+ if($("homeCoverage").value==="area"&&validBounds(placeBounds)){areaRectangle=L.rectangle([[placeBounds.south,placeBounds.west],[placeBounds.north,placeBounds.east]],{color:"#2563eb",weight:2,dashArray:"6 4",fillColor:"#60a5fa",fillOpacity:.04}).addTo(map);map.fitBounds(areaRectangle.getBounds(),{padding:[12,12],maxZoom:11});}
+ else{radiusCircle=L.circle([coords.lat,coords.lon],{radius,color:"#dc2626",weight:1,dashArray:"5 5",fillColor:"#dc2626",fillOpacity:.035}).addTo(map);map.setView([coords.lat,coords.lon],radius<=1000?14:radius<=3000?13:radius<=10000?11:10);}}
+function finderUrl(type){const u=new URL("./enterprise.html",window.location.href);if(coords){u.searchParams.set("lat",coords.lat);u.searchParams.set("lon",coords.lon);u.searchParams.set("location",placeLabel);}u.searchParams.set("radius",$("homeRadius").value||"3000");u.searchParams.set("scope",$("homeCoverage").value||"nearby");if(placeBounds)u.searchParams.set("bounds",[placeBounds.south,placeBounds.west,placeBounds.north,placeBounds.east].join(","));u.searchParams.set("type",type||$("homeTypeFilter").value||"all");return u.pathname+u.search;}
+function updateLocation(lat,lon,label,bounds=null){coords={lat,lon};placeLabel=label||"Lokasi terpilih";placeBounds=validBounds(bounds)?bounds:null;$("homeLocationName").textContent=placeLabel;updateMap();renderRecommendations();}
 function ideaType(o){return o.business_type||(o.id==="local-aggregation"||o.id==="textile-craft-micro"?"service":"sell");}
 function typeFilter(){return $("homeTypeFilter").value||"all";}
 function selectedIdea(){return catalog.find(o=>o.id===activeIdea)||null;}
@@ -37,7 +39,7 @@ function relevantCategories(){const o=selectedIdea();return new Set(o&&o.map_cat
 function renderPoints(elements){if(!coords)return;const unique=new Map();(elements||[]).forEach(el=>{const t=el.tags||{},lat=num(el.lat!=null?el.lat:el.center&&el.center.lat),lon=num(el.lon!=null?el.lon:el.center&&el.center.lon),cat=classify(el),key=el.type+"/"+el.id;unique.set(key,{raw:el,key,name:t.name||t.brand||t.operator||"Lokasi tanpa nama",cat,lat,lon,dist:lat==null||lon==null?null:km(coords.lat,coords.lon,lat,lon)});});
  points=[...unique.values()].sort((a,b)=>(a.dist??9999)-(b.dist??9999));drawPoints();renderRecommendations();}
 function drawPoints(){if(!map||!markers||!lines||!coords)return;markers.clearLayers();lines.clearLayers();const cats=relevantCategories();
- points.slice(0,100).forEach((p,i)=>{if(p.lat==null||p.lon==null)return;const rel=cats.has(p.cat);
+ const mapPoints=points.length<=350?points:points.filter((p,i)=>i%Math.ceil(points.length/350)===0).slice(0,350);mapPoints.forEach((p,i)=>{if(p.lat==null||p.lon==null)return;const rel=cats.has(p.cat);
   if(i<35)L.polyline([[coords.lat,coords.lon],[p.lat,p.lon]],{color:rel?"#0d9488":(colors[p.cat]||colors.other),weight:rel?2:1,opacity:rel?.65:.25,dashArray:rel?"":"4 5"}).addTo(lines);
   L.circleMarker([p.lat,p.lon],{radius:rel?7:5,color:"#fff",weight:1,fillColor:colors[p.cat]||colors.other,fillOpacity:.9}).bindPopup("<b>"+esc(p.name)+"</b><br>"+esc(poiLabel(p.cat))+"<br>"+esc(kmLabel(p.dist))).addTo(markers);
  });
@@ -68,12 +70,13 @@ function renderRelationship(){const o=selectedIdea();if(!o){$("homeRelationship"
  ["PASAR LUAR",o.international_search||"Riset buyer sesuai produk","Pencarian bukan daftar order; impor bukan retail sales"]
  ];
  $("homeRelationshipTitle").textContent="Rantai peluang · "+o.title;
- $("homeRelationship").innerHTML=nodes.map(n=>'<div class="home-flow-step"><b>'+esc(n[0])+'</b><strong>'+esc(n[1])+'</strong><small>'+esc(n[2])+'</small></div>').join("");}
-async function searchNearby(){if(!coords)return;const radius=Number($("homeRadius").value||3000),lat=coords.lat,lon=coords.lon,key="gpir:overpass:v2:"+lat.toFixed(3)+":"+lon.toFixed(3)+":"+radius;
+ $("homeRelationship").innerHTML=nodes.map((n,i)=>'<div class="home-flow-step '+(i===1?"is-active":"")+(o.id===activeIdea?" home-selected":"")+'"><b>'+esc(n[0])+'</b><strong>'+esc(n[1])+'</strong><small>'+esc(n[2])+'</small></div>').join("");}
+async function searchNearby(){if(!coords)return;const radius=Number($("homeRadius").value||3000),lat=coords.lat,lon=coords.lon,areaMode=$("homeCoverage").value==="area";if(areaMode&&!validBounds(placeBounds)){$("homeLocationStatus").textContent="Untuk peta satu kota penuh, cari nama kota/area administratif terlebih dahulu, misalnya Jakarta, Indonesia.";$("homeLocationQuery").focus();return;}const scopeKey=areaMode?"area:"+[placeBounds.south,placeBounds.west,placeBounds.north,placeBounds.east].map(v=>v.toFixed(3)).join(","):"nearby:"+radius,key="gpir:overpass:v3:"+scopeKey+":"+lat.toFixed(3)+":"+lon.toFixed(3);
  const cached=cacheRead(key,POI_TTL);if(Array.isArray(cached)){renderPoints(cached);$("homeLocationStatus").textContent="Titik sekitar dimuat dari cache; pastikan tempat masih aktif.";return;}
  if(Date.now()-lastRequest<1500){$("homeLocationStatus").textContent="Tunggu sebentar sebelum mencari lagi.";return;}lastRequest=Date.now();
  $("homeLocationStatus").textContent="Mencari titik pasar, toko, pemasok dan jasa…";$("homePoiCount").textContent="Mencari…";
- const q='[out:json][timeout:25];(nwr(around:'+radius+','+lat+','+lon+')["shop"];nwr(around:'+radius+','+lat+','+lon+')["amenity"~"marketplace|restaurant|cafe|fast_food|food_court|bakery|ice_cream|community_centre|school|hospital|clinic|car_repair|fuel"];nwr(around:'+radius+','+lat+','+lon+')["craft"];nwr(around:'+radius+','+lat+','+lon+')["office"~"company|commercial|wholesale"];nwr(around:'+radius+','+lat+','+lon+')["landuse"~"farmland|orchard|plant_nursery"];);out center tags 300;';
+ const shape=areaMode?'nwr('+placeBounds.south+','+placeBounds.west+','+placeBounds.north+','+placeBounds.east+')':'nwr(around:'+radius+','+lat+','+lon+')';
+ const q='[out:json][timeout:35];('+shape+'["shop"];'+shape+'["amenity"~"marketplace|restaurant|cafe|fast_food|food_court|bakery|ice_cream|community_centre|school|hospital|clinic|car_repair|fuel"];'+shape+'["craft"];'+shape+'["office"~"company|commercial|wholesale"];'+shape+'["landuse"~"farmland|orchard|plant_nursery"];);out center tags;';
  try{const r=await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(q),{headers:{"Accept":"application/json"}});if(!r.ok)throw new Error("HTTP "+r.status);
   const j=await r.json(),u=new Map();(j.elements||[]).forEach(el=>u.set(el.type+"/"+el.id,el));const rows=[...u.values()];cacheWrite(key,rows);renderPoints(rows);
   $("homeLocationStatus").textContent=points.length+" titik ditemukan dalam radius "+(radius/1000)+" km. Verifikasi sebelum membeli/menjual.";
@@ -81,11 +84,11 @@ async function searchNearby(){if(!coords)return;const radius=Number($("homeRadiu
 async function searchLocation(){const q=$("homeLocationQuery").value.trim();if(q.length<3){$("homeLocationStatus").textContent="Masukkan nama kecamatan/kota yang lebih lengkap.";return;}
  const key="gpir:geocode:search:"+q.toLowerCase();let item=cacheRead(key,GEOCODE_TTL);
  if(!item){$("homeSearchLocation").disabled=true;$("homeLocationStatus").textContent="Mencari lokasi pilihan…";
-  try{const r=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&countrycodes=id&q="+encodeURIComponent(q),{headers:{"Accept":"application/json"}});if(!r.ok)throw new Error("HTTP "+r.status);
+  try{const r=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&q="+encodeURIComponent(q),{headers:{"Accept":"application/json"}});if(!r.ok)throw new Error("HTTP "+r.status);
    const rows=await r.json();if(!rows.length)throw new Error("Lokasi tidak ditemukan; tambahkan kabupaten/provinsi.");item=rows[0];cacheWrite(key,item);
   }catch(e){$("homeLocationStatus").textContent="Pencarian lokasi gagal: "+e.message;$("homeSearchLocation").disabled=false;return;}}
  $("homeSearchLocation").disabled=false;const lat=num(item.lat),lon=num(item.lon);if(lat==null||lon==null)return;
- updateLocation(lat,lon,item.display_name||q);await searchNearby();}
+ const bounds=parseBounds(item.boundingbox);updateLocation(lat,lon,item.display_name||q,bounds);if($("homeCoverage").value==="area"&&!bounds){$("homeLocationStatus").textContent="Batas wilayah tidak tersedia. Coba cari nama kota/kabupaten yang lebih luas.";return;}await searchNearby();}
 function detectLocation(automatic){if(!navigator.geolocation){$("homeLocationStatus").textContent="Browser tidak mendukung lokasi. Cari lokasi secara manual.";return;}
  $("homeDetectLocation").disabled=true;$("homeDetectLocation").textContent="Meminta izin lokasi…";
  navigator.geolocation.getCurrentPosition(async p=>{$("homeDetectLocation").disabled=false;$("homeDetectLocation").textContent="◎ Deteksi lokasi saya";updateLocation(p.coords.latitude,p.coords.longitude,"Lokasi perangkat ("+p.coords.latitude.toFixed(3)+", "+p.coords.longitude.toFixed(3)+")");await searchNearby();},
@@ -98,7 +101,8 @@ async function init(){try{const r=await fetch(CATALOG_URL,{cache:"no-store"});if
  $("homeSearchLocation").addEventListener("click",searchLocation);
  $("homeLocationQuery").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchLocation();}});
  $("homeDetectLocation").addEventListener("click",()=>detectLocation(false));
- $("homeRadius").addEventListener("change",()=>{if(coords)searchNearby();});
+ $("homeRadius").addEventListener("change",()=>{if(coords&&$("homeCoverage").value==="nearby")searchNearby();});
+ $("homeCoverage").addEventListener("change",()=>{if(coords)searchNearby();});
  $("homeTypeFilter").addEventListener("change",()=>{activeIdea=null;renderRecommendations();drawPoints();});
  detectLocation(true);}
 init();
