@@ -191,7 +191,7 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
             },
             "worksheets": report
         }
-        manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2) + "\\n"
+        manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
         # Stage the final files on the output filesystem, so directory replacement
         # does not depend on /tmp and the repository sharing the same mount.
         shutil.copytree(temp_json, staged_json)
