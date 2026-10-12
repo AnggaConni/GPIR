@@ -27,6 +27,27 @@ CONFIG_DIR = ROOT / "config"
 USER_AGENT = "GlobalProductIntelligenceRadar/1.0 (+https://github.com/AnggaConni/GPIR; open-data research project)"
 OSM_OVERPASS = "https://overpass-api.de/api/interpreter"
 UNESCO_API = "https://data.unesco.org/api/explore/v2.1/catalog/datasets/ich001/records"
+UNESCO_DESIGNATED_API = "https://data.unesco.org/api/explore/v2.1/catalog/datasets/{dataset}/records"
+UNESCO_DESIGNATED_DATASETS = (
+    {
+        "dataset": "whc001", "category": "world_heritage",
+        "designation": "UNESCO World Heritage Site",
+        "dataset_url": "https://data.unesco.org/explore/dataset/whc001/api/",
+        "license": "CC BY-SA 4.0",
+    },
+    {
+        "dataset": "eg0001", "category": "geopark",
+        "designation": "UNESCO Global Geopark",
+        "dataset_url": "https://data.unesco.org/explore/dataset/eg0001/api/",
+        "license": "CC BY-SA 4.0",
+    },
+    {
+        "dataset": "mab001", "category": "biosphere_reserve",
+        "designation": "UNESCO Biosphere Reserve",
+        "dataset_url": "https://data.unesco.org/explore/dataset/mab001/api/",
+        "license": "CC BY-SA 4.0",
+    },
+)
 WORLD_BANK_API = "https://api.worldbank.org/v2"
 OPENFOODFACTS_SEARCH = "https://world.openfoodfacts.org/cgi/search.pl"
 OPENTRIPMAP_RADIUS = "https://api.opentripmap.com/0.1/en/places/radius"
@@ -353,6 +374,153 @@ def collect_unesco_ich(session: requests.Session, page_size: int = 100, max_page
                      "dataset_url": "https://data.unesco.org/explore/dataset/ich001/api/"}
 
 
+def normalize_designated_site(row: dict[str, Any], dataset: dict[str, str]) -> dict[str, Any] | None:
+    """Normalize georeferenced UNESCO-designated areas/sites for the map picker."""
+    if not isinstance(row, dict):
+        return None
+    fields = row.get("fields") if isinstance(row.get("fields"), dict) else row
+    name = first_text(fields, (
+        "name_en", "title_en", "site_name_en", "site_name", "name", "title",
+        "name_of_site", "property_name", "designation_name"
+    ))
+    if not name:
+        for key, value in fields.items():
+            if re.search(r"(name|title|site)", key, re.I) and isinstance(value, str) and value.strip():
+                name = value.strip()
+                break
+    if not name:
+        return None
+
+    coordinates: Any = None
+    for key in ("coordinates", "geo_point_2d", "geo_point", "location"):
+        if fields.get(key) not in (None, ""):
+            coordinates = fields[key]
+            break
+    lat = lon = None
+    if isinstance(coordinates, (list, tuple)) and len(coordinates) >= 2:
+        # UNESCO DataHub geo-point fields are serialized as [latitude, longitude].
+        lat, lon = as_float(coordinates[0]), as_float(coordinates[1])
+    elif isinstance(coordinates, dict):
+        lat = as_float(coordinates.get("lat") or coordinates.get("latitude"))
+        lon = as_float(coordinates.get("lon") or coordinates.get("lng") or coordinates.get("longitude"))
+    elif isinstance(coordinates, str):
+        try:
+            decoded = json.loads(coordinates)
+        except (json.JSONDecodeError, TypeError):
+            decoded = None
+        if isinstance(decoded, (list, tuple)) and len(decoded) >= 2:
+            lat, lon = as_float(decoded[0]), as_float(decoded[1])
+        else:
+            numbers = re.findall(r"-?\d+(?:\.\d+)?", coordinates)
+            if len(numbers) >= 2:
+                lat, lon = as_float(numbers[0]), as_float(numbers[1])
+    if lat is None or lon is None:
+        lat = as_float(fields.get("latitude") if fields.get("latitude") is not None else fields.get("lat"))
+        lon = as_float(fields.get("longitude") if fields.get("longitude") is not None else fields.get("lon"))
+    if lat is None or lon is None or not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        return None
+
+    country_value = None
+    for key in (
+        "states_names_en", "states_name_en", "states_names", "state_party", "states_parties",
+        "country_title_en", "countries_en", "country_en", "countries", "country", "country_name",
+        "country_name_en", "iso2"
+    ):
+        value = fields.get(key)
+        if value not in (None, "", [], {}):
+            country_value = value
+            break
+    country = flatten_names(country_value) or "Country not specified"
+    external_id = first_text(fields, ("id_no", "mab_id", "uuid", "id", "code")) or re.sub(
+        r"[^a-z0-9]+", "-", (dataset["dataset"] + "-" + name).lower()
+    ).strip("-")
+    site_url = first_text(fields, ("url", "website", "site_url"))
+    if not site_url and dataset["dataset"] == "whc001":
+        site_url = "https://whc.unesco.org/en/list/" + external_id + "/"
+    return {
+        "id": dataset["dataset"] + ":" + external_id,
+        "external_id": external_id,
+        "source": "UNESCO DataHub",
+        "source_dataset": dataset["dataset"],
+        "category": dataset["category"],
+        "designation": dataset["designation"],
+        "name": name,
+        "country": country,
+        "country_code": first_text(fields, ("iso2", "iso3", "country_iso2", "country_iso3")),
+        "lat": lat,
+        "lon": lon,
+        "inscription_year": first_text(fields, ("date_inscribed", "year_inscribed", "inscription_year", "date")),
+        "url": site_url or dataset["dataset_url"],
+        "source_url": dataset["dataset_url"],
+        "license": dataset["license"],
+        "evidence_type": "official_unesco_designation_reference",
+        "retrieved_at": utc_now(),
+    }
+
+
+def collect_unesco_designated_sites(
+    session: requests.Session, page_size: int = 100, max_pages: int = 30
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Fetch World Heritage, Global Geopark and Biosphere Reserve reference records."""
+    items: list[dict[str, Any]] = []
+    dataset_status: dict[str, Any] = {}
+    page_size = max(1, min(100, page_size))
+    for dataset in UNESCO_DESIGNATED_DATASETS:
+        dataset_items: list[dict[str, Any]] = []
+        offset = 0
+        pages = 0
+        try:
+            while pages < max_pages:
+                payload = fetch_json(
+                    session,
+                    UNESCO_DESIGNATED_API.format(dataset=dataset["dataset"]),
+                    {"limit": page_size, "offset": offset},
+                    timeout=45,
+                )
+                if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
+                    raise RuntimeError("Unexpected UNESCO DataHub response")
+                rows = payload["results"]
+                for row in rows:
+                    if isinstance(row, dict):
+                        normalized = normalize_designated_site(row, dataset)
+                        if normalized:
+                            dataset_items.append(normalized)
+                pages += 1
+                offset += len(rows)
+                total = payload.get("total_count")
+                if not rows or len(rows) < page_size or (isinstance(total, int) and offset >= total):
+                    break
+                time.sleep(0.15)
+            if dataset_items:
+                dataset_status[dataset["dataset"]] = {
+                    "status": "ok", "records": len(dataset_items), "pages": pages,
+                    "dataset_url": dataset["dataset_url"], "license": dataset["license"],
+                }
+                items.extend(dataset_items)
+                logger.info("UNESCO %s: %d coordinate records", dataset["dataset"], len(dataset_items))
+            else:
+                dataset_status[dataset["dataset"]] = {
+                    "status": "empty", "records": 0, "pages": pages,
+                    "dataset_url": dataset["dataset_url"], "license": dataset["license"],
+                }
+                logger.warning("UNESCO %s returned no usable coordinate records", dataset["dataset"])
+        except (requests.RequestException, RuntimeError, ValueError, TypeError, KeyError) as exc:
+            dataset_status[dataset["dataset"]] = {
+                "status": "failed", "records": len(dataset_items), "pages": pages,
+                "error_type": type(exc).__name__, "dataset_url": dataset["dataset_url"],
+            }
+            logger.warning("UNESCO %s request failed: %s", dataset["dataset"], type(exc).__name__)
+
+    successes = sum(v["status"] == "ok" for v in dataset_status.values())
+    failures = sum(v["status"] == "failed" for v in dataset_status.values())
+    overall = "ok" if successes == len(UNESCO_DESIGNATED_DATASETS) else "partial" if successes else "failed"
+    return items, {
+        "status": overall, "records": len(items), "datasets": dataset_status,
+        "license": "CC BY-SA 4.0", "attribution": "UNESCO DataHub",
+        "note": "Designated-site coordinates are searchable reference points; large reserves and multi-site properties may cover a wider area."
+    }
+
+
 def normalize_food_product(row: dict[str, Any], query_term: str) -> dict[str, Any] | None:
     code = first_text(row, ("code", "id"))
     name = first_text(row, ("product_name", "product_name_en", "generic_name"))
@@ -483,6 +651,10 @@ def run() -> dict[str, dict[str, Any]]:
     heritage = run_source("UNESCO ICH", lambda: collect_unesco_ich(session,
                    page_size=int(os.getenv("UNESCO_ICH_PAGE_SIZE", "100")),
                    max_pages=int(os.getenv("UNESCO_ICH_MAX_PAGES", "30"))))
+    designated_sites = run_source("UNESCO Designated Sites", lambda: collect_unesco_designated_sites(
+                   session,
+                   page_size=int(os.getenv("UNESCO_DESIGNATED_PAGE_SIZE", "100")),
+                   max_pages=int(os.getenv("UNESCO_DESIGNATED_MAX_PAGES", "30"))))
     food = run_source("Open Food Facts", lambda: collect_openfoodfacts(session, food_terms,
                    page_size=int(os.getenv("OFF_PAGE_SIZE", "20")),
                    sleep_seconds=float(os.getenv("OFF_REQUEST_SLEEP_SECONDS", "6.2"))))
@@ -501,11 +673,13 @@ def run() -> dict[str, dict[str, Any]]:
     heritage_path = DATA_DIR / "ich_heritage.json"
     food_path = DATA_DIR / "food_products.json"
     stats_path = DATA_DIR / "tourism_stats.json"
+    designated_path = DATA_DIR / "designated_sites.json"
 
     previous_places = read_existing(places_path) or {}
     previous_heritage = read_existing(heritage_path) or {}
     previous_food = read_existing(food_path) or {}
     previous_stats = read_existing(stats_path) or {}
+    previous_designated = read_existing(designated_path) or {}
 
     if places or not previous_places:
         write_json(places_path, {
@@ -548,6 +722,37 @@ def run() -> dict[str, dict[str, Any]]:
                      "note": "Packaged-food catalogue metadata only; not a sales, sell-through or market-share dataset."},
             "items": food_records
         })
+    # If one UNESCO dataset is temporarily unavailable, retain its last good records.
+    designated_status = source_status.get("UNESCO Designated Sites", {})
+    previous_designated_items = previous_designated.get("items", [])
+    fresh_dataset_status = designated_status.get("datasets", {}) if isinstance(designated_status, dict) else {}
+    successful_dataset_ids = {key for key, value in fresh_dataset_status.items()
+                              if isinstance(value, dict) and value.get("status") == "ok"}
+    retained_designated = [
+        item for item in previous_designated_items
+        if isinstance(item, dict) and item.get("source_dataset") not in successful_dataset_ids
+    ]
+    designated_by_id = {}
+    for item in retained_designated + designated_sites:
+        if isinstance(item, dict) and item.get("id"):
+            designated_by_id[str(item["id"])] = item
+    designated_records = sorted(designated_by_id.values(), key=lambda row: (
+        str(row.get("country", "")).casefold(), str(row.get("designation", "")).casefold(),
+        str(row.get("name", "")).casefold()
+    ))
+    write_json(designated_path, {
+        "schema_version": "1.0.0",
+        "generated_at": now if designated_sites else previous_designated.get("generated_at", now),
+        "meta": {
+            "source": "UNESCO DataHub",
+            "source_status": designated_status,
+            "license": "CC BY-SA 4.0",
+            "attribution": "UNESCO DataHub",
+            "datasets": {item["dataset"]: item["dataset_url"] for item in UNESCO_DESIGNATED_DATASETS},
+            "note": "Global searchable reference for World Heritage Sites, UNESCO Global Geoparks and Biosphere Reserves. Coordinates are representative map points, not full boundaries; transboundary sites may appear in more than one country."
+        },
+        "items": designated_records,
+    })
     stats_records = arrivals if arrivals else previous_stats.get("countries", [])
     write_json(stats_path, {
         "schema_version": "1.0.0", "generated_at": now if arrivals else previous_stats.get("generated_at", now),
@@ -556,8 +761,8 @@ def run() -> dict[str, dict[str, Any]]:
                  "UN_Tourism_url": "https://www.untourism.int/tourism-statistics/tourism-statistics-database"},
         "countries": stats_records
     })
-    logger.info("Tourism pipeline completed: %d place records, %d ICH records, %d packaged products, %d country arrival series",
-                len(places), len(heritage_records), len(food_records), len(stats_records))
+    logger.info("Tourism pipeline completed: %d place records, %d ICH records, %d designated sites, %d packaged products, %d country arrival series",
+                len(places), len(heritage_records), len(designated_records), len(food_records), len(stats_records))
     return source_status
 
 
