@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 """Import the official UN Tourism bulk ZIP (Excel workbooks) into JSON snapshots.
 
-The importer deliberately preserves each worksheet as a grid instead of guessing
-which rows are headers. A compact manifest records files, sheets and row counts.
-The output is reference statistics, not attraction-level visitor counts.
+Each worksheet is preserved as a grid rather than guessing the header row. A manifest
+records source provenance, worksheet names and dimensions. These statistics are not
+attraction-level visitor counts.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import logging
+import math
 import os
 import re
 import shutil
-import sys
-import tempfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -42,7 +41,7 @@ def slug(value: str) -> str:
 
 
 def download_archive(url: str, target: Path, timeout: int = 90) -> Path:
-    """Download an archive atomically; refuse non-HTTP(S) URLs and HTML error pages."""
+    """Download an archive atomically and reject non-ZIP responses."""
     parsed = urlparse(url)
     if parsed.scheme not in {"https", "http"} or not parsed.netloc:
         raise ValueError("Bulk URL must be a valid HTTP(S) URL")
@@ -66,7 +65,7 @@ def download_archive(url: str, target: Path, timeout: int = 90) -> Path:
 
 
 def safe_extract(zip_path: Path, extract_dir: Path) -> list[Path]:
-    """Extract ZIP without allowing absolute paths or path traversal."""
+    """Extract archive members without allowing absolute paths or path traversal."""
     extract_dir.mkdir(parents=True, exist_ok=True)
     root = extract_dir.resolve()
     extracted: list[Path] = []
@@ -88,8 +87,6 @@ def json_value(value: Any) -> Any:
     if value is None or isinstance(value, (str, int, bool)):
         return value
     if isinstance(value, float):
-        # JSON has no NaN/Infinity; convert non-finite Excel values to null.
-        import math
         return value if math.isfinite(value) else None
     if hasattr(value, "isoformat"):
         try:
@@ -107,26 +104,18 @@ def export_workbook(path: Path, output_dir: Path, source_url: str, generated_at:
     try:
         for sheet_index, sheet in enumerate(workbook.worksheets, start=1):
             rows = [[json_value(cell) for cell in row] for row in sheet.iter_rows(values_only=True)]
-            # Preserve matrix/grid layout because official statistical workbooks often
-            # use multi-row headings, footnotes and merged-cell structures.
             while rows and all(value is None for value in rows[-1]):
                 rows.pop()
             if not rows:
                 continue
-            stem = slug(path.stem)
-            sheet_slug = slug(sheet.title)
+            stem, sheet_slug = slug(path.stem), slug(sheet.title)
             out_path = output_dir / f"{stem}__{sheet_index:02d}_{sheet_slug}.json"
             payload = {
-                "schema_version": "1.0.0",
-                "generated_at": generated_at,
+                "schema_version": "1.0.0", "generated_at": generated_at,
                 "meta": {
-                    "source": "UN Tourism Statistics Database",
-                    "source_url": source_url,
-                    "source_archive": path.name,
-                    "workbook": path.name,
-                    "worksheet": sheet.title,
-                    "layout": "grid",
-                    "row_count": len(rows),
+                    "source": "UN Tourism Statistics Database", "source_url": source_url,
+                    "source_archive": path.name, "workbook": path.name, "worksheet": sheet.title,
+                    "layout": "grid", "row_count": len(rows),
                     "column_count": max((len(row) for row in rows), default=0),
                     "note": "Worksheet values are preserved as a grid; header rows and indicators are not inferred automatically."
                 },
@@ -152,49 +141,66 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
         raise ValueError(f"Archive is missing or invalid: {archive}")
 
     generated_at = utc_now()
-    extract_dir = output_dir / "extracted"
-    # A clean extraction prevents stale workbook exports from surviving a changed ZIP.
-    if extract_dir.exists():
-        shutil.rmtree(extract_dir)
-    extracted = safe_extract(archive, extract_dir)
+    # Extract into a fresh temporary sibling and only replace the prior extraction once
+    # the new archive has been fully extracted and validated.
+    output_dir.mkdir(parents=True, exist_ok=True)
+    temp_extract = output_dir / "extracted.next"
+    if temp_extract.exists():
+        shutil.rmtree(temp_extract)
+    extracted = safe_extract(archive, temp_extract)
     workbooks = [p for p in extracted if p.suffix.lower() in {".xlsx", ".xlsm"}]
     if not workbooks:
-        raise ValueError("No .xlsx or .xlsm workbooks were found in the ZIP. Inspect the archive contents.")
+        shutil.rmtree(temp_extract, ignore_errors=True)
+        raise ValueError("No .xlsx or .xlsm workbooks were found in the ZIP. Inspect archive contents.")
 
-    json_dir = output_dir / "sheets"
-    json_dir.mkdir(parents=True, exist_ok=True)
-    # Remove only files created by this exporter, not other GPIR data files.
-    for old in json_dir.glob("*.json"):
-        old.unlink()
+    temp_json = output_dir / "sheets.next"
+    if temp_json.exists():
+        shutil.rmtree(temp_json)
+    temp_json.mkdir(parents=True, exist_ok=True)
     report: list[dict[str, Any]] = []
-    for workbook_path in workbooks:
-        report.extend(export_workbook(workbook_path, json_dir, url, generated_at))
-    if not report:
-        raise ValueError("Excel workbooks were found, but no non-empty worksheets could be exported")
-
-    manifest = {
-        "schema_version": "1.0.0",
-        "generated_at": generated_at,
-        "meta": {
-            "source": "UN Tourism Statistics Database",
-            "source_url": "https://www.untourism.int/tourism-statistics/tourism-statistics-database",
-            "download_url": url,
-            "archive": archive.name,
-            "archive_size_bytes": archive.stat().st_size,
-            "workbook_count": len(workbooks),
-            "worksheet_count": len(report),
-            "layout": "grid",
-            "limitations": [
-                "Statistics retain their original worksheet layout; automated header interpretation is intentionally not attempted.",
-                "National or regional tourism statistics are not attraction-level footfall.",
-                "The JSON reflects the archived source release and is not live data."
-            ]
-        },
-        "worksheets": report
-    }
-    manifest_path = output_dir / "manifest.json"
-    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    LOG.info("Exported %d worksheets from %d workbooks to %s", len(report), len(workbooks), json_dir)
+    try:
+        for workbook_path in workbooks:
+            report.extend(export_workbook(workbook_path, temp_json, url, generated_at))
+        if not report:
+            raise ValueError("Excel workbooks were found, but no non-empty worksheets could be exported")
+        manifest = {
+            "schema_version": "1.0.0", "generated_at": generated_at,
+            "meta": {
+                "source": "UN Tourism Statistics Database",
+                "source_url": "https://www.untourism.int/tourism-statistics/tourism-statistics-database",
+                "download_url": url, "archive": archive.name,
+                "archive_size_bytes": archive.stat().st_size, "workbook_count": len(workbooks),
+                "worksheet_count": len(report), "layout": "grid",
+                "limitations": [
+                    "Statistics retain original worksheet layout; automated header interpretation is intentionally not attempted.",
+                    "National or regional tourism statistics are not attraction-level footfall.",
+                    "The JSON reflects the archived release and is not live data."
+                ]
+            },
+            "worksheets": report
+        }
+        manifest_tmp = output_dir / "manifest.json.tmp"
+        manifest_tmp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        # Commit output directories only after every workbook conversion succeeds.
+        final_extract, final_json = output_dir / "extracted", output_dir / "sheets"
+        old_extract, old_json = output_dir / "extracted.previous", output_dir / "sheets.previous"
+        for old in (old_extract, old_json):
+            if old.exists():
+                shutil.rmtree(old)
+        if final_extract.exists():
+            final_extract.replace(old_extract)
+        if final_json.exists():
+            final_json.replace(old_json)
+        temp_extract.replace(final_extract)
+        temp_json.replace(final_json)
+        manifest_tmp.replace(output_dir / "manifest.json")
+        shutil.rmtree(old_extract, ignore_errors=True)
+        shutil.rmtree(old_json, ignore_errors=True)
+    except Exception:
+        shutil.rmtree(temp_extract, ignore_errors=True)
+        shutil.rmtree(temp_json, ignore_errors=True)
+        raise
+    LOG.info("Exported %d worksheets from %d workbooks to %s", len(report), len(workbooks), output_dir / "sheets")
     return manifest
 
 
