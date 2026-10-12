@@ -173,6 +173,35 @@
       return userTerms.some(term => context.includes(term) || term.includes(context));
     }) || null;
   }
+  function nearbyTravelGuides(limitKm=5) {
+    if(!currentLocation)return [];
+    const guides=[];
+    tourismSnapshot.filter(item=>item&&item.kind==="travel_guide"&&number(item.lat)!=null&&number(item.lon)!=null&&safeHttpUrl(item.url)).forEach(item=>{
+      const distance=distanceKm(currentLocation.lat,currentLocation.lon,Number(item.lat),Number(item.lon));
+      if(distance<=limitKm)guides.push({...item,distance});
+    });
+    const unique=[];
+    guides.sort((a,b)=>a.distance-b.distance).forEach(guide=>{
+      if(!unique.some(existing=>clean(existing.name)===clean(guide.name)&&Math.abs(existing.distance-guide.distance)<0.12))unique.push(guide);
+    });
+    return unique.slice(0,8);
+  }
+  function renderTourismGuides() {
+    const target=$("tourismGuideLinks");if(!target)return;
+    const guides=nearbyTravelGuides(5);
+    if(guides.length){
+      target.innerHTML=guides.map(guide=>'<a class="tourism-guide-link" href="'+esc(safeHttpUrl(guide.url)||"#")+'" target="_blank" rel="noopener noreferrer"><b>'+esc(guide.name)+'</b><span>'+esc(distanceLabel(guide.distance))+' · '+esc(guide.source||"Wikivoyage")+' ↗</span></a>').join("");
+    } else if(currentLocation) {
+      target.innerHTML='<p class="tiny">Belum ada metadata travel guide dalam 5 km pada snapshot ini. Ini bukan bukti bahwa tidak ada panduan atau atraksi.</p>';
+    } else {
+      target.innerHTML='<p class="tiny">Pilih lokasi untuk mencari metadata panduan perjalanan di sekitar.</p>';
+    }
+  }
+  function countryTourismContext(profile) {
+    if(!Array.isArray(tourismStats)||!tourismStats.length)return null;
+    const location=clean([currentLocationLabel,profile.district,profile.province].join(" "));
+    return tourismStats.find(row=>row&&row.country&&location.includes(clean(row.country)))||null;
+  }
   function buyerSegmentLabel(segment) {
     return ({consumers:"Konsumen rumah tangga",msme:"UMKM: mikro, kecil, menengah",business:"Perusahaan / institusi / grosir",export:"Importir / distributor luar negeri",mixed:"Campuran / belum ditentukan"})[segment] || "Campuran / belum ditentukan";
   }
@@ -417,6 +446,7 @@
       const profile = collectProfile();
       renderRecommendations(profile);
       updateTourismStatus();
+      renderTourismGuides();
       const summary=$("tourismDataSummary");
       if(summary){
         const lang=window.GPIRi18n&&window.GPIRi18n.getLanguage?window.GPIRi18n.getLanguage():"en";
@@ -585,6 +615,7 @@
     });
     nearbyPoints.sort((a,b)=>(a.distance??9999)-(b.distance??9999));
     updateTourismStatus();
+    renderTourismGuides();
     const active=lastRecommendations.find(o=>o.id===activeOpportunityId),wanted=active?(active.map_categories||[]):[];
     const relevant= p=>wanted.includes(p.category)&&(p.category!=="tourism"||(p.distance!=null&&p.distance<=3));
     const areaMode=$("coverage")&&$("coverage").value==="area"&&validBounds(selectedAreaBounds);
@@ -701,13 +732,19 @@
     const trade=matchingTradeRows(opp,profile,2);
     const input=[...profile.resources.slice(0,2),...profile.skills.slice(0,1)].join(" · ")||"Sumber daya/keterampilan belum diisi";
     const tourismText=attractions.length?attractions.map(p=>p.name+" · "+distanceLabel(p.distance)).join(" / "):"Tidak ada atraksi terpetakan ≤3 km";
+    const travelGuides=nearbyTravelGuides(5).slice(0,2);
+    const guideText=travelGuides.length?travelGuides.map(g=>g.name+" · "+distanceLabel(g.distance)).join(" / "):"Tidak ada metadata panduan dalam 5 km";
+    const wbContext=countryTourismContext(profile);
+    const wbLatest=wbContext&&wbContext.latest&&number(wbContext.latest.international_tourist_arrivals)!=null
+      ? wbContext.country+" · "+wbContext.latest.year+": "+new Intl.NumberFormat("en-US",{maximumFractionDigits:0,notation:"compact"}).format(wbContext.latest.international_tourist_arrivals)+" arrivals"
+      : "";
     const localText=leads.length?leads.map(p=>p.name+" · "+distanceLabel(p.distance)).join(" / "):"Belum ada titik usaha kategori cocok";
     const nodes=[
       {label:"INPUT LOKAL",value:input,detail:"Dari input pengguna/inventaris lokal"},
       {label:businessTypeLabel(opp.business_type),value:firstText(opp.products,opp.title),detail:opp.action_summary||opp.rationale},
       {label:"CALON PEMBELI",value:firstText(opp.sell_to,"Identifikasi lewat wawancara"),detail:firstText(opp.channels,"Uji kanal sebelum investasi")},
-      {label:"WISATA & USAHA SEKITAR",value:tourismText+(leads.length?" · Usaha: "+localText:""),detail:"Hanya atraksi ≤3 km dianggap dekat. Tempat peta adalah petunjuk, bukan buyer terkonfirmasi."},
-      {label:"SINYAL PASAR LUAR",value:trade.length?trade.map(t=>(t.market_name||t.market_iso3)+" · "+compactUSD(number(t.latest_import_usd))+" / "+(t.latest_year||"tahun?")).join(" / "):"Belum ada padanan pada feed",detail:"Impor tahunan tingkat negara, bukan buyer atau pesanan terverifikasi"}
+      {label:"WISATA & USAHA SEKITAR",value:tourismText+(leads.length?" · Usaha: "+localText:"")+(travelGuides.length?" · Travel guide: "+guideText:""),detail:"Hanya atraksi ≤3 km dianggap dekat. Panduan perjalanan terpisah; tempat peta bukan buyer terkonfirmasi."},
+      {label:"SINYAL PASAR LUAR",value:[trade.length?trade.map(t=>(t.market_name||t.market_iso3)+" · "+compactUSD(number(t.latest_import_usd))+" / "+(t.latest_year||"tahun?")).join(" / "):"Belum ada padanan perdagangan",wbLatest].filter(Boolean).join(" · "),detail:"Impor adalah arus perdagangan; kedatangan wisata World Bank adalah statistik tahunan negara, bukan hitungan pengunjung objek wisata."}
     ];
     $("relationshipTitle").textContent="Rantai peluang: "+opp.title;
     $("relationshipSummary").textContent="Hubungan dihitung dari bahan/skill, tipe usaha, calon pembeli, lokasi terpetakan dan padanan perdagangan.";
