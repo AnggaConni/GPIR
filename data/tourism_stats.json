@@ -1,10 +1,460 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": null,
+  "generated_at": "2026-10-12T18:49:14+00:00",
   "meta": {
-    "source_status": {},
-    "note": "Annual country-level tourism context, not attraction-level visitor counts.",
-    "UN_Tourism_access": "access_required"
+    "source_status": {
+      "OpenStreetMap": {
+        "status": "failed",
+        "records": 0,
+        "failed_areas": [],
+        "license": "ODbL 1.0; attribution required; share-alike obligations may apply"
+      },
+      "OpenTripMap": {
+        "status": "skipped_missing_api_key",
+        "records": 0,
+        "message": "Set GitHub Actions secret OPENTRIPMAP_API_KEY to enable this source."
+      },
+      "Wikivoyage": {
+        "status": "ok",
+        "records": 89,
+        "failed_areas": [],
+        "license": "Wikivoyage content CC BY-SA; only title/coordinate metadata stored"
+      },
+      "UNESCO ICH": {
+        "status": "ok",
+        "records": 849,
+        "pages": 9,
+        "license": "CC BY-SA 4.0",
+        "dataset_url": "https://data.unesco.org/explore/dataset/ich001/api/"
+      },
+      "Open Food Facts": {
+        "status": "partial",
+        "records": 117,
+        "queries": [
+          "banana chips",
+          "cassava chips",
+          "coffee",
+          "sambal",
+          "coconut sugar",
+          "fruit jam",
+          "chocolate"
+        ],
+        "failed_queries": [
+          "cassava chips: RetryError"
+        ],
+        "note": "Product catalogue only; not sales volume, price history or market share."
+      },
+      "World Bank Tourism Indicators": {
+        "status": "ok",
+        "countries": 7,
+        "failed_countries": [],
+        "indicator_id": "ST.INT.ARVL",
+        "note": "Country-level annual context; not visitor counts for a particular attraction."
+      },
+      "UN Tourism Statistics Database": {
+        "status": "access_required",
+        "records": 0,
+        "url": "https://www.untourism.int/tourism-statistics/tourism-statistics-database",
+        "method": "Official database/publication access; no unauthenticated public API configured",
+        "note": "The official page states that free database access for students/researchers requires a formal written request. Do not scrape the portal or label country statistics as site-level visitor counts."
+      }
+    },
+    "note": "Annual country-level tourism context; not attraction-level counts or a live visitor feed.",
+    "UN_Tourism_access": "Official Tourism Statistics Database is listed as access_required until official data access/export is available.",
+    "UN_Tourism_url": "https://www.untourism.int/tourism-statistics/tourism-statistics-database"
   },
-  "countries": []
+  "countries": [
+    {
+      "iso2": "FR",
+      "country": "France",
+      "indicator_id": "ST.INT.ARVL",
+      "indicator_name": "International tourism, number of arrivals",
+      "unit": "arrivals (each entry can represent a trip/arrival, not unique people)",
+      "series": [
+        {
+          "year": 2025,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2024,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2023,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2022,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2021,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2020,
+          "international_tourist_arrivals": 117109000.0
+        },
+        {
+          "year": 2019,
+          "international_tourist_arrivals": 217877000.0
+        },
+        {
+          "year": 2018,
+          "international_tourist_arrivals": 211998000.0
+        },
+        {
+          "year": 2017,
+          "international_tourist_arrivals": 207274000.0
+        },
+        {
+          "year": 2016,
+          "international_tourist_arrivals": 203042000.0
+        }
+      ],
+      "latest": {
+        "year": 2020,
+        "international_tourist_arrivals": 117109000.0
+      },
+      "source": "World Bank Indicators API",
+      "source_url": "https://api.worldbank.org/v2/country/FR/indicator/ST.INT.ARVL",
+      "evidence_type": "annual_country_tourism_context_not_site_visits"
+    },
+    {
+      "iso2": "GB",
+      "country": "United Kingdom",
+      "indicator_id": "ST.INT.ARVL",
+      "indicator_name": "International tourism, number of arrivals",
+      "unit": "arrivals (each entry can represent a trip/arrival, not unique people)",
+      "series": [
+        {
+          "year": 2025,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2024,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2023,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2022,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2021,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2020,
+          "international_tourist_arrivals": 11101000.0
+        },
+        {
+          "year": 2019,
+          "international_tourist_arrivals": 40857000.0
+        },
+        {
+          "year": 2018,
+          "international_tourist_arrivals": 40283000.0
+        },
+        {
+          "year": 2017,
+          "international_tourist_arrivals": 41080000.0
+        },
+        {
+          "year": 2016,
+          "international_tourist_arrivals": 39129000.0
+        }
+      ],
+      "latest": {
+        "year": 2020,
+        "international_tourist_arrivals": 11101000.0
+      },
+      "source": "World Bank Indicators API",
+      "source_url": "https://api.worldbank.org/v2/country/GB/indicator/ST.INT.ARVL",
+      "evidence_type": "annual_country_tourism_context_not_site_visits"
+    },
+    {
+      "iso2": "ID",
+      "country": "Indonesia",
+      "indicator_id": "ST.INT.ARVL",
+      "indicator_name": "International tourism, number of arrivals",
+      "unit": "arrivals (each entry can represent a trip/arrival, not unique people)",
+      "series": [
+        {
+          "year": 2025,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2024,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2023,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2022,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2021,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2020,
+          "international_tourist_arrivals": 4053000.0
+        },
+        {
+          "year": 2019,
+          "international_tourist_arrivals": 16107000.0
+        },
+        {
+          "year": 2018,
+          "international_tourist_arrivals": 15810000.0
+        },
+        {
+          "year": 2017,
+          "international_tourist_arrivals": 14040000.0
+        },
+        {
+          "year": 2016,
+          "international_tourist_arrivals": 11519000.0
+        }
+      ],
+      "latest": {
+        "year": 2020,
+        "international_tourist_arrivals": 4053000.0
+      },
+      "source": "World Bank Indicators API",
+      "source_url": "https://api.worldbank.org/v2/country/ID/indicator/ST.INT.ARVL",
+      "evidence_type": "annual_country_tourism_context_not_site_visits"
+    },
+    {
+      "iso2": "JP",
+      "country": "Japan",
+      "indicator_id": "ST.INT.ARVL",
+      "indicator_name": "International tourism, number of arrivals",
+      "unit": "arrivals (each entry can represent a trip/arrival, not unique people)",
+      "series": [
+        {
+          "year": 2025,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2024,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2023,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2022,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2021,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2020,
+          "international_tourist_arrivals": 4115799.8046875
+        },
+        {
+          "year": 2019,
+          "international_tourist_arrivals": 31881000.0
+        },
+        {
+          "year": 2018,
+          "international_tourist_arrivals": 31191000.0
+        },
+        {
+          "year": 2017,
+          "international_tourist_arrivals": 28691000.0
+        },
+        {
+          "year": 2016,
+          "international_tourist_arrivals": 24039000.0
+        }
+      ],
+      "latest": {
+        "year": 2020,
+        "international_tourist_arrivals": 4115799.8046875
+      },
+      "source": "World Bank Indicators API",
+      "source_url": "https://api.worldbank.org/v2/country/JP/indicator/ST.INT.ARVL",
+      "evidence_type": "annual_country_tourism_context_not_site_visits"
+    },
+    {
+      "iso2": "MY",
+      "country": "Malaysia",
+      "indicator_id": "ST.INT.ARVL",
+      "indicator_name": "International tourism, number of arrivals",
+      "unit": "arrivals (each entry can represent a trip/arrival, not unique people)",
+      "series": [
+        {
+          "year": 2025,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2024,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2023,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2022,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2021,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2020,
+          "international_tourist_arrivals": 4333000.0
+        },
+        {
+          "year": 2019,
+          "international_tourist_arrivals": 26101000.0
+        },
+        {
+          "year": 2018,
+          "international_tourist_arrivals": 25832000.0
+        },
+        {
+          "year": 2017,
+          "international_tourist_arrivals": 25948000.0
+        },
+        {
+          "year": 2016,
+          "international_tourist_arrivals": 26757000.0
+        }
+      ],
+      "latest": {
+        "year": 2020,
+        "international_tourist_arrivals": 4333000.0
+      },
+      "source": "World Bank Indicators API",
+      "source_url": "https://api.worldbank.org/v2/country/MY/indicator/ST.INT.ARVL",
+      "evidence_type": "annual_country_tourism_context_not_site_visits"
+    },
+    {
+      "iso2": "SG",
+      "country": "Singapore",
+      "indicator_id": "ST.INT.ARVL",
+      "indicator_name": "International tourism, number of arrivals",
+      "unit": "arrivals (each entry can represent a trip/arrival, not unique people)",
+      "series": [
+        {
+          "year": 2025,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2024,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2023,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2022,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2021,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2020,
+          "international_tourist_arrivals": 2742000.0
+        },
+        {
+          "year": 2019,
+          "international_tourist_arrivals": 19116000.0
+        },
+        {
+          "year": 2018,
+          "international_tourist_arrivals": 18508000.0
+        },
+        {
+          "year": 2017,
+          "international_tourist_arrivals": 17425000.0
+        },
+        {
+          "year": 2016,
+          "international_tourist_arrivals": 16403000.0
+        }
+      ],
+      "latest": {
+        "year": 2020,
+        "international_tourist_arrivals": 2742000.0
+      },
+      "source": "World Bank Indicators API",
+      "source_url": "https://api.worldbank.org/v2/country/SG/indicator/ST.INT.ARVL",
+      "evidence_type": "annual_country_tourism_context_not_site_visits"
+    },
+    {
+      "iso2": "TH",
+      "country": "Thailand",
+      "indicator_id": "ST.INT.ARVL",
+      "indicator_name": "International tourism, number of arrivals",
+      "unit": "arrivals (each entry can represent a trip/arrival, not unique people)",
+      "series": [
+        {
+          "year": 2025,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2024,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2023,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2022,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2021,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2020,
+          "international_tourist_arrivals": null
+        },
+        {
+          "year": 2019,
+          "international_tourist_arrivals": 39916000.0
+        },
+        {
+          "year": 2018,
+          "international_tourist_arrivals": 38178000.0
+        },
+        {
+          "year": 2017,
+          "international_tourist_arrivals": 35592000.0
+        },
+        {
+          "year": 2016,
+          "international_tourist_arrivals": 32530000.0
+        }
+      ],
+      "latest": {
+        "year": 2019,
+        "international_tourist_arrivals": 39916000.0
+      },
+      "source": "World Bank Indicators API",
+      "source_url": "https://api.worldbank.org/v2/country/TH/indicator/ST.INT.ARVL",
+      "evidence_type": "annual_country_tourism_context_not_site_visits"
+    }
+  ]
 }

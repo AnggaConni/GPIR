@@ -1,0 +1,317 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-10-12T18:58:58+00:00",
+  "meta": {
+    "source": "UN Tourism Statistics Database",
+    "source_url": "https://pre-webunwto.s3.amazonaws.com/s3fs-public/2026-05/UN_Tourism_bulk_data_download_05_2026.zip",
+    "source_archive": "UN_Tourism_domestic_accommodation_12_2025.xlsx",
+    "workbook": "UN_Tourism_domestic_accommodation_12_2025.xlsx",
+    "worksheet": "Overview",
+    "layout": "grid",
+    "row_count": 30,
+    "column_count": 8,
+    "note": "Worksheet values are preserved as a grid; header rows and indicators are not inferred automatically."
+  },
+  "data": [
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "Overview",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "UN Tourism collects, standardizes and publishes statistics of tourism, and promotes the integration of these statistics within the sphere of the United Nations system",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "Data are collected and updated on a regular basis through questionnaires to country statistical focal points.",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "The definitions and classifications used are based on the International Recommendations for Tourism Statistics 2008 (https://www.unwto.org/tourism-statistics/on-basic-tourism-statistics-irts-2008), approved by the United Nations Statistical Commission at its 39th session (26-29 February 2008).",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "NOTE: The results presented are based on a newly implemented data collection process, based on a new unified questionnaire. The corresponding new data processing system is currently in a transitional phase, and therefore some data points may not yet fully reflect the intended standards. We appreciate your understanding as we continue the ongoing improvements, which are also expected to gradually increase the completeness of the datasets.",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "Disclaimer:",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "The data and related materials provided by UN Tourism are made available “as is” and reflect the most current information accessible at the time of publication. UN Tourism does not warrant, guarantee, or make any representations (express or implied) regarding the accuracy, reliability, completeness, timeliness, or fitness for a particular purpose of the content.",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "While every effort is made to ensure the quality and consistency of the data, this dataset is part of an evolving process. Opportunity areas have been identified to enhance coverage, harmonization, and methodological consistency. Future updates may include refinements to validation procedures and improvements in data structure.",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "UN Tourism shall not be liable for any direct, indirect, consequential, or incidental damages arising from the use or inability to use the data or related materials. Users are encouraged to interpret the information within its intended scope and context.\"    ",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "File content:",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "Category",
+      "Content",
+      "Last release / revision",
+      "Suggested citation",
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "Inbound Tourism",
+      "All Countries: Domestic Tourism: Accommodation 1995 - 2024 (12.2025)",
+      "23 December 2025",
+      "World Tourism Organization (2025) All Countries: Domestic Tourism: Accommodation 1995 - 2024 (12.2025). UN Tourism Statistics Database, Madrid. Data updated on 23 December 2025. More information: https://www.untourism.int/tourism-statistics/tourism-data-domestic-tourism",
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "Data variables:",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "Variable",
+      "Description",
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "indicator_code",
+      "Code that identifies the indicator.",
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "indicator_label",
+      "Description of the indicator.",
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "indicator_previous_code",
+      "Indicator code used in the previous versions of the database (e.g. in the former publications \"Compendium\" [CP] and \"Yearbook \" [YB]).",
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "reporter_area_code",
+      "Code that identifies the geographic area represented by the statistical focal point that reported the data.",
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "reporter_area_label",
+      "Name of the reporter area as per the United Nations standard for statistical use (M49).",
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "year",
+      "Year represented by the value of the indicator.",
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "value",
+      "Value of the indicator.",
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "flag",
+      "Code providing information about the quality of a value or about unusual or missing values, as per SDMX code list for observation status (https://sdmx.org/sdmx_cdcl/).",
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "flag_label",
+      "Description of the flag code.",
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "unit",
+      "Unit of measurement that defines the scale or type of the value.",
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "notes",
+      "Additional comments (if any)",
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  ]
+}

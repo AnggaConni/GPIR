@@ -1,0 +1,231 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-10-12T18:58:58+00:00",
+  "meta": {
+    "source": "UN Tourism Statistics Database",
+    "source_url": "https://www.untourism.int/tourism-statistics/tourism-statistics-database",
+    "download_url": "https://pre-webunwto.s3.amazonaws.com/s3fs-public/2026-05/UN_Tourism_bulk_data_download_05_2026.zip",
+    "archive": "UN_Tourism_bulk_data_download_05_2026.zip",
+    "archive_size_bytes": 8910727,
+    "workbook_count": 15,
+    "worksheet_count": 30,
+    "layout": "grid",
+    "limitations": [
+      "Statistics retain original worksheet layout; automated header interpretation is intentionally not attempted.",
+      "National or regional tourism statistics are not attraction-level footfall.",
+      "The JSON reflects the archived release and is not live data."
+    ]
+  },
+  "worksheets": [
+    {
+      "file": "UN_Tourism_domestic_trips_12_2025__01_Overview.json",
+      "workbook": "UN_Tourism_domestic_trips_12_2025.xlsx",
+      "worksheet": "Overview",
+      "rows": 30,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_domestic_trips_12_2025__02_Data.json",
+      "workbook": "UN_Tourism_domestic_trips_12_2025.xlsx",
+      "worksheet": "Data",
+      "rows": 2548,
+      "columns": 11
+    },
+    {
+      "file": "UN_Tourism_domestic_accommodation_12_2025__01_Overview.json",
+      "workbook": "UN_Tourism_domestic_accommodation_12_2025.xlsx",
+      "worksheet": "Overview",
+      "rows": 30,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_domestic_accommodation_12_2025__02_Data.json",
+      "workbook": "UN_Tourism_domestic_accommodation_12_2025.xlsx",
+      "worksheet": "Data",
+      "rows": 6836,
+      "columns": 11
+    },
+    {
+      "file": "UN_Tourism_inbound_arrivals_12_2025__01_Overview.json",
+      "workbook": "UN_Tourism_inbound_arrivals_12_2025.xlsx",
+      "worksheet": "Overview",
+      "rows": 32,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_inbound_arrivals_12_2025__02_Data.json",
+      "workbook": "UN_Tourism_inbound_arrivals_12_2025.xlsx",
+      "worksheet": "Data",
+      "rows": 13901,
+      "columns": 13
+    },
+    {
+      "file": "UN_Tourism_inbound_expenditure_12_2025__01_Overview.json",
+      "workbook": "UN_Tourism_inbound_expenditure_12_2025.xlsx",
+      "worksheet": "Overview",
+      "rows": 32,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_inbound_expenditure_12_2025__02_Data.json",
+      "workbook": "UN_Tourism_inbound_expenditure_12_2025.xlsx",
+      "worksheet": "Data",
+      "rows": 13988,
+      "columns": 13
+    },
+    {
+      "file": "UN_Tourism_inbound_arrivals_by_region_12_2025__01_Overview.json",
+      "workbook": "UN_Tourism_inbound_arrivals_by_region_12_2025.xlsx",
+      "worksheet": "Overview",
+      "rows": 32,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_inbound_arrivals_by_region_12_2025__02_Data.json",
+      "workbook": "UN_Tourism_inbound_arrivals_by_region_12_2025.xlsx",
+      "worksheet": "Data",
+      "rows": 33840,
+      "columns": 13
+    },
+    {
+      "file": "UN_Tourism_inbound_arrivals_by_purpose_12_2025__01_Overview.json",
+      "workbook": "UN_Tourism_inbound_arrivals_by_purpose_12_2025.xlsx",
+      "worksheet": "Overview",
+      "rows": 32,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_inbound_arrivals_by_purpose_12_2025__02_Data.json",
+      "workbook": "UN_Tourism_inbound_arrivals_by_purpose_12_2025.xlsx",
+      "worksheet": "Data",
+      "rows": 12032,
+      "columns": 13
+    },
+    {
+      "file": "UN_Tourism_inbound_arrivals_by_transport_12_2025__01_Overview.json",
+      "workbook": "UN_Tourism_inbound_arrivals_by_transport_12_2025.xlsx",
+      "worksheet": "Overview",
+      "rows": 32,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_inbound_arrivals_by_transport_12_2025__02_Data.json",
+      "workbook": "UN_Tourism_inbound_arrivals_by_transport_12_2025.xlsx",
+      "worksheet": "Data",
+      "rows": 14574,
+      "columns": 13
+    },
+    {
+      "file": "UN_Tourism_inbound_accommodation_12_2025__01_Overview.json",
+      "workbook": "UN_Tourism_inbound_accommodation_12_2025.xlsx",
+      "worksheet": "Overview",
+      "rows": 32,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_inbound_accommodation_12_2025__02_Data.json",
+      "workbook": "UN_Tourism_inbound_accommodation_12_2025.xlsx",
+      "worksheet": "Data",
+      "rows": 10215,
+      "columns": 13
+    },
+    {
+      "file": "UN_Tourism_outbound_departures_12_2025__01_Overview.json",
+      "workbook": "UN_Tourism_outbound_departures_12_2025.xlsx",
+      "worksheet": "Overview",
+      "rows": 32,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_outbound_departures_12_2025__02_Data.json",
+      "workbook": "UN_Tourism_outbound_departures_12_2025.xlsx",
+      "worksheet": "Data",
+      "rows": 4252,
+      "columns": 13
+    },
+    {
+      "file": "UN_Tourism_outbound_expenditure_12_2025__01_Overview.json",
+      "workbook": "UN_Tourism_outbound_expenditure_12_2025.xlsx",
+      "worksheet": "Overview",
+      "rows": 32,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_outbound_expenditure_12_2025__02_Data.json",
+      "workbook": "UN_Tourism_outbound_expenditure_12_2025.xlsx",
+      "worksheet": "Data",
+      "rows": 14280,
+      "columns": 13
+    },
+    {
+      "file": "UN_Tourism_accommodation_hotels_12_2025__01_Overview.json",
+      "workbook": "UN_Tourism_accommodation_hotels_12_2025.xlsx",
+      "worksheet": "Overview",
+      "rows": 30,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_accommodation_hotels_12_2025__02_Data.json",
+      "workbook": "UN_Tourism_accommodation_hotels_12_2025.xlsx",
+      "worksheet": "Data",
+      "rows": 18595,
+      "columns": 11
+    },
+    {
+      "file": "UN_Tourism_accommodation_other_indicators_12_2025__01_Overview.json",
+      "workbook": "UN_Tourism_accommodation_other_indicators_12_2025.xlsx",
+      "worksheet": "Overview",
+      "rows": 30,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_accommodation_other_indicators_12_2025__02_Data.json",
+      "workbook": "UN_Tourism_accommodation_other_indicators_12_2025.xlsx",
+      "worksheet": "Data",
+      "rows": 18595,
+      "columns": 11
+    },
+    {
+      "file": "UN_Tourism_8_9_1_TDGDP_05_2026__01_Overview.json",
+      "workbook": "UN_Tourism_8_9_1_TDGDP_05_2026.xlsx",
+      "worksheet": "Overview",
+      "rows": 28,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_8_9_1_TDGDP_05_2026__02_Data.json",
+      "workbook": "UN_Tourism_8_9_1_TDGDP_05_2026.xlsx",
+      "worksheet": "Data",
+      "rows": 1772,
+      "columns": 41
+    },
+    {
+      "file": "UN_Tourism_8_9_2_employed_persons_06_2026__01_Overview.json",
+      "workbook": "UN_Tourism_8_9_2_employed_persons_06_2026.xlsx",
+      "worksheet": "Overview",
+      "rows": 29,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_8_9_2_employed_persons_06_2026__02_Data.json",
+      "workbook": "UN_Tourism_8_9_2_employed_persons_06_2026.xlsx",
+      "worksheet": "Data",
+      "rows": 24776,
+      "columns": 10
+    },
+    {
+      "file": "UN_Tourism_12_b_1_TSA_SEEA_03_2026__01_Overview.json",
+      "workbook": "UN_Tourism_12_b_1_TSA_SEEA_03_2026.xlsx",
+      "worksheet": "Overview",
+      "rows": 27,
+      "columns": 8
+    },
+    {
+      "file": "UN_Tourism_12_b_1_TSA_SEEA_03_2026__02_Data.json",
+      "workbook": "UN_Tourism_12_b_1_TSA_SEEA_03_2026.xlsx",
+      "worksheet": "Data",
+      "rows": 7589,
+      "columns": 40
+    }
+  ]
+}
