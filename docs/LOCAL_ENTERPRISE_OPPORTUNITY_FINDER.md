@@ -143,3 +143,24 @@ Open `enterprise.html` from GitHub Pages or serve the repository locally over HT
 - The profile separates starting capital, intended enterprise scale (micro/small/medium/scale-up), geographic market, and buyer segment (households, MSMEs, business/institutional buyers, and importers/distributors).
 - Nearby map mode supports a 1–15 km radius. Whole-city/administrative mode requires a manual search for a city/area name and uses the returned bounding box for the Overpass query and map extent. Broad queries can be slower; nearby results are cached in the browser.
 - Active recommendation cards and the selected relationship step have a visible glow, respecting reduced-motion preferences.
+
+## How the opportunity pathway works
+1. Input and inventory: the visitor supplies available resources, skills, starting capital, desired business scale, buyer segment and market reach. Inventory entries stay in browser localStorage unless explicitly exported.
+2. Opportunity matching: a curated catalogue contains resource/skill keywords, candidate products/services, indicative pilot-capital ranges, buyer hypotheses, setup needs and first validation steps. GPIR ranks opportunities using resource and skill matches, selected target market, buyer segment and scale. The score is an input-fit screening score, not a probability of success.
+3. Local place signals: geocoding identifies the searched location. Overpass queries mapped OSM shops, food businesses, makers, suppliers and relevant facilities within a radius or the selected search-result bounding box. These are mapped places, not verified customers, sales, stock availability or exact administrative polygons.
+4. External-market context: UN Comtrade snapshots add annual cross-border product flows, while World Bank indicators add country-level macro context. Matching by text/HS names is exploratory. Import values are not retail orders.
+5. The five-step visual connects local inputs → possible product/service → candidate customer segment → mapped nearby place → external trade/search signal. These links are hypotheses, not established commercial relationships.
+6. Validation loop: shortlist an idea, confirm supply price and quality, interview potential buyers, test a tiny batch or pre-order, record real sales/costs/repeat orders, then use these outcomes to refine recommendations.
+
+## Data connector roadmap and evidence types
+Keep different source types separate:
+- Connected now: UN Comtrade scheduled snapshot (annual trade flow), World Bank country indicators (macro context), and OpenStreetMap geocoding/place discovery (mapped places).
+- Potential local-supply connectors: BPS WebAPI (regional statistics) and SIPEDAS Kementan (agricultural production). Use Python/Actions for token-limited or scheduled retrieval, normalize to JSON, cache results and keep tokens out of browser code. SIPEDAS documents geography levels down to kecamatan for some modules; actual fields vary by module/year.
+- Product catalogue: Open Food Facts can help compare packaged product variety, brands, categories, ingredients and packaging metadata. It is not sales volume. Search calls should be explicit user actions and respect its published rate limits.
+- Search-interest proxy: Google Trends API would help analyze trends by region and time, but official docs still describe alpha access requiring approval. Do not depend on it until access exists.
+- Active listing/asking-price proxy: eBay Browse API can show active listings/prices with application tokens. Collect authenticated snapshots server-side rather than expose application credentials in frontend JavaScript.
+- Completed-sales evidence: eBay Marketplace Insights could support a rolling 30/90-day sales signal only after approval for its Limited Release. If access is unavailable, show no completed-sales chart rather than mislabel active listings or imports as sales.
+- Agriculture and trade context: FAOSTAT provides food/agriculture production and trade context, not local buyer leads. UN Comtrade is annual merchandise trade, not live marketplace sales.
+
+### Keep the Python collector selective
+Use the scheduled Python collector for APIs requiring a key, approval, fragile quotas, or recurring snapshots. Public/no-key sources may be called by the frontend at user action time where policy permits, with request throttling, attribution, caching and graceful failure. Marketplace secrets belong in GitHub Actions secrets, never in repository JavaScript. A rolling 30-day display is valid only for dated observations that actually measure completed sales; otherwise label it as listing count/asking-price or search-interest trend.

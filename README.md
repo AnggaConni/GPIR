@@ -78,3 +78,6 @@ Project code: MIT (see `LICENSE`). Upstream datasets remain subject to their own
 - Profile separates available capital, business scale (micro/small/medium/scale-up), target market, and buyer segment (households, MSMEs, business/institutional buyers, and importers/distributors).
 - Submitting resources and skills clears any old category filter and matches across sell/grow/service ideas.
 - Whole-city map mode uses an explicitly searched city's/administrative area's bounding box; nearby mode remains a faster radius scan.
+
+### Opportunity pathway and source types
+The pathway combines visitor resources/skills with a curated idea catalogue, mapped nearby places and external-market context. A high match score means input fit—not a forecast or guarantee. The data connector register distinguishes active connections from candidates such as Open Food Facts product metadata, Google Trends search interest (alpha access), eBay active listings and approval-gated eBay sold-item history. Annual UN Comtrade flows, active listings, search interest and completed sales are different evidence types and should not be presented as interchangeable.
