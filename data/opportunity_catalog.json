@@ -1,0 +1,477 @@
+{
+  "schema_version": "1.0.0",
+  "note": "Curated starter hypotheses for local microenterprise exploration. Not sales rankings or validated market demand.",
+  "opportunities": [
+    {
+      "id": "coconut-value-added",
+      "title": "Coconut value-added products",
+      "products": [
+        "coconut sugar",
+        "coconut oil",
+        "desiccated coconut",
+        "coir products"
+      ],
+      "resource_keywords": [
+        "coconut",
+        "kelapa",
+        "tempurung",
+        "sabut kelapa",
+        "nira"
+      ],
+      "skill_keywords": [
+        "food processing",
+        "pengolahan pangan",
+        "drying",
+        "pengeringan",
+        "packaging",
+        "kemasan"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 750000,
+      "capital_max_idr": 5000000,
+      "market_fit": [
+        "local",
+        "both",
+        "international"
+      ],
+      "demand_keywords": [
+        "coconut",
+        "copra",
+        "coconut oil",
+        "desiccated coconut",
+        "coir"
+      ],
+      "rationale": "Start with a single simple product and a small test batch; confirm input consistency, food safety, packaging, and repeat buyers before scaling.",
+      "first_test": "Interview 10 local buyers and 3 potential resellers; get written prices for raw material and packaging; sell a small batch before buying equipment.",
+      "risks": [
+        "seasonal supply and inconsistent quality",
+        "food safety and labelling",
+        "export standards and shipping costs"
+      ],
+      "evidence_type": "opportunity_hypothesis"
+    },
+    {
+      "id": "cassava-snacks",
+      "title": "Cassava and root-crop snacks",
+      "products": [
+        "cassava chips",
+        "tapioca flour",
+        "cassava crackers"
+      ],
+      "resource_keywords": [
+        "cassava",
+        "singkong",
+        "ubi kayu",
+        "tapioca",
+        "sago",
+        "sagu"
+      ],
+      "skill_keywords": [
+        "cooking",
+        "memasak",
+        "food processing",
+        "pengolahan pangan",
+        "packaging",
+        "kemasan"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 500000,
+      "capital_max_idr": 3500000,
+      "market_fit": [
+        "local",
+        "both"
+      ],
+      "demand_keywords": [
+        "cassava",
+        "tapioca",
+        "starch",
+        "snacks"
+      ],
+      "rationale": "A small packaged product can be tested locally in limited batches. Unit economics depend on oil, energy, packaging, wastage, and reseller margin.",
+      "first_test": "Test two flavours and two package sizes with local shops; record sell-through and reorder requests instead of relying on likes.",
+      "risks": [
+        "shelf life and food safety",
+        "competitive pricing",
+        "packaging and reseller margins"
+      ],
+      "evidence_type": "opportunity_hypothesis"
+    },
+    {
+      "id": "coffee-cacao",
+      "title": "Coffee or cacao micro-batches",
+      "products": [
+        "roasted coffee",
+        "ground coffee",
+        "cacao nibs",
+        "cocoa powder"
+      ],
+      "resource_keywords": [
+        "coffee",
+        "kopi",
+        "cacao",
+        "kakao",
+        "cocoa"
+      ],
+      "skill_keywords": [
+        "roasting",
+        "sangrai",
+        "grinding",
+        "penggilingan",
+        "branding",
+        "merek"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 1000000,
+      "capital_max_idr": 7000000,
+      "market_fit": [
+        "local",
+        "both",
+        "international"
+      ],
+      "demand_keywords": [
+        "coffee",
+        "cocoa",
+        "cacao",
+        "roasted coffee"
+      ],
+      "rationale": "Traceable origin and a consistent small batch can be differentiated, but specialty price premiums must be tested with buyers rather than assumed.",
+      "first_test": "Obtain 3 sample lots, compare quality with 5 buyers or cafes, and pre-sell a limited batch before investing in machinery.",
+      "risks": [
+        "grading and moisture",
+        "seasonality and storage",
+        "quality consistency and certifications for export"
+      ],
+      "evidence_type": "opportunity_hypothesis"
+    },
+    {
+      "id": "dried-spices",
+      "title": "Dried herbs, spices and simple blends",
+      "products": [
+        "dried ginger",
+        "turmeric powder",
+        "chilli flakes",
+        "spice blends"
+      ],
+      "resource_keywords": [
+        "ginger",
+        "jahe",
+        "turmeric",
+        "kunyit",
+        "chili",
+        "cabai",
+        "clove",
+        "cengkeh",
+        "cinnamon",
+        "kayu manis",
+        "pepper",
+        "lada",
+        "herbs",
+        "rempah"
+      ],
+      "skill_keywords": [
+        "drying",
+        "pengeringan",
+        "grinding",
+        "penggilingan",
+        "food processing",
+        "pengolahan pangan"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 500000,
+      "capital_max_idr": 4000000,
+      "market_fit": [
+        "local",
+        "both",
+        "international"
+      ],
+      "demand_keywords": [
+        "ginger",
+        "turmeric",
+        "pepper",
+        "spices",
+        "cloves",
+        "cinnamon"
+      ],
+      "rationale": "Small lots can be tested with households, food stalls, and local food processors. Drying, contamination control, and stable moisture are crucial.",
+      "first_test": "Ask restaurants and food stalls what they currently buy, in what pack sizes, and at what weekly volume; offer a sample only after calculating cost per gram.",
+      "risks": [
+        "microbial contamination and moisture",
+        "commodity price fluctuations",
+        "food import/export requirements"
+      ],
+      "evidence_type": "opportunity_hypothesis"
+    },
+    {
+      "id": "fish-shelf-stable",
+      "title": "Shelf-stable fish and seafood products",
+      "products": [
+        "dried fish",
+        "smoked fish",
+        "seasoned fish snacks"
+      ],
+      "resource_keywords": [
+        "fish",
+        "ikan",
+        "shrimp",
+        "udang",
+        "seafood",
+        "marine",
+        "laut",
+        "salt",
+        "garam"
+      ],
+      "skill_keywords": [
+        "drying",
+        "pengeringan",
+        "smoking",
+        "pengasapan",
+        "food safety",
+        "keamanan pangan"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 1000000,
+      "capital_max_idr": 8000000,
+      "market_fit": [
+        "local",
+        "both"
+      ],
+      "demand_keywords": [
+        "fish",
+        "seafood",
+        "shrimp",
+        "dried fish"
+      ],
+      "rationale": "Processing can add shelf life and value where raw supply and local buyers exist. Cold chain, hygiene and legal requirements determine feasibility.",
+      "first_test": "Map daily raw supply and spoilage, interview 5 retailers, and test product safety and packaging with a small batch.",
+      "risks": [
+        "food safety and spoilage",
+        "seasonal catch and cold-chain access",
+        "local permits and seafood export requirements"
+      ],
+      "evidence_type": "opportunity_hypothesis"
+    },
+    {
+      "id": "fruit-preservation",
+      "title": "Dried fruit, jam or puree from surplus fruit",
+      "products": [
+        "dried fruit",
+        "fruit jam",
+        "fruit puree"
+      ],
+      "resource_keywords": [
+        "banana",
+        "pisang",
+        "mango",
+        "mangga",
+        "pineapple",
+        "nanas",
+        "papaya",
+        "pepaya",
+        "fruit",
+        "buah"
+      ],
+      "skill_keywords": [
+        "drying",
+        "pengeringan",
+        "cooking",
+        "memasak",
+        "food processing",
+        "pengolahan pangan"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 750000,
+      "capital_max_idr": 6000000,
+      "market_fit": [
+        "local",
+        "both"
+      ],
+      "demand_keywords": [
+        "dried fruit",
+        "mango",
+        "banana",
+        "pineapple",
+        "fruit puree"
+      ],
+      "rationale": "Useful where seasonal surplus or grading rejects are available at a clear discount. Actual yield, energy, packaging and shelf life must be measured.",
+      "first_test": "Track surplus fruit for two weeks, calculate usable yield, then test small batches with 3 retail outlets.",
+      "risks": [
+        "short shelf life",
+        "yield loss during drying",
+        "food registration and labelling"
+      ],
+      "evidence_type": "opportunity_hypothesis"
+    },
+    {
+      "id": "bamboo-rattan-craft",
+      "title": "Bamboo, rattan and repairable household goods",
+      "products": [
+        "baskets",
+        "storage goods",
+        "kitchenware",
+        "small decor"
+      ],
+      "resource_keywords": [
+        "bamboo",
+        "bambu",
+        "rattan",
+        "rotan",
+        "wood",
+        "kayu",
+        "craft",
+        "kerajinan",
+        "palm leaf"
+      ],
+      "skill_keywords": [
+        "craft",
+        "kerajinan",
+        "weaving",
+        "anyaman",
+        "carpentry",
+        "pertukangan",
+        "design",
+        "desain"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 500000,
+      "capital_max_idr": 5000000,
+      "market_fit": [
+        "local",
+        "both",
+        "international"
+      ],
+      "demand_keywords": [
+        "bamboo",
+        "rattan",
+        "basket",
+        "household goods",
+        "wooden"
+      ],
+      "rationale": "Made-to-order and repairable goods can avoid holding a large stock. Confirm legal sourcing, product durability and shipping dimensions before targeting export.",
+      "first_test": "Photograph 3 prototype designs, ask 10 potential buyers for deposits or pre-orders, and calculate packaging and shipping cost.",
+      "risks": [
+        "legal and sustainable sourcing",
+        "labour time underestimated",
+        "breakage and bulky shipping"
+      ],
+      "evidence_type": "opportunity_hypothesis"
+    },
+    {
+      "id": "textile-craft-micro",
+      "title": "Local textiles, sewing and made-to-order crafts",
+      "products": [
+        "small textile accessories",
+        "custom souvenirs",
+        "repairs and alterations"
+      ],
+      "resource_keywords": [
+        "batik",
+        "weaving",
+        "tenun",
+        "textile",
+        "tekstil",
+        "sewing",
+        "jahit",
+        "embroidered",
+        "embroidery",
+        "craft",
+        "kerajinan"
+      ],
+      "skill_keywords": [
+        "sewing",
+        "menjahit",
+        "weaving",
+        "menenun",
+        "design",
+        "desain",
+        "craft",
+        "kerajinan"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 300000,
+      "capital_max_idr": 5000000,
+      "market_fit": [
+        "local",
+        "both",
+        "international"
+      ],
+      "demand_keywords": [
+        "textile",
+        "batik",
+        "woven",
+        "handmade",
+        "souvenir"
+      ],
+      "rationale": "Made-to-order products or alteration services may need less working capital than a ready-made inventory. Unit labour time must be costed.",
+      "first_test": "Show a compact catalogue, collect paid pre-orders, and track time/material use per item before expanding designs.",
+      "risks": [
+        "irregular order flow",
+        "underpricing labour",
+        "design copying and delivery deadlines"
+      ],
+      "evidence_type": "opportunity_hypothesis"
+    },
+    {
+      "id": "local-aggregation",
+      "title": "Local produce aggregation and market link service",
+      "products": [
+        "order aggregation",
+        "pre-order group sales",
+        "sorting and packing service"
+      ],
+      "resource_keywords": [
+        "farmer",
+        "petani",
+        "cooperative",
+        "koperasi",
+        "producer",
+        "produsen",
+        "market",
+        "pasar",
+        "village",
+        "desa",
+        "fish",
+        "ikan",
+        "fruit",
+        "buah",
+        "vegetable",
+        "sayur",
+        "rice",
+        "beras"
+      ],
+      "skill_keywords": [
+        "sales",
+        "penjualan",
+        "logistics",
+        "logistik",
+        "coordination",
+        "koordinasi",
+        "digital",
+        "administration",
+        "administrasi"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 250000,
+      "capital_max_idr": 2500000,
+      "market_fit": [
+        "local",
+        "both"
+      ],
+      "demand_keywords": [
+        "fresh produce",
+        "food",
+        "fruit",
+        "vegetable",
+        "fish",
+        "rice"
+      ],
+      "rationale": "A service model can connect small producers and existing buyers without requiring the founder to own all inventory. Trust, delivery reliability and fair pricing matter.",
+      "first_test": "Map 5 suppliers and 5 buyers, verify weekly volumes, then trial a pre-order with no speculative stock.",
+      "risks": [
+        "working capital and late payments",
+        "spoilage and delivery coordination",
+        "quality variation"
+      ],
+      "evidence_type": "opportunity_hypothesis"
+    }
+  ]
+}
