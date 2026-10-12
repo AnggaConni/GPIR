@@ -164,3 +164,17 @@ Keep different source types separate:
 
 ### Keep the Python collector selective
 Use the scheduled Python collector for APIs requiring a key, approval, fragile quotas, or recurring snapshots. Public/no-key sources may be called by the frontend at user action time where policy permits, with request throttling, attribution, caching and graceful failure. Marketplace secrets belong in GitHub Actions secrets, never in repository JavaScript. A rolling 30-day display is valid only for dated observations that actually measure completed sales; otherwise label it as listing count/asking-price or search-interest trend.
+
+
+## Tourism and visitor-linked local economy data
+The scheduled Python collector is \`pipeline/fetch_tourism_data.py\`. It produces four independent snapshots:
+- \`data/tourism_places.json\`: OpenStreetMap attraction/craft/souvenir records and Wikivoyage guide metadata around configured seed areas, plus OpenTripMap records when \`OPENTRIPMAP_API_KEY\` exists.
+- \`data/ich_heritage.json\`: UNESCO DataHub dataset \`ich001\`; use as cultural context, not coordinates of active artisans.
+- \`data/food_products.json\`: targeted Open Food Facts packaged-food catalogue queries; it is not transaction volume, current stock or market share.
+- \`data/tourism_stats.json\`: annual World Bank \`ST.INT.ARVL\` country-level international arrival context. The UN Tourism Statistics Database is marked access-required: its public page says free access for student/researchers requires a formal written request; GPIR does not scrape it or claim an unauthenticated API integration.
+
+Set optional repository secret \`OPENTRIPMAP_API_KEY\` to enable OpenTripMap snapshots. Without it, the collector still fetches public OSM, Wikivoyage, UNESCO, Open Food Facts and World Bank data where endpoints respond. Failed sources do not stop other collectors, and existing useful snapshots are preserved if a source returns no usable records.
+
+Dynamic proximity remains based on the visitor's current/selected coordinates and on-demand nearby OSM query. The proximity bands are **very close ≤1 km**, **nearby ≤3 km**, and **outside the local-tourism boost >3 km**. If the UI's general map radius is 10–15 km, that wider radius is for exploration only; it must not cause a 10 km attraction to be described as nearby. No precise visitor coordinate is sent to the scheduled backend.
+
+The collector stores metadata/title/coordinates for Wikimedia/Wikivoyage rather than article bodies, adds required source attribution and license notices, and keeps the source evidence types distinct. Tourist attractions are map leads; a mapped POI is not a verified visitor count, customer, seller, stock or order.

@@ -81,3 +81,7 @@ Project code: MIT (see `LICENSE`). Upstream datasets remain subject to their own
 
 ### Opportunity pathway and source types
 The pathway combines visitor resources/skills with a curated idea catalogue, mapped nearby places and external-market context. A high match score means input fit—not a forecast or guarantee. The data connector register distinguishes active connections from candidates such as Open Food Facts product metadata, Google Trends search interest (alpha access), eBay active listings and approval-gated eBay sold-item history. Annual UN Comtrade flows, active listings, search interest and completed sales are different evidence types and should not be presented as interchangeable.
+
+
+### Tourism-linked local economy
+A scheduled Python collector builds tourism/place, travel-guide, UNESCO intangible-heritage, packaged-food catalogue, and country-level tourism-context snapshots in \`data/tourism_places.json\`, \`data/ich_heritage.json\`, \`data/food_products.json\`, and \`data/tourism_stats.json\`. Add the optional Actions secret \`OPENTRIPMAP_API_KEY\` for OpenTripMap. Tourist proximity is a separate local signal: within 1 km = very close; within 3 km = nearby; beyond 3 km is not used as the local tourism boost. World Bank arrivals are annual country statistics, not attraction footfall; UN Tourism direct database access is marked access-required unless official access/export is available.

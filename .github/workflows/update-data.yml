@@ -72,11 +72,16 @@ jobs:
           COMTRADE_API_KEY: ${{ secrets.UN_COMTRADE_API_KEY || secrets.COMTRADE_API_KEY }}
           PYTHONUNBUFFERED: "1"
         run: python pipeline/fetch_data.py
+      - name: Refresh tourism, heritage and packaged-food snapshots
+        env:
+          OPENTRIPMAP_API_KEY: ${{ secrets.OPENTRIPMAP_API_KEY }}
+          PYTHONUNBUFFERED: "1"
+        run: python pipeline/fetch_tourism_data.py
       - name: Commit updated data only when changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/data.json
+          git add data/data.json data/tourism_places.json data/ich_heritage.json data/food_products.json data/tourism_stats.json
           if git diff --cached --quiet; then
             echo "No data changes to commit."
           else

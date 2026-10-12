@@ -1,0 +1,12 @@
+{
+  "note": "Queries run once per scheduled collector execution; this is product catalogue metadata, not retail sales.",
+  "terms": [
+    "banana chips",
+    "cassava chips",
+    "coffee",
+    "sambal",
+    "coconut sugar",
+    "fruit jam",
+    "chocolate"
+  ]
+}

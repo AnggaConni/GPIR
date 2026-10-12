@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0.0",
+  "note": "Seed areas provide scheduled background reference data only. They do not restrict dynamic nearby search, which still uses the user's explicitly selected/current location.",
+  "osm_seed_radius_m": 3500,
+  "opentripmap_radius_m": 15000,
+  "opentripmap_limit": 60,
+  "wikivoyage_radius_m": 10000,
+  "wikivoyage_limit": 15,
+  "areas": [
+    {
+      "id": "jakarta",
+      "name": "Jakarta",
+      "country": "Indonesia",
+      "iso2": "ID",
+      "iso3": "IDN",
+      "language": "id",
+      "lat": -6.2088,
+      "lon": 106.8456
+    },
+    {
+      "id": "yogyakarta",
+      "name": "Yogyakarta",
+      "country": "Indonesia",
+      "iso2": "ID",
+      "iso3": "IDN",
+      "language": "id",
+      "lat": -7.7956,
+      "lon": 110.3695
+    },
+    {
+      "id": "bali-denpasar",
+      "name": "Denpasar, Bali",
+      "country": "Indonesia",
+      "iso2": "ID",
+      "iso3": "IDN",
+      "language": "id",
+      "lat": -8.6705,
+      "lon": 115.2126
+    },
+    {
+      "id": "labuan-bajo",
+      "name": "Labuan Bajo",
+      "country": "Indonesia",
+      "iso2": "ID",
+      "iso3": "IDN",
+      "language": "id",
+      "lat": -8.4964,
+      "lon": 119.8877
+    },
+    {
+      "id": "bandung",
+      "name": "Bandung",
+      "country": "Indonesia",
+      "iso2": "ID",
+      "iso3": "IDN",
+      "language": "id",
+      "lat": -6.9175,
+      "lon": 107.6191
+    },
+    {
+      "id": "borobudur",
+      "name": "Borobudur",
+      "country": "Indonesia",
+      "iso2": "ID",
+      "iso3": "IDN",
+      "language": "id",
+      "lat": -7.6079,
+      "lon": 110.2038
+    },
+    {
+      "id": "singapore",
+      "name": "Singapore",
+      "country": "Singapore",
+      "iso2": "SG",
+      "iso3": "SGP",
+      "language": "en",
+      "lat": 1.3521,
+      "lon": 103.8198
+    },
+    {
+      "id": "kuala-lumpur",
+      "name": "Kuala Lumpur",
+      "country": "Malaysia",
+      "iso2": "MY",
+      "iso3": "MYS",
+      "language": "en",
+      "lat": 3.139,
+      "lon": 101.6869
+    },
+    {
+      "id": "bangkok",
+      "name": "Bangkok",
+      "country": "Thailand",
+      "iso2": "TH",
+      "iso3": "THA",
+      "language": "en",
+      "lat": 13.7563,
+      "lon": 100.5018
+    },
+    {
+      "id": "kyoto",
+      "name": "Kyoto",
+      "country": "Japan",
+      "iso2": "JP",
+      "iso3": "JPN",
+      "language": "en",
+      "lat": 35.0116,
+      "lon": 135.7681
+    },
+    {
+      "id": "paris",
+      "name": "Paris",
+      "country": "France",
+      "iso2": "FR",
+      "iso3": "FRA",
+      "language": "en",
+      "lat": 48.8566,
+      "lon": 2.3522
+    },
+    {
+      "id": "london",
+      "name": "London",
+      "country": "United Kingdom",
+      "iso2": "GB",
+      "iso3": "GBR",
+      "language": "en",
+      "lat": 51.5072,
+      "lon": -0.1276
+    }
+  ]
+}
