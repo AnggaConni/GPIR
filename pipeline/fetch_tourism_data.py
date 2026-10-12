@@ -515,6 +515,12 @@ def run() -> dict[str, dict[str, Any]]:
                 "scope": "Scheduled reference snapshot around configured seed areas only; not a complete global POI feed.",
                 "tourism_nearby_primary_threshold_km": 3,
                 "tourism_very_near_threshold_km": 1,
+                "proximity_policy": {
+                    "very_close_km": 1,
+                    "nearby_km": 3,
+                    "tourism_relevance_boost_max_km": 3,
+                    "note": "A 10-15 km map radius is for exploration and must not be treated as nearby-tourism evidence."
+                },
                 "seed_areas": len(areas), "place_records": len(places), "source_status": source_status,
                 "limitations": ["Mapped places are leads, not verified businesses, active attractions, stock or buyers.",
                                 "The current device/location is not sent to this collector. Dynamic nearby detection uses a separate on-demand query.",
