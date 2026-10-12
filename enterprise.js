@@ -214,13 +214,17 @@
       const foreignQuery=opp.international_search||(opp.products||[]).slice(0,2).join(" ")+" importer";
       const icon=type==="grow"?"🌱":type==="service"?"🛠️":"🛍️";
       const fit=opp.fitScore==null?"Lengkapi input":opp.fitScore+"/100 cocok-input";
-      const steps=Array.isArray(opp.start_steps)?opp.start_steps:[opp.first_test||"Wawancarai calon pembeli dan hitung unit economics."];
+      const scaleLabels={micro:"Mikro / rumahan",small:"Kecil / UMKM berkembang",medium:"Menengah / SME supplier",scalable:"Mulai kecil lalu scale-up"};
+      const scaleLabel=scaleLabels[profile.businessScale]||scaleLabels.micro;
+      const buyerLabel=buyerSegmentLabel(profile.buyerSegment);
+      const buyerFitText=profile.buyerSegment==="mixed"?"Segmen pembeli masih terbuka":opp.buyerSegmentMatch?"Sesuai segmen pelanggan yang dipilih":"Validasi segmen pelanggan alternatif";
+      const steps=Array.isArray(opp.start_steps)?opp.start_steps:[opp.first_test||"Wawancarai calon pembeli dan hitung biaya per unit."];
       const stepHtml="<ol>"+steps.map(s=>"<li>"+esc(s)+"</li>").join("")+"</ol>";
       return '<article class="rec '+(opp.id===activeOpportunityId?'is-selected':'')+'" data-opportunity-card="'+esc(opp.id)+'"><div class="kind-row"><span class="kind-badge '+typeClass+'">'+icon+' '+esc(businessTypeLabel(type))+'</span><span class="'+(opp.fitScore==null?"tiny":"fit")+'">'+esc(fit)+'</span></div>'+
         '<h3>'+esc(opp.title)+'</h3><p class="action-summary">'+esc(opp.action_summary||opp.rationale)+'</p>'+
         '<div class="rec-detail-grid"><div class="rec-detail"><h4>Yang bisa dibuat / ditawarkan</h4><p><b>'+esc(what)+'</b></p><p class="tiny" style="margin-top:6px">'+esc(resourceText)+'</p><p class="tiny" style="margin-top:5px">'+esc(skillText)+'</p></div>'+
-        '<div class="rec-detail"><h4>Yang perlu dibeli / disiapkan</h4><ul>'+buy+'</ul><p class="tiny" style="margin-top:6px">Modal ilustratif: <b>'+esc(capitalRange(opp))+'</b></p></div>'+
-        '<div class="rec-detail"><h4>Calon pembeli awal</h4><ul>'+sell+'</ul><p class="tiny" style="margin-top:6px">Kanal terpetakan: '+esc(leadText)+'</p></div>'+
+        '<div class="rec-detail"><h4>Yang perlu dibeli / disiapkan</h4><ul>'+buy+'</ul><p class="tiny" style="margin-top:6px">Modal pilot mikro indikatif: <b>'+esc(capitalRange(opp))+'</b></p><p class="tiny" style="margin-top:6px"><b>Skala:</b> '+esc(scaleLabel)+'</p><p class="tiny" style="margin-top:4px">'+esc(opp.scaleAdvice||"Sesuaikan skala dengan modal dan kemampuan.")+'</p></div>'+
+        '<div class="rec-detail"><h4>Calon pembeli awal</h4><ul>'+sell+'</ul><p class="tiny" style="margin-top:6px"><b>Segmen pilihan:</b> '+esc(buyerLabel)+' · '+esc(buyerFitText)+'</p><p class="tiny" style="margin-top:6px">Kanal terpetakan: '+esc(leadText)+'</p></div>'+
         '<div class="rec-detail"><h4>Cara mulai mencari pelanggan</h4><ul>'+channels+'</ul><p class="tiny" style="margin-top:6px">'+esc(getMarketText(opp,profile))+'</p></div>'+
         '<div class="rec-detail"><h4>Sinyal perdagangan luar</h4><p>'+esc(tradeText)+'</p><p class="tiny" style="margin-top:5px">Impor negara bukan bukti buyer tertentu atau penjualan retail.</p></div>'+
         '<div class="rec-detail"><h4>Langkah uji pertama</h4><div class="tiny">'+stepHtml+'</div><ul>'+((opp.risks||[]).slice(0,2).map(r=>"<li>"+esc(r)+"</li>").join(""))+'</ul></div></div>'+
@@ -239,6 +243,8 @@
       const opp=lastRecommendations.find(o=>o.id===btn.dataset.mapFlow);activeOpportunityId=btn.dataset.mapFlow;
       renderRelationshipFlow(opp,collectProfile());
       if(currentLocation)renderPOIs(nearbyPoints.map(p=>p.raw),currentLocation.lat,currentLocation.lon);
+      $("recommendations").querySelectorAll("[data-opportunity-card]").forEach(card=>card.classList.toggle("is-selected",card.dataset.opportunityCard===activeOpportunityId));
+      $("pathwaySection")?.scrollIntoView({behavior:"smooth",block:"center"});
       $("relationshipTitle").scrollIntoView({behavior:"smooth",block:"center"});
     }));
     $("recommendations").querySelectorAll("[data-evidence]").forEach(btn=>btn.addEventListener("click",()=>{
@@ -446,7 +452,8 @@
     $("poiCount").textContent=nearbyPoints.length+" titik";
     $("poiSummary").textContent=nearbyPoints.length?nearbyPoints.length+" lokasi terpetakan "+(areaMode?"dalam area administrasi terpilih":"dalam radius "+(within/1000)+" km")+"; "+nearbyPoints.filter(relevant).length+" berkategori terkait ide aktif.":"Tidak ada titik ditemukan; data peta mungkin tidak lengkap.";
     if(poiMarkers)poiMarkers.clearLayers();if(poiConnections)poiConnections.clearLayers();markerIndex=new Map();
-    nearbyPoints.slice(0,100).forEach((p,i)=>{
+    const mapPoints=nearbyPoints.length<=350?nearbyPoints:nearbyPoints.filter((p,i)=>i%Math.ceil(nearbyPoints.length/350)===0).slice(0,350);
+    mapPoints.forEach((p,i)=>{
       if(p.lat==null||p.lon==null)return;
       const isRelevant=relevant(p);
       if(poiConnections&&i<35)L.polyline([[lat,lon],[p.lat,p.lon]],{color:isRelevant?"#0d9488":p.color,weight:isRelevant?2.5:1,opacity:isRelevant?.65:.3,dashArray:isRelevant?"":"4 5"}).addTo(poiConnections);
