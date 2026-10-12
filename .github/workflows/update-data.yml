@@ -67,7 +67,7 @@ jobs:
         run: python -m pip install -r requirements.txt
       - name: Fetch quota-limited UN Comtrade trade data
         env:
-          COMTRADE_API_KEY: ${{ secrets.COMTRADE_API_KEY }}
+          COMTRADE_API_KEY: ${{ secrets.UN_COMTRADE_API_KEY || secrets.COMTRADE_API_KEY }}
           PYTHONUNBUFFERED: "1"
         run: python pipeline/fetch_data.py
       - name: Commit updated data only when changed
