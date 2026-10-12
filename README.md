@@ -1,43 +1,48 @@
 # Global Product Intelligence Radar (GPIR)
 
-An open-data starter for discovering product-market opportunities using international merchandise trade and macroeconomic indicators.
+An open-data starter to screen product–market opportunities using UN Comtrade trade statistics and World Bank country context. Dashboard outputs can feed other Horizon Scanning pages.
 
-## What it does
-- Static dashboard with market/product filters, KPI cards, opportunity rankings and a map.
-- Python pipeline for UN Comtrade annual trade data and World Bank indicators.
-- Weekly/manual GitHub Actions refresh.
-- Transparent source and sample-data status; demo records are never labelled as live data.
-- JSON output designed for downstream Horizon Scanning integration.
+## What it includes
+- Responsive static dashboard with search, market/product filters, map, ranking, and evidence panel.
+- Python pipeline that maps official UN Comtrade reporter codes to ISO-3 markets.
+- Six-digit HS product rows, growth/CAGR metrics, and explainable percentile scoring.
+- Scheduled/manual GitHub Actions workflow to refresh the JSON dataset.
+- Tests for data-quality rules.
 
 ## Data sources
-- UN Comtrade: https://comtradeapi.un.org/
-- World Bank Indicators API: https://api.worldbank.org/v2/
+- [UN Comtrade API](https://comtradeapi.un.org/) — reported merchandise trade, not retail sales.
+- [World Bank Indicators API v2](https://api.worldbank.org/v2/) — population, coordinates, GDP per capita as context signals.
 
-UN Comtrade is trade data (not retail sales). Rankings are signals for further research, not guarantees of profitability. Where trade quantity or marketplace sales are unavailable, the dashboard must not imply they were observed.
+## Setup
+1. Enable GitHub Pages in **Settings → Pages → Deploy from a branch → main / (root)**.
+2. Add repository secret `COMTRADE_API_KEY` in **Settings → Secrets and variables → Actions**. Without a key, UN Comtrade public-preview access may be rate-limited or limited to a small sample.
+3. Run **Actions → Update trade data → Run workflow**.
 
-## Run locally
-Requires Python 3.11+.
+## Local use
+Python 3.10+:
 
 ```bash
 python -m pip install -r requirements.txt
-python scripts/build_data.py
 python -m unittest discover -s tests -v
+python -m http.server 8080
 ```
 
-Add the secret `COMTRADE_API_KEY` in repository Settings → Secrets and variables → Actions for scheduled runs. Without a key, public API access may be limited; the pipeline records errors rather than fabricating live data.
+Open `http://localhost:8080`.
 
-## Deploy
-Enable GitHub Pages from branch `main`, folder `/ (root)`. The dashboard reads `data/data.json`.
+## Environment variables
+- `COMTRADE_API_KEY` — optional, recommended for more comprehensive requests.
+- `COMTRADE_START_YEAR` and `COMTRADE_END_YEAR` — range of annual observations.
+- `COMTRADE_MAX_RECORDS` — max records per API call.
+- `MARKET_ISO3` — comma-separated ISO-3 markets overriding `config/markets.json`.
+- `REQUEST_SLEEP_SECONDS` — delay between calls.
 
-## Configure
-Workflow: Actions → Update trade data → Run workflow. The pipeline defaults to a small, configurable list of HS chapters and reporter markets to control API usage.
-
-## Data integrity
-- Keep HS classification version and reporting period attached to trade rows.
-- Do not compare HS revisions without a concordance.
-- Do not calculate CAGR from zero/negative values.
-- Treat missing values as unknown, not zero.
-- Keep API credentials out of browser code and committed files.
+## Important interpretation caveats
+- This starter begins in explicitly marked demo mode. It is replaced only after successful API fetch.
+- Current market list is a configurable subset, not all countries.
+- Import values do not prove retail sales, unmet demand, profit, or product viability.
+- Latest observations vary by country; HS classification changes can affect time-series comparability.
+- Missing data means unknown and should not be treated as zero.
+- Review upstream data terms before republishing.
 
 ## License
-MIT (see LICENSE). Check each upstream dataset's terms before redistributing derived data.
+Project code is licensed under MIT (see `LICENSE`). Upstream datasets remain subject to their source terms.
