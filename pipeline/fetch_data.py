@@ -35,8 +35,8 @@ def session_with_retries() -> requests.Session:
     return session
 
 
-def fetch_json(session: requests.Session, url: str, params: dict[str, Any] | None = None, timeout: int = 45) -> Any:
-    response = session.get(url, params=params, timeout=timeout)
+def fetch_json(session: requests.Session, url: str, params: dict[str, Any] | None = None, timeout: int = 45, headers: dict[str, str] | None = None) -> Any:
+    response = session.get(url, params=params, headers=headers, timeout=timeout)
     response.raise_for_status()
     return response.json()
 
@@ -90,15 +90,17 @@ def fetch_trade_rows(session: requests.Session, reporter_code: int, year: int, a
         params = {
             "reporterCode": reporter_code, "partnerCode": 0, "flowCode": "M",
             "period": year, "maxrecords": max_records, "includeDesc": "true",
-            "subscription-key": api_key,
         }
+        # UN Comtrade's API portal documents this subscription-key header.
+        headers = {"Ocp-Apim-Subscription-Key": api_key}
         mode = "live"
     else:
         url = "https://comtradeapi.un.org/public/v1/preview/C/A/HS"
         params = {"reporterCode": reporter_code, "partnerCode": 0, "flowCode": "M",
                   "period": year, "maxrecords": min(max_records, 500), "includeDesc": "true"}
+        headers = None
         mode = "preview"
-    payload = fetch_json(session, url, params=params)
+    payload = fetch_json(session, url, params=params, headers=headers)
     rows = payload.get("data", []) if isinstance(payload, dict) else []
     if not isinstance(rows, list):
         raise RuntimeError(f"Unexpected Comtrade payload for reporter {reporter_code}, year {year}")
@@ -219,6 +221,8 @@ def main() -> int:
     if not api_key:
         max_records = min(max_records, 500)
         log.warning("No COMTRADE_API_KEY: public preview mode is limited and may be truncated.")
+    else:
+        log.info("COMTRADE_API_KEY detected; using the authenticated UN Comtrade endpoint.")
     reporter_reference = get_reporter_reference(session)
     selected = {iso: reporter_reference[iso] for iso in markets if iso in reporter_reference}
     unresolved = sorted(set(markets) - set(selected))
