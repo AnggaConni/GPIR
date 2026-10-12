@@ -23,7 +23,7 @@ function km(a,b,c,d){const r=x=>x*Math.PI/180,dl=r(c-a),dn=r(d-b),x=Math.sin(dl/
 function kmLabel(n){return n==null?"jarak tidak tersedia":n<1?Math.round(n*1000)+" m":n.toFixed(1)+" km";}
 function nearbyTourismAttractions(limitKm=Infinity){
  if(!coords)return[];const rows=[];
- points.filter(p=>p.cat==="tourism"&&num(p.lat)!=null&&num(p.lon)!=null).forEach(p=>{const dist=km(coords.lat,coords.lon,Number(p.lat),Number(p.lon));if(dist<=limitKm)rows.push({...p,dist,source:"OpenStreetMap"});});
+ points.filter(p=>p.cat==="tourism"&&String(p.name||"").toLowerCase()!=="lokasi tanpa nama"&&num(p.lat)!=null&&num(p.lon)!=null).forEach(p=>{const dist=km(coords.lat,coords.lon,Number(p.lat),Number(p.lon));if(dist<=limitKm)rows.push({...p,dist,source:"OpenStreetMap"});});
  tourismSnapshot.filter(p=>p&&p.kind==="tourist_attraction"&&num(p.lat)!=null&&num(p.lon)!=null).forEach(p=>{const dist=km(coords.lat,coords.lon,Number(p.lat),Number(p.lon));if(dist<=limitKm)rows.push({key:"snapshot:"+p.id,name:p.name||"Unnamed attraction",cat:"tourism",lat:Number(p.lat),lon:Number(p.lon),dist,source:p.source||"Tourism snapshot",url:p.url||""});});
  const unique=[];rows.sort((a,b)=>a.dist-b.dist).forEach(p=>{if(!unique.some(q=>String(q.name).toLowerCase()===String(p.name).toLowerCase()&&Math.abs(q.dist-p.dist)<.12))unique.push(p);});
  return unique.filter(p=>p.dist<=limitKm);
