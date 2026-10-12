@@ -9,7 +9,7 @@ An open-data starter to screen product–market opportunities using UN Comtrade 
 - Responsive global dashboard, interactive map, product search, country filters and opportunity rankings.
 - Python pipelines for quota-limited UN Comtrade trade data and scheduled tourism/heritage/context snapshots.
 - UN Tourism bulk ZIP importer: downloads official Excel workbooks, safely extracts them, and exports every non-empty worksheet to JSON with source metadata and a manifest.
-- Potential Explorer (`tourism.html` + `potential.js`): world map occupying roughly three quarters of the desktop workspace with a compact filter/results sidebar. Users can click the map or drag a pin; the map draws glowing dashed links to mapped local businesses/attractions within 5 km and to international countries with matching UN Comtrade import observations.
+- Potential Explorer (`potential.html` + `potential.js`): world map occupying roughly three quarters of the desktop workspace with a compact filter/results sidebar. Users can click the map or drag a pin; the map draws glowing dashed links to mapped local businesses/attractions within 5 km and to international countries with matching UN Comtrade import observations.
 - Six-digit HS product observations with yearly growth, CAGR and explainable percentile scoring.
 - Weekly scheduled and manual GitHub Actions refresh.
 - Tests for product code filtering, scoring safeguards, and UN Tourism Excel-to-JSON conversion.
@@ -94,7 +94,7 @@ A scheduled Python collector builds tourism/place, travel-guide, UNESCO intangib
 
 ### Potential Explorer
 
-Open `tourism.html` for the **Potential Explorer** world map. The user can click anywhere on the map to place the red origin pin, drag it to a new point, or search for a named location. It fetches relevant OpenStreetMap points on demand, draws dashed/glowing connections to mapped tourist attractions within 5 km and nearby local ecosystem points, and can draw international connections where the GPIR trade snapshot has matching product-import observations. Destination links are grouped by country and can be zoomed individually.
+Open `potential.html` for the **Potential Explorer** world map. The former `tourism.html` URL redirects here for compatibility. The user can click anywhere on the map to place the red origin pin, drag it to a new point, or search for a named location. It fetches relevant OpenStreetMap points on demand, draws dashed/glowing connections to mapped tourist attractions within 5 km and nearby local ecosystem points, and can draw international connections where the GPIR trade snapshot has matching product-import observations. Destination links are grouped by country and can be zoomed individually.
 
 Product terms such as `singkong` expand to English trade terms such as cassava/manioc/tapioca for matching. The UI shows a market link only when a relevant observation is present; no data match is not evidence that demand is absent. Trade rows are reported national imports, not retail sales or confirmed buyer orders. The configured reporter set includes the Netherlands (NLD), but refresh Actions to populate new observations.
 
