@@ -80,14 +80,15 @@ function normalizeDesignatedSite(raw,definition={}){
  const name=designatedText(value(["name","name_en","title_en","site_name_en","site_name","name_of_site","property_name","title"]));
  if(!name)return null;
  let coordinates=value(["coordinates","geo_point_2d","geo_point","location"]),lat=null,lon=null;
- if(Array.isArray(coordinates)&&coordinates.length>=2){lat=Number(coordinates[0]);lon=Number(coordinates[1]);}
- else if(coordinates&&typeof coordinates==="object"){lat=Number(coordinates.lat??coordinates.latitude);lon=Number(coordinates.lon??coordinates.lng??coordinates.longitude);}
+ const coordinateNumber=v=>v==null||v===""?null:Number(v);
+ if(Array.isArray(coordinates)&&coordinates.length>=2){lat=coordinateNumber(coordinates[0]);lon=coordinateNumber(coordinates[1]);}
+ else if(coordinates&&typeof coordinates==="object"){lat=coordinateNumber(coordinates.lat??coordinates.latitude);lon=coordinateNumber(coordinates.lon??coordinates.lng??coordinates.longitude);}
  else if(typeof coordinates==="string"){
-  try{const decoded=JSON.parse(coordinates);if(Array.isArray(decoded)&&decoded.length>=2){lat=Number(decoded[0]);lon=Number(decoded[1]);}}catch(_){}
-  if(!Number.isFinite(lat)||!Number.isFinite(lon)){const found=coordinates.match(/-?\d+(?:\.\d+)?/g)||[];if(found.length>=2){lat=Number(found[0]);lon=Number(found[1]);}}
+  try{const decoded=JSON.parse(coordinates);if(Array.isArray(decoded)&&decoded.length>=2){lat=coordinateNumber(decoded[0]);lon=coordinateNumber(decoded[1]);}}catch(_){}
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)){const found=coordinates.match(/-?\d+(?:\.\d+)?/g)||[];if(found.length>=2){lat=coordinateNumber(found[0]);lon=coordinateNumber(found[1]);}}
  }
  if(!Number.isFinite(lat)||!Number.isFinite(lon)){
-  lat=Number(value(["latitude","lat"]));lon=Number(value(["longitude","lon","lng"]));
+  lat=coordinateNumber(value(["latitude","lat"]));lon=coordinateNumber(value(["longitude","lon","lng"]));
  }
  if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180)return null;
  const country=designatedText(value(["country","country_title_en","country_name_en","country_name","countries_en","countries","states_names_en","states_name_en","states_names","state_party","states_parties","country_en","iso2"]))||"Country not specified";
