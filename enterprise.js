@@ -506,7 +506,13 @@
     $("relationshipStatus").className="pill "+(opp.hasResourceFit||opp.hasSkillFit?"green":"gold");
     $("relationshipVisual").innerHTML=nodes.map((n,i)=>'<div class="flow-step"><span class="step-no">LANGKAH '+(i+1)+'</span><h3>'+esc(n.label)+'</h3><strong>'+esc(n.value)+'</strong><p>'+esc(n.detail)+'</p></div>'+(i<nodes.length-1?'<span class="flow-arrow" aria-hidden="true">→</span>':"")).join("");
   }
-  $("findBtn").addEventListener("click",()=>renderRecommendations(collectProfile()));
+  $("findBtn").addEventListener("click",()=>{
+    renderRecommendations(collectProfile());
+    // Bring the result into view so the user gets visible feedback after submitting the profile.
+    const resultHeading=$("recommendationStatus")?.closest(".section-title");
+    if(resultHeading) resultHeading.scrollIntoView({behavior:"smooth",block:"start"});
+    else $("recommendations")?.scrollIntoView({behavior:"smooth",block:"start"});
+  });
   $("clearBtn").addEventListener("click",clearProfile);
   $("addInventory").addEventListener("click",addInventory);
   $("exportInventory").addEventListener("click",exportInventory);
