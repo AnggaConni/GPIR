@@ -20,7 +20,7 @@ const compact = value => value == null ? "—" : new Intl.NumberFormat("id-ID",{
 const formatNumber = value => value == null ? "Tidak tersedia" : new Intl.NumberFormat("id-ID",{maximumFractionDigits:2}).format(value);
 const titleize = value => String(value || "").replace(/^UN_Tourism_/i,"").replace(/__(01|02)_/g," ").replace(/_(12_2025|05_2026|06_2026|03_2026)/g," ").replace(/_/g," ").replace(/\s+/g," ").trim();
 function datasetTitle(item){
-  const f = norm(item.workbook);
+  const f = norm(item.workbook).replace(/_/g," ").replace(/\.xlsx?$/i,"");
   const rules = [
     [/inbound arrivals by region/,"Kedatangan internasional menurut wilayah asal"],
     [/inbound arrivals by purpose/,"Kedatangan internasional menurut tujuan perjalanan"],
