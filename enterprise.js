@@ -613,7 +613,7 @@
   }
   function clearProfile() {
     ["district", "province", "resources", "skills"].forEach(id => $(id).value = "");
-    $("capital").value = "micro"; $("businessScale").value = "micro"; $("buyerSegment").value = "mixed"; $("targetMarket").value = "both";
+    $("capital").value = "micro"; $("businessStage").value = "start"; $("businessScale").value = "micro"; $("buyerSegment").value = "mixed"; $("targetMarket").value = "both";
     renderRecommendations(collectProfile());
   }
   function initMap() {
@@ -853,6 +853,7 @@
   $("radius").addEventListener("change",()=>{if(currentLocation&&$("coverage").value==="nearby")searchNearby();});
   $("coverage").addEventListener("change",()=>{if(currentLocation)searchNearby();});
   $("businessTypeFilter").addEventListener("change",()=>renderRecommendations(collectProfile()));
+  $("businessStage").addEventListener("change",()=>renderRecommendations(collectProfile()));
   renderInventory();initMap();loadFeeds();
   const params=new URLSearchParams(window.location.search);
   const qLat=number(params.get("lat")),qLon=number(params.get("lon")),qLocation=params.get("location")||"";
