@@ -414,7 +414,10 @@
   function distanceKm(aLat,aLon,bLat,bLon){const rad=x=>x*Math.PI/180,R=6371,dLat=rad(bLat-aLat),dLon=rad(bLon-aLon),x=Math.sin(dLat/2)**2+Math.cos(rad(aLat))*Math.cos(rad(bLat))*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(x));}
   function safeHttpUrl(value){try{const u=new URL(String(value||""),window.location.href);return ["http:","https:"].includes(u.protocol)?u.href:"";}catch(_){return "";}}
   function classifyPOI(el){
-    const t=el.tags||{},shop=String(t.shop||"").toLowerCase(),amenity=String(t.amenity||"").toLowerCase(),craft=String(t.craft||"").toLowerCase(),office=String(t.office||"").toLowerCase(),landuse=String(t.landuse||"").toLowerCase();
+    const t=el.tags||{},shop=String(t.shop||"").toLowerCase(),amenity=String(t.amenity||"").toLowerCase(),craft=String(t.craft||"").toLowerCase(),office=String(t.office||"").toLowerCase(),landuse=String(t.landuse||"").toLowerCase(),tourism=String(t.tourism||"").toLowerCase(),historic=String(t.historic||"").toLowerCase(),natural=String(t.natural||"").toLowerCase(),leisure=String(t.leisure||"").toLowerCase();
+    const attractionTags=["attraction","museum","gallery","viewpoint","theme_park","zoo","aquarium","artwork","picnic_site"];
+    const historicTags=["monument","memorial","ruins","castle","archaeological_site"];
+    if(attractionTags.includes(tourism)||historicTags.includes(historic)||["beach","waterfall","hot_spring","cave_entrance"].includes(natural)||["park","garden"].includes(leisure))return {category:"tourism",label:"Atraksi wisata / budaya",color:POI_COLORS.tourism};
     if(amenity==="marketplace")return {category:"market",label:"Pasar / marketplace",color:POI_COLORS.market};
     if(["restaurant","cafe","fast_food","food_court","bakery","ice_cream"].includes(amenity))return {category:"food_buyer",label:"Usaha kuliner",color:POI_COLORS.food_buyer};
     if(["car_repair","motorcycle_repair","bicycle_repair","tailor","electronics_repair","shoemaker"].includes(craft)||["car_repair","bicycle","motorcycle"].includes(shop)||["car_repair","repair"].includes(amenity))return {category:"service",label:"Jasa / bengkel",color:POI_COLORS.service};
@@ -518,7 +521,7 @@
     if(Date.now()-lastOverpassRequestAt<1500){$("locationStatus").textContent="Tunggu sebentar sebelum mengulangi pencarian peta.";return;}
     lastOverpassRequestAt=Date.now();
     const shape=areaMode?'nwr('+selectedAreaBounds.south+','+selectedAreaBounds.west+','+selectedAreaBounds.north+','+selectedAreaBounds.east+')':'nwr(around:'+radius+','+lat+','+lon+')';
-    const q='[out:json][timeout:35];('+shape+'["shop"];'+shape+'["amenity"~"marketplace|restaurant|cafe|fast_food|food_court|bakery|ice_cream|community_centre|school|hospital|clinic|car_repair|fuel"];'+shape+'["craft"];'+shape+'["office"~"company|commercial|wholesale"];'+shape+'["landuse"~"farmland|orchard|plant_nursery"];);out center tags;';
+    const q='[out:json][timeout:35];('+shape+'["tourism"~"attraction|museum|gallery|viewpoint|theme_park|zoo|aquarium|artwork|picnic_site"];'+shape+'["historic"~"monument|memorial|ruins|castle|archaeological_site"];'+shape+'["natural"~"beach|waterfall|hot_spring|cave_entrance"];'+shape+'["leisure"~"park|garden"];'+shape+'["shop"];'+shape+'["amenity"~"marketplace|restaurant|cafe|fast_food|food_court|bakery|ice_cream|community_centre|school|hospital|clinic|car_repair|fuel"];'+shape+'["craft"];'+shape+'["office"~"company|commercial|wholesale"];'+shape+'["landuse"~"farmland|orchard|plant_nursery"];);out center tags;';
     try{
       const response=await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(q),{headers:{"Accept":"application/json"}});
       if(!response.ok)throw new Error("HTTP "+response.status+". Endpoint publik mungkin sibuk.");
