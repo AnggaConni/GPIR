@@ -122,6 +122,57 @@
     const wanted = Array.isArray(opp.map_categories) ? opp.map_categories : [];
     return wanted.length ? nearbyPoints.filter(p => wanted.includes(p.category) && (p.category !== "tourism" || (p.distance != null && p.distance <= 3))).sort((a,b)=>(a.distance??9999)-(b.distance??9999)) : [];
   }
+  function tourismCopy() {
+    const lang = window.GPIRi18n && window.GPIRi18n.getLanguage ? window.GPIRi18n.getLanguage() : "id";
+    const copy = {
+      id:{waiting:"Wisata ≤3 km: belum dicek",very:"Wisata sangat dekat",near:"Dekat destinasi wisata",none:"Tidak ada atraksi terpetakan ≤3 km; data peta mungkin tidak lengkap.",nearest:"Wisata terpetakan terdekat",outside:"di luar zona dekat (>3 km)"},
+      en:{waiting:"Tourism ≤3 km: not checked",very:"Very close attraction",near:"Near a tourist attraction",none:"No mapped attraction within 3 km; map coverage may be incomplete.",nearest:"Nearest mapped attraction",outside:"outside the nearby zone (>3 km)"},
+      es:{waiting:"Turismo ≤3 km: sin comprobar",very:"Atracción muy cercana",near:"Cerca de una atracción turística",none:"No se encontró una atracción cartografiada en 3 km; la cobertura puede ser incompleta.",nearest:"Atracción cartografiada más cercana",outside:"fuera de la zona cercana (>3 km)"},
+      fr:{waiting:"Tourisme ≤3 km : non vérifié",very:"Attraction très proche",near:"Près d’une attraction touristique",none:"Aucune attraction cartographiée à moins de 3 km ; la couverture peut être incomplète.",nearest:"Attraction cartographiée la plus proche",outside:"hors de la zone proche (>3 km)"},
+      ar:{waiting:"السياحة ≤3 كم: لم يتم التحقق",very:"معلم سياحي قريب جداً",near:"بالقرب من معلم سياحي",none:"لا يوجد معلم مسجل خلال 3 كم؛ قد تكون تغطية الخريطة غير مكتملة.",nearest:"أقرب معلم مسجل على الخريطة",outside:"خارج نطاق القرب (>3 كم)"},
+      zh:{waiting:"3 公里内旅游景点：尚未检查",very:"附近有旅游景点",near:"靠近旅游景点",none:"3 公里内未找到地图景点；覆盖可能不完整。",nearest:"最近的地图景点",outside:"超出附近范围（>3 公里）"},
+      ru:{waiting:"Туризм ≤3 км: не проверено",very:"Очень близкая достопримечательность",near:"Рядом с достопримечательностью",none:"В пределах 3 км не найдено отмеченных достопримечательностей; покрытие может быть неполным.",nearest:"Ближайшая отмеченная достопримечательность",outside:"за пределами ближней зоны (>3 км)"}
+    };
+    return copy[lang] || copy.en;
+  }
+  function updateTourismStatus() {
+    const el = $("tourismStatus");
+    if (!el) return;
+    const copy = tourismCopy();
+    if (!currentLocation) { el.textContent = copy.waiting; el.className = "pill gray"; return; }
+    const close = nearbyTourismAttractions(3);
+    const nearest = nearbyTourismAttractions()[0];
+    if (close.length) {
+      const place = close[0];
+      el.textContent = (place.distance <= 1 ? copy.very : copy.near) + ": " + place.name + " · " + distanceLabel(place.distance);
+      el.className = "pill green";
+    } else if (nearest && nearest.distance > 3) {
+      el.textContent = copy.nearest + ": " + nearest.name + " · " + distanceLabel(nearest.distance) + " — " + copy.outside;
+      el.className = "pill gray";
+    } else {
+      el.textContent = copy.none;
+      el.className = "pill gray";
+    }
+  }
+  function matchingFoodProducts(opp, profile, limit = 2) {
+    if (!Array.isArray(foodProducts) || !foodProducts.length) return [];
+    const terms = [...(opp.products || []), ...(opp.resource_keywords || []), ...(profile.resources || [])].map(clean).filter(s => s.length >= 4);
+    return foodProducts.filter(product => {
+      const text = clean([product.name,product.brands,product.categories,product.ingredients,product.query_term].join(" "));
+      return terms.some(term => text.includes(term) || term.includes(text));
+    }).slice(0, limit);
+  }
+  function matchingHeritageContext(opp, profile) {
+    if (!Array.isArray(heritageItems) || !heritageItems.length) return null;
+    const location = clean([currentLocationLabel,profile.district,profile.province].join(" "));
+    const userTerms = [...(profile.resources || []), ...(profile.skills || []), ...(opp.resource_keywords || []), ...(opp.products || []), opp.title].map(clean).filter(term => term.length >= 4);
+    return heritageItems.find(item => {
+      const countries = clean(item.country_or_countries || "");
+      if (!countries || !countries.split(/[;,|]/).some(name => name.trim().length > 2 && location.includes(name.trim()))) return false;
+      const context = clean([item.name,item.description].join(" "));
+      return userTerms.some(term => context.includes(term) || term.includes(context));
+    }) || null;
+  }
   function buyerSegmentLabel(segment) {
     return ({consumers:"Konsumen rumah tangga",msme:"UMKM: mikro, kecil, menengah",business:"Perusahaan / institusi / grosir",export:"Importir / distributor luar negeri",mixed:"Campuran / belum ditentukan"})[segment] || "Campuran / belum ditentukan";
   }
