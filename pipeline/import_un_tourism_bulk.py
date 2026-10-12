@@ -140,8 +140,7 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
 
     generated_at = utc_now()
     output_dir.mkdir(parents=True, exist_ok=True)
-    # Stage extraction and JSON exports in a temporary directory outside the published
-    # snapshot. Keep the previous complete outputs unless every conversion succeeds.
+    # Stage extraction and all JSON output outside the published snapshot.
     with tempfile.TemporaryDirectory(prefix="gpir-un-tourism-") as temp_root:
         staging = Path(temp_root)
         temp_extract = staging / "extracted"
@@ -174,22 +173,20 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
         }
         manifest_tmp = staging / "manifest.json"
         manifest_tmp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        # Stage everything outside the output directory; the old outputs stay untouched
-        # until extraction and conversion have both succeeded.
-        final_extract = output_dir / "extracted"
-        final_json = output_dir / "sheets"
-        old_extract = output_dir / "extracted.previous"
-        old_json = output_dir / "sheets.previous"
+
+        final_extract, final_json = output_dir / "extracted", output_dir / "sheets"
+        old_extract, old_json = output_dir / "extracted.previous", output_dir / "sheets.previous"
         for old in (old_extract, old_json):
             if old.exists():
                 shutil.rmtree(old)
+        # Move old snapshots aside before promotion; restore them if anything fails.
         if final_extract.exists():
             final_extract.replace(old_extract)
         if final_json.exists():
             final_json.replace(old_json)
         try:
-            shutil.copytree(temp_extract, final_extract)
-            shutil.copytree(temp_json, final_json)
+            temp_extract.replace(final_extract)
+            temp_json.replace(final_json)
             shutil.copy2(manifest_tmp, output_dir / "manifest.json.tmp")
             (output_dir / "manifest.json.tmp").replace(output_dir / "manifest.json")
         except Exception:
