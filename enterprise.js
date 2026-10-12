@@ -389,7 +389,7 @@
       const whyParts=[];
       if(opp.resourceMatches.length)whyParts.push("resource cocok: "+opp.resourceMatches.slice(0,3).join(", "));
       if(opp.skillMatches.length)whyParts.push("skill cocok: "+opp.skillMatches.slice(0,3).join(", "));
-      if(opp.tourismNearbyCount>0&&opp.tourismScore>0)whyParts.push(opp.tourismNearbyCount+" atraksi terpetakan dalam 3 km"+(opp.nearestTourismKm!=null?" (terdekat "+(opp.nearestTourismKm<1?Math.round(opp.nearestTourismKm*1000)+" m":opp.nearestTourismKm.toFixed(1)+" km")+")":"")+"; tipe usaha dinilai relevan untuk wisata");
+      if(opp.tourismNearbyCount>0&&opp.tourism_fit!=="low"&&opp.tourismScore>0)whyParts.push(opp.tourismNearbyCount+" atraksi terpetakan dalam 3 km"+(opp.nearestTourismKm!=null?" (terdekat "+(opp.nearestTourismKm<1?Math.round(opp.nearestTourismKm*1000)+" m":opp.nearestTourismKm.toFixed(1)+" km")+")":"")+"; tipe usaha dinilai relevan untuk wisata");
       if(opp.localLeadCount>0)whyParts.push(opp.localLeadCount+" titik calon kanal/pemasok yang dipetakan dalam 5 km");
       if(opp.evidenceCount>0)whyParts.push(opp.evidenceCount+" kecocokan sinyal perdagangan/impor");
       const contextReason=whyParts.length?whyParts.join(" · "):
