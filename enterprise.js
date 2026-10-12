@@ -206,11 +206,14 @@
     const scaleBonus=profile.businessScale==="micro"&&opp.capital_level==="micro"?5:profile.businessScale==="small"?4:profile.businessScale==="medium"?3:5;
     const evidence=matchingTradeRows(opp,profile,3), locationMatches=findNearbyLeads(opp);
     const hasResourceFit=resourceMatches.length>0, hasSkillFit=skillMatches.length>0;
-    const rawScore=resourceScore+skillScore+marketScore+buyerScore+capitalScore+scaleBonus;
+    const tourismNearbyCount=nearbyTourismAttractions(3).length;
+    const tourismScore=tourismNearbyCount>0?(opp.tourism_fit==="high"?8:opp.tourism_fit==="medium"?4:0):0;
+    const rawScore=resourceScore+skillScore+marketScore+buyerScore+capitalScore+scaleBonus+tourismScore;
     return {...opp,business_type:businessType(opp),resourceMatches,skillMatches,evidenceCount:evidence.length,locationMatches,
       locationScore:Math.min(15,locationMatches.length*3),buyerSegmentMatch:segmentMatches,
       fitScore:hasInputs?Math.min(100,Math.round(rawScore)):null,
-      hasInputs,hasResourceFit,hasSkillFit,scaleAdvice:scaleAdvice(opp,profile.businessScale)};
+      hasInputs,hasResourceFit,hasSkillFit,scaleAdvice:scaleAdvice(opp,profile.businessScale),
+      tourismNearbyCount,tourismScore,tourismFitActive:tourismNearbyCount>0&&["high","medium"].includes(opp.tourism_fit)};
   }
   function matchingTradeRows(opp, profile, limit = 50) {
     if (!tradeItems.length) return [];
@@ -247,6 +250,7 @@
   function renderRecommendations(profile) {
     const all=catalog.map(o=>rankOpportunity(o,profile)).sort((a,b)=>
       Number(b.hasResourceFit)-Number(a.hasResourceFit)||Number(b.hasSkillFit)-Number(a.hasSkillFit)||
+      Number(b.tourismFitActive)-Number(a.tourismFitActive)||
       b.locationMatches.length-a.locationMatches.length||(b.fitScore??-1)-(a.fitScore??-1)||b.evidenceCount-a.evidenceCount);
     lastRecommendations=all;
     const chosenType=$("businessTypeFilter")?$("businessTypeFilter").value:"all";
