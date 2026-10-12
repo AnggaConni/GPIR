@@ -195,7 +195,7 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
         try:
             temp_extract.replace(final_extract)
             temp_json.replace(final_json)
-            shutil.copy2(manifest_tmp, manifest_tmp_path)
+            manifest_tmp_path.write_text(manifest_tmp.read_text(encoding="utf-8"), encoding="utf-8")
             manifest_tmp_path.replace(manifest_path)
         except Exception:
             shutil.rmtree(final_extract, ignore_errors=True)
