@@ -84,6 +84,9 @@ async function loadData(){
  try{
   const res=await fetch(DATA_URL+"?t="+Date.now(),{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);
   const raw=await res.json();
+  // Share the already-loaded trade feed with the homepage SME Finder; avoid a second large JSON download.
+  window.GPIRTradeItems=Array.isArray(raw.items)?raw.items:(Array.isArray(raw.records)?raw.records:(Array.isArray(raw.data)?raw.data:[]));
+  window.dispatchEvent(new Event("gpir-trade-feed-ready"));
   allRows=normalize(raw,null);
   setupFilters();applyFilters();
   const meta=raw.meta||raw.metadata||{},status=String(meta.status||meta.data_status||meta.mode||"unknown");
