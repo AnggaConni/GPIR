@@ -13,12 +13,14 @@ The feature is a decision-support aid. It does not promise that a product will s
 - `enterprise.html`: Indonesian-first, responsive interface and source/cost explainer.
 - `enterprise.js`: rule-based idea-fit matching, GPIR trade feed matching, optional Overpass discovery, local inventory management.
 - `data/opportunity_catalog.json`: curated hypotheses, product ideas, resource/skill keywords, illustrative starting-capital bands, first validation test, and risk prompts.
-- `data/data.json`: existing GPIR UN Comtrade feed. Current schema contains `meta`, `countries`, and `items`.
+- `data/data.json`: scheduled UN Comtrade feed. Current schema contains `meta`, `countries`, and `items`; public macro data are deliberately not duplicated into this file.
+- `market-context.js`: async browser-side World Bank enrichment, with graceful fallback if the API or network is unavailable.
 - `index.html`: navigation to the new Local Enterprise Opportunity Finder.
 
 ## Architecture
 
-1. **Global trade layer:** existing `pipeline/fetch_data.py` fetches UN Comtrade annual imports and World Bank country context to `data/data.json`. This represents reported cross-border trade—not retail sell-through.
+1. **Quota-limited trade layer:** `pipeline/fetch_data.py` fetches UN Comtrade annual imports to `data/data.json`. This scheduled Python collector is reserved for the source that benefits from controlled, keyed, cached requests. It represents reported cross-border trade—not retail sell-through.
+2. **Open country context:** `market-context.js` requests the no-key World Bank Indicators API directly from the browser (country coordinates, GDP per capita and population). It runs asynchronously, has a 12-hour browser-session cache, and does not make the trade collector wait on macro data. It is context, not product demand evidence.
 2. **Opportunity hypotheses:** `data/opportunity_catalog.json` stores hand-curated business ideas with the resources they typically require, a low-capital starting path, a buyer-validation task and risks.
 3. **Local context layer:** users enter district, province, skills and known resources. They can optionally search nearby mapped businesses through the public Overpass API using coordinates or browser geolocation.
 4. **Community resource inventory:** resource, quantity, unit, availability and indicative price can be entered by the user. The starter stores it in that browser's localStorage and can export/import JSON. It is not sent to the repository or shared with other users.
@@ -45,7 +47,7 @@ The opportunity catalogue includes approximate microenterprise startup-cost band
 | [SIPEDAS Kementan API](https://sipedas.pertanian.go.id/api/default/index) | Selected horticultural statistics by time and region, depending on module | **Reported production statistic** | API documentation exposes a `key` parameter. Check access, permitted use and coverage; don't expose credentials in browser code. Production volume isn't inventory currently available for sale. |
 | [BPS WebAPI](https://webapi.bps.go.id/developer) | Population and other official statistics by geography, where published | **Official statistical indicator** | Developer registration/key may be required. Indicators are context, not product demand. |
 | [OpenStreetMap / Overpass](https://overpass-turbo.eu/) | Mapped shops, markets, crafts and some facilities with coordinates | **Mapped presence** | Community completeness varies; not inventory, turnover or proof a business is open. Public instances are rate-limited/fair-use; current UI calls only on explicit user action. |
-| [World Bank Indicators API](https://api.worldbank.org/v2/) | Population, GDP/capita and macroeconomic indicators | **Official country-level context** | No API key required. Often national-level and lagged; weak for a specific product. |
+| [World Bank Indicators API](https://api.worldbank.org/v2/) | Population, GDP/capita and macroeconomic indicators | **Official country-level context** | Called directly in the frontend because no API key is required. Browser-side cache is 12 hours; values can be national-level and lagged. This is not a sales signal. |
 | [FAOSTAT](https://www.fao.org/faostat/) | Agriculture, food and commodity production/trade statistics | **Reported / compiled statistics** | Open datasets, but geography, units, years and refresh cadence vary by dataset. |
 | [Open Food Facts API](https://github.com/openfoodfacts/openfoodfacts-server/blob/main/docs/api/index.md) | Community-contributed food product catalogue, ingredients and pack metadata | **Product catalogue** | Not sales data; API has rate limits. Bulk exports are preferable for large-scale analysis. |
 | [eBay Browse API](https://developer.ebay.com/develop/api/buy/browse_api) | Listings, asking prices and availability | **Current listing / asking-price proxy** | App/OAuth access; marketplace and API quotas apply. Does not prove sold quantity. |
@@ -95,18 +97,30 @@ Use actual local quotes rather than generic API proxies:
 
 This is an implementation-level estimate, not a budget for the user's business:
 - **Static MVP:** potentially Rp0 incremental hosting/API cost using GitHub Pages and open data within platform/provider policies, normal quotas and a public repository. Browser localStorage has no server bill but is device-specific.
-- **Open-data refresh:** often Rp0 in direct API fees for World Bank, FAOSTAT downloads and limited public endpoints; Comtrade key/quotas and BPS/SIPEDAS access need to be checked. Avoid aggressive polling.
+- **Open-data refresh:** World Bank context is fetched directly in the browser (no API key required); the Python job is focused on UN Comtrade's quota-limited endpoint. BPS/SIPEDAS and marketplace access must be checked individually. Avoid aggressive polling.
 - **Community shared inventory:** requires a backend/database and moderation; free-tier availability and quotas can change. Keep private/community records out of public static JSON.
 - **Commercial marketplace data:** may require approval or a paid provider contract; costs are not estimated until a concrete vendor, coverage and quota are chosen.
 - **Field validation:** travel, sample testing, packaging, lab tests, permits and labour are variable local costs and are not covered by the API estimate.
 
 ## Roadmap
 
-### Phase 1 — Shipped starter
-Local opportunity page, curated hypotheses, resource inventory in browser, GPIR trade-feed matching, and optional nearby mapped-place search.
+### API routing rule
 
-### Phase 2 — Licensed official connectors
-Add BPS and SIPEDAS server-side connectors only after credentials, access permission, data fields, refresh cadence and terms are verified. Use a scheduled Python data job to publish only permitted aggregate datasets.
+- **Python/GitHub Actions collector:** use for quota-limited, keyed, approval-gated, expensive, or history-dependent APIs where server-side secrets and polite batching matter. Keep credentials in Actions secrets; never ship secrets to browser code.
+- **Frontend direct fetch:** use for public, no-key sources that support browser CORS and reasonable request volumes (for example, World Bank context). Fetch asynchronously, cache for a sensible duration, and show a graceful fallback. "No API key" does not mean literally unlimited; respect provider policies and fair-use constraints.
+- **Public map queries:** Overpass remains a user-triggered frontend lookup because the current workflow asks only when the user presses the search button. The public instance has usage limits, so avoid automatic/polling requests.
+
+### Sales data and a 30-day trend
+
+GPIR's current UN Comtrade feed is annual cross-border trade—not daily retail sales. It must not be relabelled as a 30-day sales trend. The architecture should support a rolling 30-day window when a source genuinely exposes completed-sales observations. Each daily aggregation should preserve `date`, `source`, `marketplace`, `product_query`/product identifier, `sold_count` (when returned), `median_sold_price`, `currency`, `geography`, `retrieved_at` and an explicit `evidence_type: "completed_sales"`. Keep only the window and source coverage needed for analysis, with attribution and terms respected.
+
+If a source only exposes active listings, the same process may chart daily listing count and median asking price, but must label it `evidence_type: "listing_proxy"`—not sales. eBay Marketplace Insights is documented as a Limited Release product for approved developers; its official overview describes sold-item history for up to 90 days, so it is a potential connector only after access is granted. It is not treated as currently connected. See [official eBay overview](https://www.edp.ebay.com/api-docs/buy/marketplace-insights/static/overview.html).
+
+### Phase 1 — Shipped starter
+Local opportunity page, curated hypotheses, resource inventory in browser, GPIR trade-feed matching, asynchronous World Bank context in the frontend, and optional nearby mapped-place search.
+
+### Phase 2 — Licensed / limited connectors
+Add BPS, SIPEDAS or an approved completed-sales marketplace connector server-side only after credentials, access permission, data fields, refresh cadence and terms are verified. Use a scheduled Python job to publish permitted aggregate snapshots and retain enough history for a rolling 30-day trend. If no approved sales endpoint is available, show listing/price proxies separately and state that completed-sales data are unavailable.
 
 ### Phase 3 — Marketplace validation
 Add approved listing APIs first. Store price/availability snapshots to calculate changes over time. Treat listing volume and search rank as proxies. Add sold-item datasets only if official access is approved.
