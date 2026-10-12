@@ -559,6 +559,7 @@
       return {raw:el,key:el.type+"/"+el.id,name,type:type.label,category:type.category,color:type.color,lat:lat2,lon:lon2,distance:lat2==null||lon2==null?null:distanceKm(lat,lon,lat2,lon2)};
     }).sort((a,b)=>(a.distance??9999)-(b.distance??9999));
     const unique=new Map();normalized.forEach(p=>unique.set(p.key,p));nearbyPoints=[...unique.values()].sort((a,b)=>(a.distance??9999)-(b.distance??9999));
+    updateTourismStatus();
     const active=lastRecommendations.find(o=>o.id===activeOpportunityId),wanted=active?(active.map_categories||[]):[];
     const relevant= p=>wanted.includes(p.category);
     const areaMode=$("coverage")&&$("coverage").value==="area"&&validBounds(selectedAreaBounds);
@@ -669,13 +670,17 @@
   }
   function renderRelationshipFlow(opp,profile){
     if(!opp||!$("relationshipVisual"))return;
-    const leads=findNearbyLeads(opp).slice(0,2),trade=matchingTradeRows(opp,profile,2);
+    const leads=findNearbyLeads(opp).filter(p=>p.category!=="tourism").slice(0,2);
+    const attractions=nearbyTourismAttractions(3).slice(0,2);
+    const trade=matchingTradeRows(opp,profile,2);
     const input=[...profile.resources.slice(0,2),...profile.skills.slice(0,1)].join(" · ")||"Sumber daya/keterampilan belum diisi";
+    const tourismText=attractions.length?attractions.map(p=>p.name+" · "+distanceLabel(p.distance)).join(" / "):"Tidak ada atraksi terpetakan ≤3 km";
+    const localText=leads.length?leads.map(p=>p.name+" · "+distanceLabel(p.distance)).join(" / "):"Belum ada titik usaha kategori cocok";
     const nodes=[
       {label:"INPUT LOKAL",value:input,detail:"Dari input pengguna/inventaris lokal"},
       {label:businessTypeLabel(opp.business_type),value:firstText(opp.products,opp.title),detail:opp.action_summary||opp.rationale},
       {label:"CALON PEMBELI",value:firstText(opp.sell_to,"Identifikasi lewat wawancara"),detail:firstText(opp.channels,"Uji kanal sebelum investasi")},
-      {label:"TITIK SEKITAR",value:leads.length?leads.map(p=>p.name+" · "+distanceLabel(p.distance)).join(" / "):"Belum ada titik kategori cocok",detail:leads.length+" lokasi peta yang masuk kategori terkait; verifikasi dulu"},
+      {label:"WISATA & USAHA SEKITAR",value:tourismText+(leads.length?" · Usaha: "+localText:""),detail:"Hanya atraksi ≤3 km dianggap dekat. Tempat peta adalah petunjuk, bukan buyer terkonfirmasi."},
       {label:"SINYAL PASAR LUAR",value:trade.length?trade.map(t=>(t.market_name||t.market_iso3)+" · "+compactUSD(number(t.latest_import_usd))+" / "+(t.latest_year||"tahun?")).join(" / "):"Belum ada padanan pada feed",detail:"Impor tahunan tingkat negara, bukan buyer atau pesanan terverifikasi"}
     ];
     $("relationshipTitle").textContent="Rantai peluang: "+opp.title;
@@ -684,6 +689,7 @@
     $("relationshipStatus").className="pill "+(opp.hasResourceFit||opp.hasSkillFit?"green":"gold");
     $("relationshipVisual").innerHTML=nodes.map((n,i)=>'<div class="flow-step '+(i===1?'is-active':'')+'"><span class="step-no">LANGKAH '+(i+1)+'</span><h3>'+esc(n.label)+'</h3><strong>'+esc(n.value)+'</strong><p>'+esc(n.detail)+'</p></div>'+(i<nodes.length-1?'<span class="flow-arrow" aria-hidden="true">→</span>':"")).join("");
     $("pathwaySection")?.classList.add("is-active");
+    updateTourismStatus();
   }
   $("findBtn").addEventListener("click",()=>{
     // Do not let a previous homepage category filter override the resources and skills just entered.
