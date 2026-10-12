@@ -106,7 +106,7 @@
   function nearbyTourismAttractions(limitKm = Infinity) {
     if (!currentLocation) return [];
     const rows = [];
-    nearbyPoints.filter(p => p.category === "tourism" && p.distance != null).forEach(p => rows.push({...p, tourismSource:"OpenStreetMap"}));
+    nearbyPoints.filter(p => p.category === "tourism" && p.distance != null && clean(p.name) !== "lokasi tanpa nama").forEach(p => rows.push({...p, tourismSource:"OpenStreetMap"}));
     tourismSnapshot.filter(item => item && item.kind === "tourist_attraction" && number(item.lat) != null && number(item.lon) != null).forEach(item => {
       const distance = distanceKm(currentLocation.lat,currentLocation.lon,Number(item.lat),Number(item.lon));
       if (distance <= limitKm) rows.push({key:"snapshot:"+item.id,name:item.name||"Unnamed mapped attraction",category:"tourism",type:"Atraksi wisata / budaya",distance,lat:Number(item.lat),lon:Number(item.lon),url:item.url||"",source:item.source||"Tourism snapshot",tourismSource:item.source||"Tourism snapshot"});
