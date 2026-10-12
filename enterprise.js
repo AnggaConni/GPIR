@@ -601,7 +601,7 @@
       $("locationStatus").textContent="Untuk memetakan seluruh kota/area, cari nama wilayah administratif terlebih dahulu (contoh: Jakarta, Indonesia).";
       $("locationSearch").focus();return;
     }
-    currentLocation={lat,lon};currentLocationLabel=currentLocationLabel||"Lokasi terpilih";updateMapCenter(lat,lon);
+    currentLocation={lat,lon};currentLocationLabel=currentLocationLabel||"Lokasi terpilih";updateMapCenter(lat,lon);updateTourismStatus();
     $("locationStatus").textContent=areaMode?"Memetakan seluruh area terpilih…":"Mencari titik sekitar "+currentLocationLabel+"…";
     $("poiSummary").textContent="Mencari toko, pasar, pemasok, jasa, dan calon mitra…";
     $("poiResults").innerHTML='<div class="empty">Memuat data peta OpenStreetMap…</div>';
