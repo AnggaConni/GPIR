@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build scheduled tourism, travel-guide, heritage and food-catalogue snapshots for GPIR.
+"""Build scheduled tourism, UNESCO designated-site, heritage and food-catalogue snapshots for GPIR.
 
 Dynamic user-nearby place detection remains an on-demand OpenStreetMap operation in
 the browser because GitHub Pages is static. This scheduled collector builds reusable
