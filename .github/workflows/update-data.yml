@@ -16,6 +16,8 @@ on:
       - "docs/**"
       - "README.md"
       - "index.html"
+      - "tourism.html"
+      - "tourism.js"
       - ".github/workflows/update-data.yml"
   workflow_dispatch:
   schedule:
@@ -45,9 +47,9 @@ jobs:
       - name: Run transformation tests
         run: python -m unittest discover -s tests -v
       - name: Check frontend JavaScript syntax
-        run: node --check app.js && node --check market-context.js && node --check local-home.js && node --check i18n.js && node --check enterprise.js
+        run: node --check app.js && node --check market-context.js && node --check local-home.js && node --check i18n.js && node --check enterprise.js && node --check tourism.js
       - name: Validate JSON data files
-        run: python -c "import json,pathlib; [json.loads(p.read_text(encoding='utf-8')) for p in pathlib.Path('data').glob('*.json')]; print('All data JSON files are valid')"
+        run: python -c "import json,pathlib; files=list(pathlib.Path('data').rglob('*.json')); [json.loads(p.read_text(encoding='utf-8')) for p in files]; print(f'All {len(files)} data JSON files are valid')"
 
   refresh:
     name: Refresh open trade data
