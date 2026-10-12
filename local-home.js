@@ -53,8 +53,25 @@ function ideaType(o){return o.business_type||(o.id==="local-aggregation"||o.id==
 function typeFilter(){return $("homeTypeFilter").value||"all";}
 function selectedIdea(){return catalog.find(o=>o.id===activeIdea)||null;}
 function relevantCategories(){const o=selectedIdea();return new Set(o&&o.map_categories||[]);}
-function renderPoints(elements){if(!coords)return;const unique=new Map();(elements||[]).forEach(el=>{const t=el.tags||{},lat=num(el.lat!=null?el.lat:el.center&&el.center.lat),lon=num(el.lon!=null?el.lon:el.center&&el.center.lon),cat=classify(el),key=el.type+"/"+el.id;unique.set(key,{raw:el,key,name:t.name||t.brand||t.operator||"Lokasi tanpa nama",cat,lat,lon,dist:lat==null||lon==null?null:km(coords.lat,coords.lon,lat,lon)});});
- points=[...unique.values()].sort((a,b)=>(a.dist??9999)-(b.dist??9999));drawPoints();updateTourismStatus();renderRecommendations();}
+function renderPoints(elements){
+ if(!coords)return;
+ const unique=new Map();
+ (elements||[]).forEach(el=>{
+  const t=el.tags||{},lat=num(el.lat!=null?el.lat:el.center&&el.center.lat),lon=num(el.lon!=null?el.lon:el.center&&el.center.lon),cat=classify(el),key=el.type+"/"+el.id;
+  unique.set(key,{raw:el,key,name:t.name||t.brand||t.operator||"Lokasi tanpa nama",cat,lat,lon,dist:lat==null||lon==null?null:km(coords.lat,coords.lon,lat,lon),source:"OpenStreetMap"});
+ });
+ points=[...unique.values()].sort((a,b)=>(a.dist??9999)-(b.dist??9999));
+ const areaMode=$("homeCoverage").value==="area"&&validBounds(placeBounds),radius=Number($("homeRadius").value||3000);
+ tourismSnapshot.filter(item=>item&&item.kind==="tourist_attraction"&&num(item.lat)!=null&&num(item.lon)!=null).forEach(item=>{
+  const lat=Number(item.lat),lon=Number(item.lon),dist=km(coords.lat,coords.lon,lat,lon);
+  const inside=areaMode?lat>=placeBounds.south&&lat<=placeBounds.north&&lon>=placeBounds.west&&lon<=placeBounds.east:dist<=radius/1000;
+  if(!inside)return;
+  if(points.some(p=>p.cat==="tourism"&&String(p.name).toLowerCase()===String(item.name||"").toLowerCase()&&p.dist!=null&&Math.abs(p.dist-dist)<.12))return;
+  points.push({raw:{type:"snapshot",id:item.external_id||item.id,tags:{name:item.name||"Unnamed attraction"}},key:"snapshot:"+item.id,name:item.name||"Unnamed attraction",cat:"tourism",lat,lon,dist,source:item.source||"Tourism snapshot",url:item.url||""});
+ });
+ points.sort((a,b)=>(a.dist??9999)-(b.dist??9999));
+ drawPoints();updateTourismStatus();renderRecommendations();
+}
 function drawPoints(){if(!map||!markers||!lines||!coords)return;markers.clearLayers();lines.clearLayers();const cats=relevantCategories();
  const mapPoints=points.length<=350?points:points.filter((p,i)=>i%Math.ceil(points.length/350)===0).slice(0,350);mapPoints.forEach((p,i)=>{if(p.lat==null||p.lon==null)return;const rel=cats.has(p.cat)&&(p.cat!=="tourism"||(p.dist!=null&&p.dist<=3));
   if(i<35)L.polyline([[coords.lat,coords.lon],[p.lat,p.lon]],{color:rel?"#0d9488":(colors[p.cat]||colors.other),weight:rel?2:1,opacity:rel?.65:.25,dashArray:rel?"":"4 5"}).addTo(lines);
