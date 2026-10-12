@@ -8,6 +8,7 @@ An open-data starter to screen product–market opportunities using UN Comtrade 
 - Responsive global dashboard, interactive map, product search, country filters and opportunity rankings.
 - Python pipelines for quota-limited UN Comtrade trade data and scheduled tourism/heritage/context snapshots.
 - UN Tourism bulk ZIP importer: downloads official Excel workbooks, safely extracts them, and exports every non-empty worksheet to JSON with source metadata and a manifest.
+- Tourism SME Opportunity Explorer (`tourism.html`): lazily loads one selected UN Tourism worksheet at a time, charts country/indicator time series where the observations are comparable, and recommends start-up or SME growth experiments from the opportunity catalogue.
 - Six-digit HS product observations with yearly growth, CAGR and explainable percentile scoring.
 - Weekly scheduled and manual GitHub Actions refresh.
 - Tests for product code filtering, scoring safeguards, and UN Tourism Excel-to-JSON conversion.
@@ -83,5 +84,10 @@ Project code: MIT (see `LICENSE`). Upstream datasets remain subject to their own
 ### Tourism-linked local economy
 A scheduled Python collector builds tourism/place, travel-guide, UNESCO intangible-heritage, packaged-food catalogue, and country-level tourism-context snapshots in `data/tourism_places.json`, `data/ich_heritage.json`, `data/food_products.json`, and `data/tourism_stats.json`. Tourist proximity is a separate local signal: within 1 km = very close; within 3 km = nearby; beyond 3 km is not used as the local tourism boost. World Bank arrivals are annual country statistics, not attraction footfall; see source-specific caveats in the JSON metadata.
 
-### UN Tourism bulk statistics
+### Tourism SME Opportunity Explorer
+
+Open `tourism.html` for a data-informed SME planning page. It loads the compact UN Tourism manifest and opportunity catalogue first, then fetches only the worksheet selected by the user. Available filters include country/area, indicator, year, search terms, and a statistical breakdown where the source provides one.
+
+The recommendations have separate **Start** and **Grow an existing SME** modes. They combine the user's resources, skills, indicative budget, buyer focus, and the curated opportunity catalogue. The displayed fit score is an input/catalogue match—not a success probability. National tourism statistics provide context, not proof of demand at a specific attraction or village. The detailed local buyer/map workflow remains in `enterprise.html`.
+
 `pipeline/import_un_tourism_bulk.py` downloads the official ZIP, safely extracts Excel workbooks and exports each non-empty worksheet to `data/un_tourism/sheets/*.json`. `data/un_tourism/manifest.json` inventories the outputs. The ZIP archive itself is not committed, only the JSON exports. See `docs/UN_TOURISM_BULK_IMPORT.md`.
