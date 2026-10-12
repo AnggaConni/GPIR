@@ -77,11 +77,16 @@ jobs:
           OPENTRIPMAP_API_KEY: ${{ secrets.OPENTRIPMAP_API_KEY }}
           PYTHONUNBUFFERED: "1"
         run: python pipeline/fetch_tourism_data.py
+      - name: Refresh official UN Tourism bulk statistics
+        env:
+          UN_TOURISM_BULK_URL: ${{ vars.UN_TOURISM_BULK_URL || 'https://pre-webunwto.s3.amazonaws.com/s3fs-public/2026-05/UN_Tourism_bulk_data_download_05_2026.zip' }}
+          PYTHONUNBUFFERED: "1"
+        run: python pipeline/import_un_tourism_bulk.py --refresh-download
       - name: Commit updated data only when changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/data.json data/tourism_places.json data/ich_heritage.json data/food_products.json data/tourism_stats.json
+          git add data/data.json data/tourism_places.json data/ich_heritage.json data/food_products.json data/tourism_stats.json data/un_tourism/
           if git diff --cached --quiet; then
             echo "No data changes to commit."
           else
