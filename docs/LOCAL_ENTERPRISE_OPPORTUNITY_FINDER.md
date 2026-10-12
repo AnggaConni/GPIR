@@ -10,7 +10,8 @@ The feature is a decision-support aid. It does not promise that a product will s
 
 ## Current implementation
 
-- `enterprise.html`: Indonesian-first, responsive interface and source/cost explainer.
+- `index.html` + `local-home.js`: homepage quick-start panel with geolocation permission, manual location search, nearby map, one recommended idea per business category, supplier/buyer search links and relationship flow.
+- `enterprise.html`: detailed responsive Finder. The homepage passes coordinates, location label, radius and business type as query parameters.
 - `enterprise.js`: rule-based idea-fit matching, explicit product/cultivation/service recommendations, location search, permission-based first-load geolocation, nearby OSM/Overpass lookup with browser cache, a local relationship-flow visual, marketplace search links and local inventory management.
 - `data/opportunity_catalog.json`: curated hypotheses, product ideas, resource/skill keywords, illustrative starting-capital bands, first validation test, and risk prompts.
 - `data/data.json`: scheduled UN Comtrade feed. Current schema contains `meta`, `countries`, and `items`; public macro data are deliberately not duplicated into this file.

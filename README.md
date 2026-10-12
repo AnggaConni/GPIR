@@ -1,9 +1,10 @@
 # Global Product Intelligence Radar (GPIR)
 
-An open-data starter to screen product–market opportunities using UN Comtrade trade statistics and World Bank country context. The static dashboard can feed other Horizon Scanning pages.
+An open-data starter to screen product–market opportunities using UN Comtrade trade statistics and World Bank country context. The homepage starts with local opportunity discovery; the global trade dashboard remains available below.
 
 ## Features
-- Responsive dashboard, interactive country map, product search, country filters and opportunity rankings.
+- Location-first homepage with permission-based geolocation, manual location search, nearby mapped places, and starter recommendations for selling, cultivation and services.
+- Responsive global dashboard, interactive map, product search, country filters and opportunity rankings.
 - Python pipeline for quota-limited UN Comtrade trade data; browser-side World Bank API enrichment for country context.
 - Six-digit HS product observations with yearly growth, CAGR and explainable percentile scoring.
 - Weekly scheduled and manual GitHub Actions refresh.
@@ -38,6 +39,7 @@ Edit `config/markets.json` to set ISO-3 reporter markets. Optional environment v
 - `COMTRADE_START_YEAR` / `COMTRADE_END_YEAR` — requested annual range.
 - `COMTRADE_MAX_RECORDS` — per-call maximum records.
 - `market-context.js` — fetches public World Bank country/indicator context directly from the browser and caches it for 12 hours.
+- `local-home.js` — location-first opportunity preview. Location and radius pass into `enterprise.html` so visitors do not have to enter them again.
 - `MARKET_ISO3` — comma-separated market override.
 - `REQUEST_SLEEP_SECONDS` — pause between calls.
 

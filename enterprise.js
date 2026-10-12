@@ -519,5 +519,15 @@
   $("radius").addEventListener("change",()=>{if(currentLocation)searchNearby();});
   $("businessTypeFilter").addEventListener("change",()=>renderRecommendations(collectProfile()));
   renderInventory();initMap();loadFeeds();
-  useBrowserLocation({automatic:true});
+  const params=new URLSearchParams(window.location.search);
+  const qLat=number(params.get("lat")),qLon=number(params.get("lon")),qLocation=params.get("location")||"";
+  const qRadius=Number(params.get("radius")),qType=params.get("type")||"all";
+  if([1000,3000,5000,10000].includes(qRadius))$("radius").value=String(qRadius);
+  if(["all","sell","grow","service"].includes(qType))$("businessTypeFilter").value=qType;
+  if(qLat!=null&&qLon!=null&&qLat>=-90&&qLat<=90&&qLon>=-180&&qLon<=180){
+    currentLocation={lat:qLat,lon:qLon};currentLocationLabel=qLocation||("Lokasi terpilih ("+qLat.toFixed(3)+", "+qLon.toFixed(3)+")");
+    $("locationName").textContent=currentLocationLabel;$("locationSearch").value=qLocation;$("lat").value=qLat;$("lon").value=qLon;
+    updateMapCenter(qLat,qLon);searchNearby();
+  }else if(qLocation){$("locationSearch").value=qLocation;searchLocation();}
+  else useBrowserLocation({automatic:true});
 })();
