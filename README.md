@@ -9,7 +9,7 @@ An open-data starter to screen product–market opportunities using UN Comtrade 
 - Responsive global dashboard, interactive map, product search, country filters and opportunity rankings.
 - Python pipelines for quota-limited UN Comtrade trade data and scheduled tourism/heritage/context snapshots.
 - UN Tourism bulk ZIP importer: downloads official Excel workbooks, safely extracts them, and exports every non-empty worksheet to JSON with source metadata and a manifest.
-- Tourism SME Opportunity Explorer (`tourism.html`): lazily loads one selected UN Tourism worksheet at a time, charts country/indicator time series where the observations are comparable, and recommends start-up or SME growth experiments from the opportunity catalogue.
+- Potential Explorer (`tourism.html` + `potential.js`): world map occupying roughly three quarters of the desktop workspace with a compact filter/results sidebar. Users can click the map or drag a pin; the map draws glowing dashed links to mapped local businesses/attractions within 5 km and to international countries with matching UN Comtrade import observations.
 - Six-digit HS product observations with yearly growth, CAGR and explainable percentile scoring.
 - Weekly scheduled and manual GitHub Actions refresh.
 - Tests for product code filtering, scoring safeguards, and UN Tourism Excel-to-JSON conversion.
@@ -17,7 +17,7 @@ An open-data starter to screen product–market opportunities using UN Comtrade 
 ## Data sources
 - [UN Comtrade API](https://comtradeapi.un.org/) — reported merchandise trade, not retail sales.
 - [World Bank Indicators API v2](https://api.worldbank.org/v2/) — geographic and macroeconomic context, fetched asynchronously in the frontend, plus annual country tourism indicators.
-- [UN Tourism Statistics Database](https://www.untourism.int/tourism-statistics/tourism-statistics-database) — official bulk ZIP archive imported as worksheet-level JSON; a data snapshot, not a live API.
+- [UN Tourism Statistics Database](https://www.untourism.int/tourism-statistics/tourism-statistics-database) — official bulk ZIP archive imported as worksheet-level JSON; a data snapshot, not a live API. Archived worksheet exports remain available for further data processing.
 - [OpenStreetMap](https://www.openstreetmap.org/copyright), [OpenTripMap](https://dev.opentripmap.org/), [Wikivoyage](https://www.wikivoyage.org/), [UNESCO ICH](https://ich.unesco.org/), and [Open Food Facts](https://world.openfoodfacts.org/) — mapped places, travel-guide metadata, intangible heritage, and packaged-food catalogue context.
 
 ## Setup and deploy
@@ -52,6 +52,8 @@ Edit `config/markets.json` to set ISO-3 reporter markets. Optional environment v
 - `i18n.js` — browser-side interface localisation for Indonesian, English, Spanish, French, Arabic, Chinese and Russian.
 - `MARKET_ISO3` — comma-separated market override.
 - `REQUEST_SLEEP_SECONDS` — pause between calls.
+
+The default reporter-market set in `config/markets.json` includes the Netherlands (NLD) to support international Potential Explorer links. Run **Actions → GPIR CI and data refresh → Run workflow** after changing market coverage so `data/data.json` includes fresh observations for NLD. Without refreshed NLD rows, the map intentionally shows no Dutch link when the snapshot has no matching data.
 
 ## Interpretation
 - Import values are trade statistics, not marketplace sales, consumer spending, or profit.
@@ -90,10 +92,12 @@ Project code: MIT (see `LICENSE`). Upstream datasets remain subject to their own
 ### Tourism-linked local economy
 A scheduled Python collector builds tourism/place, travel-guide, UNESCO intangible-heritage, packaged-food catalogue, and country-level tourism-context snapshots in `data/tourism_places.json`, `data/ich_heritage.json`, `data/food_products.json`, and `data/tourism_stats.json`. Tourist proximity is a separate local signal: within 1 km = very close; within 3 km = nearby; beyond 3 km is not used as the local tourism boost. World Bank arrivals are annual country statistics, not attraction footfall; see source-specific caveats in the JSON metadata.
 
-### Tourism SME Opportunity Explorer
+### Potential Explorer
 
-Open `tourism.html` for a data-informed SME planning page. It loads the compact UN Tourism manifest and opportunity catalogue first, then fetches only the worksheet selected by the user. Available filters include country/area, indicator, year, search terms, and a statistical breakdown where the source provides one.
+Open `tourism.html` for the **Potential Explorer** world map. The user can click anywhere on the map to place the red origin pin, drag it to a new point, or search for a named location. It fetches relevant OpenStreetMap points on demand, draws dashed/glowing connections to mapped tourist attractions within 5 km and nearby local ecosystem points, and can draw international connections where the GPIR trade snapshot has matching product-import observations. Destination links are grouped by country and can be zoomed individually.
 
-The recommendations have separate **Start** and **Grow an existing SME** modes. They combine the user's resources, skills, indicative budget, buyer focus, and the curated opportunity catalogue. The displayed fit score is an input/catalogue match—not a success probability. National tourism statistics provide context, not proof of demand at a specific attraction or village. The detailed local buyer/map workflow remains in `enterprise.html`.
+Product terms such as `singkong` expand to English trade terms such as cassava/manioc/tapioca for matching. The UI shows a market link only when a relevant observation is present; no data match is not evidence that demand is absent. Trade rows are reported national imports, not retail sales or confirmed buyer orders. The configured reporter set includes the Netherlands (NLD), but refresh Actions to populate new observations.
 
-`pipeline/import_un_tourism_bulk.py` downloads the official ZIP, safely extracts Excel workbooks and exports each non-empty worksheet to `data/un_tourism/sheets/*.json`. `data/un_tourism/manifest.json` inventories the outputs. The ZIP archive itself is not committed, only the JSON exports. See `docs/UN_TOURISM_BULK_IMPORT.md`.
+### UN Tourism bulk statistics
+
+`pipeline/import_un_tourism_bulk.py` downloads the official ZIP, safely extracts Excel workbooks and exports each non-empty worksheet to `data/un_tourism/sheets/*.json`. `data/un_tourism/manifest.json` inventories the outputs. The ZIP archive itself is not committed, only the JSON exports. These archived statistics remain available for further data processing. See `docs/UN_TOURISM_BULK_IMPORT.md`.
