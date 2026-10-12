@@ -1,15 +1,46 @@
-name: Update trade data
+name: GPIR CI and data refresh
 on:
+  push:
+    paths:
+      - "pipeline/**"
+      - "config/**"
+      - "tests/**"
+      - "requirements.txt"
+      - "app.js"
+      - "index.html"
+      - ".github/workflows/update-data.yml"
   workflow_dispatch:
   schedule:
     - cron: "17 2 * * 2"
+
 permissions:
   contents: write
+
 concurrency:
   group: gpir-data-refresh
   cancel-in-progress: false
+
 jobs:
+  test:
+    name: Test transformations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run transformation tests
+        run: python -m unittest discover -s tests -v
+
   refresh:
+    name: Refresh open trade data
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -24,8 +55,6 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
-      - name: Run transformation tests
-        run: python -m unittest discover -s tests -v
       - name: Fetch trade data and enrich with World Bank context
         env:
           COMTRADE_API_KEY: ${{ secrets.COMTRADE_API_KEY }}
