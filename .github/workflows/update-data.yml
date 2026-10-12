@@ -17,6 +17,7 @@ on:
       - "README.md"
       - "index.html"
       - "tourism.html"
+      - "potential.html"
       - "tourism.js"
       - "potential.js"
       - ".github/workflows/update-data.yml"
