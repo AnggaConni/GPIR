@@ -3,6 +3,13 @@
 const $=id=>document.getElementById(id);
 const CATALOG_URL="./data/opportunity_catalog.json";
 const TRADE_URL="./data/data.json";
+const DESIGNATED_SITES_URL="./data/designated_sites.json";
+const DESIGNATED_CACHE_TTL=12*60*60*1000;
+const DESIGNATED_DATASETS=[
+ {id:"whc001",category:"world_heritage",designation:"UNESCO World Heritage Site",url:"https://data.unesco.org/explore/dataset/whc001/api/"},
+ {id:"eg0001",category:"geopark",designation:"UNESCO Global Geopark",url:"https://data.unesco.org/explore/dataset/eg0001/api/"},
+ {id:"mab001",category:"biosphere_reserve",designation:"UNESCO Biosphere Reserve",url:"https://data.unesco.org/explore/dataset/mab001/api/"}
+];
 const POI_CACHE_TTL=3*60*60*1000;
 const MARKET_FALLBACKS={
  NLD:{name:"Netherlands",lat:52.1326,lon:5.2913},DEU:{name:"Germany",lat:51.1657,lon:10.4515},
@@ -27,6 +34,7 @@ const COLORS={tourism:"#db2777",market:"#d97706",food_buyer:"#b45309",retail:"#2
 const state={
  map:null,origin:null,originMarker:null,poiLayer:null,linkLayer:null,marketLayer:null,
  catalog:[],tradeRows:[],tradeFeed:null,tradePromise:null,countryContext:null,contextPromise:null,
+ designatedSites:[],designatedPromise:null,
  pois:[],marketSignals:[],opportunities:[],active:false,analyzeSequence:0,lastOverpassAt:0,
  localBounds:null,globalBounds:null,marketBounds:{},lastTerms:[],dataStatus:"pending"
 };
@@ -59,6 +67,166 @@ function poiCategory(tags){
 function poiLabel(cat){return ({tourism:"Atraksi wisata / budaya",market:"Pasar / marketplace",food_buyer:"Usaha kuliner",retail:"Toko / retail",supplier:"Pemasok / pertanian",maker:"Perajin / produsen",service:"Jasa",institution:"Fasilitas",other:"Titik peta"})[cat]||cat;}
 function iconFor(cat){const color=COLORS[cat]||COLORS.other;return L.divIcon({className:"",html:'<div style="width:15px;height:15px;border:2px solid white;border-radius:50%;background:'+color+';box-shadow:0 0 0 3px '+color+'33,0 0 9px '+color+'77"></div>',iconSize:[15,15],iconAnchor:[7,7]});}
 function originIcon(){return L.divIcon({className:"",html:'<div class="origin-marker">+</div>',iconSize:[28,38],iconAnchor:[14,19],popupAnchor:[0,-18]});}
+function designatedText(value){
+ if(value==null)return "";
+ if(typeof value==="string"||typeof value==="number")return String(value).trim();
+ if(Array.isArray(value))return value.map(designatedText).filter(Boolean).join("; ");
+ if(typeof value==="object")return designatedText(value.name_en||value.name||value.title_en||value.label||value.country_title_en||value.country||"");
+ return "";
+}
+function normalizeDesignatedSite(raw,definition={}){
+ const row=raw&&raw.fields&&typeof raw.fields==="object"?raw.fields:(raw&&raw.record&&raw.record.fields&&typeof raw.record.fields==="object"?raw.record.fields:raw||{});
+ const value=(keys)=>{for(const key of keys){const v=row[key];if(v!==undefined&&v!==null&&v!==""&&!(Array.isArray(v)&&!v.length))return v;}return "";};
+ const name=designatedText(value(["name","name_en","title_en","site_name_en","site_name","name_of_site","property_name","title"]));
+ if(!name)return null;
+ let coordinates=value(["coordinates","geo_point_2d","geo_point","location"]),lat=null,lon=null;
+ if(Array.isArray(coordinates)&&coordinates.length>=2){lat=Number(coordinates[0]);lon=Number(coordinates[1]);}
+ else if(coordinates&&typeof coordinates==="object"){lat=Number(coordinates.lat??coordinates.latitude);lon=Number(coordinates.lon??coordinates.lng??coordinates.longitude);}
+ else if(typeof coordinates==="string"){
+  try{const decoded=JSON.parse(coordinates);if(Array.isArray(decoded)&&decoded.length>=2){lat=Number(decoded[0]);lon=Number(decoded[1]);}}catch(_){}
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)){const found=coordinates.match(/-?\d+(?:\.\d+)?/g)||[];if(found.length>=2){lat=Number(found[0]);lon=Number(found[1]);}}
+ }
+ if(!Number.isFinite(lat)||!Number.isFinite(lon)){
+  lat=Number(value(["latitude","lat"]));lon=Number(value(["longitude","lon","lng"]));
+ }
+ if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180)return null;
+ const country=designatedText(value(["country","country_title_en","country_name_en","country_name","countries_en","countries","states_names_en","states_name_en","states_names","state_party","states_parties","country_en","iso2"]))||"Country not specified";
+ const category=String(value(["category"])||definition.category||"").trim()||"other";
+ const designation=designatedText(value(["designation"]))||definition.designation||"UNESCO-designated site";
+ const dataset=String(value(["source_dataset"])||definition.id||"unesco");
+ const external=designatedText(value(["external_id","id_no","mab_id","uuid","id","code"]))||name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+ let url=designatedText(value(["url","website","site_url"]));
+ if(!url&&dataset==="whc001")url="https://whc.unesco.org/en/list/"+external+"/";
+ const sourceUrl=designatedText(value(["source_url"]))||definition.url||"https://data.unesco.org/";
+ return {
+  id:String(value(["id"])||dataset+":"+external),external_id:external,name,country,
+  country_code:designatedText(value(["country_code","iso2","iso3","country_iso2","country_iso3"])),
+  category,designation,lat,lon,url,source_dataset:dataset,source:"UNESCO DataHub",source_url:sourceUrl,
+  inscription_year:designatedText(value(["inscription_year","date_inscribed","year_inscribed","date"])),
+  license:designatedText(value(["license"]))||"CC BY-SA 4.0"
+ };
+}
+async function fetchLiveDesignatedDataset(definition){
+ const items=[];let offset=0,pages=0,total=null;
+ while(pages<30){
+  const url="https://data.unesco.org/api/explore/v2.1/catalog/datasets/"+encodeURIComponent(definition.id)+"/records?limit=100&offset="+offset;
+  const response=await fetch(url,{headers:{Accept:"application/json"}});
+  if(!response.ok)throw new Error(definition.id+" HTTP "+response.status);
+  const payload=await response.json(),rows=Array.isArray(payload.results)?payload.results:[];
+  rows.forEach(row=>{const site=normalizeDesignatedSite(row,definition);if(site)items.push(site);});
+  pages++;offset+=rows.length;total=Number(payload.total_count);
+  if(!rows.length||rows.length<100||(Number.isFinite(total)&&offset>=total))break;
+ }
+ return {items,pages};
+}
+function siteCountryList(site){
+ return String(site.country||"Country not specified").split(/[;,]/).map(v=>v.trim()).filter(Boolean);
+}
+function siteLabel(site){return site.name+" — "+site.country+" · "+site.designation;}
+function designatedSiteMatches(query=""){
+ const q=clean(query),category=$("designationFilter").value,country=$("designationCountryFilter").value;
+ return state.designatedSites.filter(site=>{
+  if(category!=="all"&&site.category!==category)return false;
+  if(country!=="all"&&!siteCountryList(site).some(name=>clean(name)===clean(country)))return false;
+  if(!q)return true;
+  return clean(site.name).includes(q)||clean(site.country).includes(q)||clean(site.designation).includes(q)||clean(siteLabel(site)).includes(q);
+ }).sort((a,b)=>a.country.localeCompare(b.country)||a.name.localeCompare(b.name));
+}
+function designatedSiteStatus(message,tone="neutral"){
+ const el=$("designatedSiteStatus");if(!el)return;
+ el.textContent=message;
+ el.style.color=tone==="error"?"#9f2d2d":tone==="success"?"#17664f":"";
+}
+function closeDesignatedSiteOptions(){
+ const list=$("designatedSiteOptions");if(!list)return;
+ list.hidden=true;$("designatedSiteSearch").setAttribute("aria-expanded","false");
+}
+function renderDesignatedSiteOptions(open=true){
+ const list=$("designatedSiteOptions"),input=$("designatedSiteSearch");
+ if(!list||!input)return;
+ const matches=designatedSiteMatches(input.value);
+ const shown=matches.slice(0,80);
+ list.innerHTML=shown.length?shown.map(site=>'<button type="button" class="destination-option" role="option" data-designated-site="'+esc(site.id)+'"><span class="destination-option-title">'+esc(site.name)+'</span><span class="destination-option-meta">'+esc(site.country)+' · '+esc(site.designation)+'</span></button>').join(""):'<div class="destination-option-empty">'+(state.designatedSites.length?"Tidak ada destinasi yang cocok. Ubah jenis/negara atau kata pencarian.":"Katalog destinasi belum tersedia. Coba muat ulang atau gunakan Cari lokasi.")+'</div>';
+ list.hidden=!open;
+ input.setAttribute("aria-expanded",open?"true":"false");
+ list.querySelectorAll("[data-designated-site]").forEach(button=>button.addEventListener("click",()=>goToDesignatedSite(button.dataset.designatedSite)));
+ if(matches.length>shown.length)designatedSiteStatus("Menampilkan "+shown.length+" dari "+matches.length+" hasil. Tambahkan kata pencarian atau pilih negara untuk mempersempit daftar.");
+ else if(state.designatedSites.length)designatedSiteStatus(matches.length+" destinasi cocok · pilih salah satu untuk memindahkan pin.");
+}
+function populateDesignatedCountries(){
+ const select=$("designationCountryFilter"),current=select.value;
+ const countries=[...new Set(state.designatedSites.flatMap(siteCountryList).filter(name=>name&&name!=="Country not specified"))].sort((a,b)=>a.localeCompare(b));
+ select.innerHTML='<option value="all">Semua negara</option>'+countries.map(name=>'<option value="'+esc(name)+'">'+esc(name)+'</option>').join("");
+ if(countries.includes(current))select.value=current;
+}
+function goToDesignatedSite(id){
+ const site=state.designatedSites.find(item=>item.id===id);if(!site)return;
+ $("designatedSiteSearch").value=site.name;
+ $("locationSearch").value=site.name+", "+site.country;
+ closeDesignatedSiteOptions();
+ const zoom=site.category==="world_heritage"?11:site.category==="geopark"?9:9;
+ setOrigin({lat:site.lat,lng:site.lon},true,site.name+" · "+site.designation+" · "+site.country);
+ state.map.setView([site.lat,site.lon],zoom);
+}
+async function ensureDesignatedSites(){
+ if(state.designatedSites.length)return state.designatedSites;
+ if(state.designatedPromise)return state.designatedPromise;
+ state.designatedPromise=(async()=>{
+  designatedSiteStatus("Memuat katalog UNESCO…");
+  let items=[];
+  const cached=cacheRead("gpir:designated-sites:v1",DESIGNATED_CACHE_TTL);
+  if(Array.isArray(cached)&&cached.length)items=cached;
+  if(!items.length){
+   try{
+    const response=await fetch(DESIGNATED_SITES_URL,{cache:"no-cache",headers:{Accept:"application/json"}});
+    if(response.ok){
+     const payload=await response.json(),rows=Array.isArray(payload.items)?payload.items:[];
+     items=rows.map(row=>normalizeDesignatedSite(row,{id:row.source_dataset,category:row.category,designation:row.designation,url:row.source_url})).filter(Boolean);
+    }
+   }catch(_){}
+  }
+  if(!items.length){
+   const outcomes=await Promise.allSettled(DESIGNATED_DATASETS.map(fetchLiveDesignatedDataset));
+   outcomes.forEach((result,index)=>{if(result.status==="fulfilled")items.push(...result.value.items);else console.warn("UNESCO dataset unavailable",DESIGNATED_DATASETS[index].id,result.reason);});
+   if(items.length)cacheWrite("gpir:designated-sites:v1",items);
+  }
+  const unique=new Map();
+  items.forEach(site=>{if(site&&site.id&&Number.isFinite(site.lat)&&Number.isFinite(site.lon))unique.set(site.id,site);});
+  state.designatedSites=[...unique.values()].sort((a,b)=>a.country.localeCompare(b.country)||a.name.localeCompare(b.name));
+  populateDesignatedCountries();
+  if(state.designatedSites.length){
+   designatedSiteStatus(state.designatedSites.length.toLocaleString()+" destinasi tersedia dari UNESCO DataHub. Filter menurut jenis situs dan negara, atau ketik nama.");
+  }else{
+   designatedSiteStatus("Katalog situs UNESCO belum dapat dimuat. Pencarian lokasi biasa tetap tersedia.", "error");
+  }
+  if(!$("designatedSiteOptions").hidden)renderDesignatedSiteOptions(true);
+  return state.designatedSites;
+ })();
+ try{return await state.designatedPromise;}finally{state.designatedPromise=null;}
+}
+function initDesignatedSitePicker(){
+ const input=$("designatedSiteSearch"),toggle=$("toggleDesignatedSiteOptions"),list=$("designatedSiteOptions");
+ input.addEventListener("focus",()=>{ensureDesignatedSites().then(()=>renderDesignatedSiteOptions(true));});
+ input.addEventListener("input",()=>{renderDesignatedSiteOptions(true);});
+ input.addEventListener("keydown",event=>{
+  if(event.key==="ArrowDown"){event.preventDefault();renderDesignatedSiteOptions(true);const first=list.querySelector("[data-designated-site]");if(first)first.focus();return;}
+  if(event.key==="Escape"){closeDesignatedSiteOptions();return;}
+  if(event.key!=="Enter")return;
+  event.preventDefault();
+  const query=clean(input.value),matches=designatedSiteMatches(input.value);
+  const exact=matches.find(site=>clean(site.name)===query||clean(siteLabel(site))===query);
+  if(exact){goToDesignatedSite(exact.id);return;}
+  if(matches.length===1){goToDesignatedSite(matches[0].id);return;}
+  if(matches.length>1){renderDesignatedSiteOptions(true);designatedSiteStatus(matches.length+" hasil ditemukan. Pilih salah satu situs dalam daftar.");return;}
+  if(query.length>=3){$("locationSearch").value=input.value;closeDesignatedSiteOptions();searchLocation();return;}
+  renderDesignatedSiteOptions(true);
+ });
+ toggle.addEventListener("click",()=>{ensureDesignatedSites().then(()=>{if(list.hidden)renderDesignatedSiteOptions(true);else closeDesignatedSiteOptions();});});
+ ["designationFilter","designationCountryFilter"].forEach(id=>$(id).addEventListener("change",()=>renderDesignatedSiteOptions(!list.hidden)));
+ document.addEventListener("click",event=>{if(!event.target.closest(".destination-combo"))closeDesignatedSiteOptions();});
+ list.addEventListener("keydown",event=>{if(event.key==="Escape"){closeDesignatedSiteOptions();input.focus();}});
+ ensureDesignatedSites().catch(error=>{console.warn("UNESCO site catalogue failed",error);designatedSiteStatus("Katalog UNESCO tidak tersedia. Gunakan Cari lokasi untuk mencari nama tempat.","error");});
+}
 function initMap(){
  state.map=L.map("potentialMap",{worldCopyJump:true,minZoom:2,maxZoom:18,preferCanvas:true,zoomControl:true}).setView([18,10],2);
  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(state.map);
@@ -448,6 +616,7 @@ function populateCatalog(){
 async function init(){
  if(!window.L){setStatus("Pustaka peta gagal dimuat. Coba muat ulang halaman.","error");return;}
  initMap();
+ initDesignatedSitePicker();
  $("locationSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchLocation();}});
  $("searchLocationBtn").addEventListener("click",searchLocation);
  $("myLocationBtn").addEventListener("click",useMyLocation);
