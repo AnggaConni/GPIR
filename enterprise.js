@@ -3,11 +3,19 @@
   const $ = (id) => document.getElementById(id);
   const CATALOG_URL = "./data/opportunity_catalog.json";
   const TRADE_URL = "./data/data.json";
+  const TOURISM_URL = "./data/tourism_places.json";
+  const HERITAGE_URL = "./data/ich_heritage.json";
+  const FOOD_CATALOG_URL = "./data/food_products.json";
+  const TOURISM_STATS_URL = "./data/tourism_stats.json";
   const INVENTORY_KEY = "gpir.localEnterprise.inventory.v1";
   const MARKET_LABELS = { local: "Lokal / regional", both: "Lokal + internasional", international: "Internasional" };
   let catalog = [];
   let tradeFeed = null;
   let tradeItems = [];
+  let tourismSnapshot = [];
+  let heritageItems = [];
+  let foodProducts = [];
+  let tourismStats = [];
   let lastRecommendations = [];
   let inventory = readInventory();
   let poiMap = null;
@@ -25,7 +33,7 @@
   let lastOverpassRequestAt = 0;
   const POI_CACHE_TTL = 6 * 60 * 60 * 1000;
   const GEOCODE_CACHE_TTL = 30 * 24 * 60 * 60 * 1000;
-  const POI_COLORS = { retail:"#2563eb", market:"#d97706", food_buyer:"#b45309", supplier:"#7c3aed", maker:"#7c3aed", service:"#0891b2", institution:"#059669", other:"#64748b" };
+  const POI_COLORS = { tourism:"#db2777", retail:"#2563eb", market:"#d97706", food_buyer:"#b45309", supplier:"#7c3aed", maker:"#7c3aed", service:"#0891b2", institution:"#059669", other:"#64748b" };
 
   const esc = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
