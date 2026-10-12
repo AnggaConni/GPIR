@@ -15,6 +15,8 @@
   let poiConnections = null;
   let userMarker = null;
   let radiusCircle = null;
+  let areaRectangle = null;
+  let selectedAreaBounds = null;
   let currentLocation = null;
   let currentLocationLabel = "";
   let nearbyPoints = [];
@@ -61,6 +63,8 @@
       district: $("district").value.trim(),
       province: $("province").value.trim(),
       capital: $("capital").value,
+      businessScale: $("businessScale") ? $("businessScale").value : "micro",
+      buyerSegment: $("buyerSegment") ? $("buyerSegment").value : "mixed",
       market: $("targetMarket").value,
       resourceText: resources.join(", "),
       resources: [...new Set(resources.map(clean).filter(Boolean))],
@@ -68,10 +72,13 @@
     };
   }
   function hasKeyword(texts, keywords) {
-    const joined = texts.map(clean).join(" · ");
+    // Match complete words/phrases, not broad substrings that cause accidental fits.
     return keywords.some(k => {
-      const key = clean(k);
-      return key && (joined.includes(key) || texts.some(t => clean(t).includes(key)));
+      const key = clean(k).replace(/\s+/g, " ");
+      if (!key) return false;
+      const escaped = key.split("").map(ch => /[.*+?^$()|[\]{}\\]/.test(ch) ? "\\" + ch : ch).join("").replace(/\s+/g, "\\s+");
+      const pattern = new RegExp("(?:^|[^a-z0-9])" + escaped + "(?:$|[^a-z0-9])", "i");
+      return texts.some(t => pattern.test(clean(t).replace(/\s+/g, " ")));
     });
   }
   function getResourceMatches(opp, profile) {
@@ -92,18 +99,44 @@
     const wanted = Array.isArray(opp.map_categories) ? opp.map_categories : [];
     return wanted.length ? nearbyPoints.filter(p=>wanted.includes(p.category)).sort((a,b)=>(a.distance??9999)-(b.distance??9999)) : [];
   }
+  function buyerSegmentLabel(segment) {
+    return ({consumers:"Konsumen rumah tangga",msme:"UMKM: mikro, kecil, menengah",business:"Perusahaan / institusi / grosir",export:"Importir / distributor luar negeri",mixed:"Campuran / belum ditentukan"})[segment] || "Campuran / belum ditentukan";
+  }
+  function segmentFit(opp, segment) {
+    if (!segment || segment === "mixed") return true;
+    const id = opp.id || "";
+    const consumers = ["cassava-snacks","fruit-preservation","coconut-value-added","coffee-cacao","dried-spices","fish-shelf-stable","textile-craft-micro","service-repair","service-local-delivery","grow-plant-nursery"];
+    const msme = ["coconut-value-added","cassava-snacks","coffee-cacao","dried-spices","fish-shelf-stable","fruit-preservation","bamboo-rattan-craft","textile-craft-micro","local-aggregation","grow-fast-greens","grow-plant-nursery","sell-compost","service-repair","service-local-delivery"];
+    const business = ["coconut-value-added","coffee-cacao","dried-spices","fish-shelf-stable","fruit-preservation","bamboo-rattan-craft","textile-craft-micro","local-aggregation","grow-fast-greens","grow-plant-nursery","sell-compost","service-repair","service-local-delivery"];
+    const exports = ["coconut-value-added","coffee-cacao","dried-spices","bamboo-rattan-craft","textile-craft-micro"];
+    return segment==="consumers" ? consumers.includes(id) : segment==="msme" ? msme.includes(id) :
+      segment==="business" ? business.includes(id) : segment==="export" ? exports.includes(id) : true;
+  }
+  function scaleAdvice(opp, scale) {
+    return ({
+      micro:"Uji batch kecil atau pre-order; hitung biaya per unit sebelum membeli alat.",
+      small:"Standarkan mutu/kemasan, jadwalkan produksi dan pengiriman, catat arus kas serta pesanan ulang.",
+      medium:"Validasi kapasitas pasok, kontrol mutu, izin/sertifikasi, modal kerja, kontrak B2B dan logistik.",
+      scalable:"Mulai dengan pilot mikro; naikkan kapasitas setelah ada pesanan berulang dan biaya per unit terukur."
+    })[scale] || "Mulai dari skala yang sesuai modal dan kemampuan saat ini.";
+  }
   function rankOpportunity(opp, profile) {
     const resourceMatches=getResourceMatches(opp,profile), skillMatches=getSkillMatches(opp,profile);
     const hasInputs=profile.resources.length>0||profile.skills.length>0;
-    const resourceScore=profile.resources.length?Math.min(60,resourceMatches.length*25):0;
-    const skillScore=profile.skills.length?Math.min(15,skillMatches.length*7.5):0;
-    const marketScore=opp.market_fit.includes(profile.market)?15:5;
-    const capitalScore=profile.capital==="micro"&&opp.capital_level==="micro"?10:profile.capital==="small"?7:5;
+    const resourceScore=profile.resources.length?Math.min(60,resourceMatches.length*24):0;
+    const skillScore=profile.skills.length?Math.min(20,skillMatches.length*10):0;
+    const marketScore=opp.market_fit.includes(profile.market)?8:0;
+    const segmentMatches=segmentFit(opp,profile.buyerSegment);
+    const buyerScore=profile.buyerSegment==="mixed"?5:(segmentMatches?12:0);
+    const capitalScore=profile.capital==="micro"&&opp.capital_level==="micro"?5:profile.capital==="small"?4:profile.capital==="medium"?3:2;
+    const scaleBonus=profile.businessScale==="micro"&&opp.capital_level==="micro"?5:profile.businessScale==="small"?4:profile.businessScale==="medium"?3:5;
     const evidence=matchingTradeRows(opp,profile,3), locationMatches=findNearbyLeads(opp);
     const hasResourceFit=resourceMatches.length>0, hasSkillFit=skillMatches.length>0;
+    const rawScore=resourceScore+skillScore+marketScore+buyerScore+capitalScore+scaleBonus;
     return {...opp,business_type:businessType(opp),resourceMatches,skillMatches,evidenceCount:evidence.length,locationMatches,
-      locationScore:Math.min(15,locationMatches.length*3),fitScore:hasInputs?Math.min(100,Math.round(resourceScore+skillScore+marketScore+capitalScore)):null,
-      hasInputs,hasResourceFit,hasSkillFit};
+      locationScore:Math.min(15,locationMatches.length*3),buyerSegmentMatch:segmentMatches,
+      fitScore:hasInputs?Math.min(100,Math.round(rawScore)):null,
+      hasInputs,hasResourceFit,hasSkillFit,scaleAdvice:scaleAdvice(opp,profile.businessScale)};
   }
   function matchingTradeRows(opp, profile, limit = 50) {
     if (!tradeItems.length) return [];
@@ -159,6 +192,8 @@
         .sort((a,b)=>b.locationMatches.length-a.locationMatches.length||(b.fitScore??-1)-(a.fitScore??-1)||b.evidenceCount-a.evidenceCount);
     } else display=candidates.slice(0,6);
     if(!display.length){$("recommendations").innerHTML='<div class="panel empty">Tidak ada ide pada kategori ini. Coba jenis usaha lain.</div>';renderRelationshipFlow(null,profile);renderTradeTable([],profile);return;}
+    const selectedBeforeRender=candidates.find(o=>o.id===activeOpportunityId)||display[0];
+    activeOpportunityId=selectedBeforeRender?selectedBeforeRender.id:null;
     const area=localAreaText(profile);
     $("recommendations").innerHTML=display.map((opp,i)=>{
       const type=opp.business_type,typeClass=type==="grow"?"grow":type==="service"?"service":"sell";
@@ -181,7 +216,7 @@
       const fit=opp.fitScore==null?"Lengkapi input":opp.fitScore+"/100 cocok-input";
       const steps=Array.isArray(opp.start_steps)?opp.start_steps:[opp.first_test||"Wawancarai calon pembeli dan hitung unit economics."];
       const stepHtml="<ol>"+steps.map(s=>"<li>"+esc(s)+"</li>").join("")+"</ol>";
-      return '<article class="rec" data-opportunity-card="'+esc(opp.id)+'"><div class="kind-row"><span class="kind-badge '+typeClass+'">'+icon+' '+esc(businessTypeLabel(type))+'</span><span class="'+(opp.fitScore==null?"tiny":"fit")+'">'+esc(fit)+'</span></div>'+
+      return '<article class="rec '+(opp.id===activeOpportunityId?'is-selected':'')+'" data-opportunity-card="'+esc(opp.id)+'"><div class="kind-row"><span class="kind-badge '+typeClass+'">'+icon+' '+esc(businessTypeLabel(type))+'</span><span class="'+(opp.fitScore==null?"tiny":"fit")+'">'+esc(fit)+'</span></div>'+
         '<h3>'+esc(opp.title)+'</h3><p class="action-summary">'+esc(opp.action_summary||opp.rationale)+'</p>'+
         '<div class="rec-detail-grid"><div class="rec-detail"><h4>Yang bisa dibuat / ditawarkan</h4><p><b>'+esc(what)+'</b></p><p class="tiny" style="margin-top:6px">'+esc(resourceText)+'</p><p class="tiny" style="margin-top:5px">'+esc(skillText)+'</p></div>'+
         '<div class="rec-detail"><h4>Yang perlu dibeli / disiapkan</h4><ul>'+buy+'</ul><p class="tiny" style="margin-top:6px">Modal ilustratif: <b>'+esc(capitalRange(opp))+'</b></p></div>'+
@@ -212,6 +247,7 @@
     }));
     const selected=candidates.find(o=>o.id===activeOpportunityId)||display[0];
     if(selected){activeOpportunityId=selected.id;renderRelationshipFlow(selected,profile);}
+    $("recommendations").querySelectorAll("[data-opportunity-card]").forEach(card=>card.classList.toggle("is-selected",card.dataset.opportunityCard===activeOpportunityId));
     renderTradeTable(matchingTradeRows(null,profile,30),profile);
   }
   function renderTradeTable(rows, profile) {
@@ -337,7 +373,7 @@
   }
   function clearProfile() {
     ["district", "province", "resources", "skills"].forEach(id => $(id).value = "");
-    $("capital").value = "micro"; $("targetMarket").value = "both";
+    $("capital").value = "micro"; $("businessScale").value = "micro"; $("buyerSegment").value = "mixed"; $("targetMarket").value = "both";
     renderRecommendations(collectProfile());
   }
   function initMap() {
@@ -370,14 +406,29 @@
     try{sessionStorage.setItem(key,obj);}catch(_){}
     if(key.startsWith("gpir:geocode:"))try{localStorage.setItem(key,obj);}catch(_){}
   }
+  function validBounds(b) { return !!b && [b.south,b.west,b.north,b.east].every(Number.isFinite) && b.south<b.north && b.west<b.east && (b.north-b.south)*(b.east-b.west)<=1.2; }
+  function parseBounds(raw) {
+    if(!Array.isArray(raw)||raw.length<4)return null;
+    const b={south:Number(raw[0]),north:Number(raw[1]),west:Number(raw[2]),east:Number(raw[3])};
+    return validBounds(b)?b:null;
+  }
+  function scopeKey() {
+    return $("coverage")&&$("coverage").value==="area"&&validBounds(selectedAreaBounds)
+      ? "area:"+[selectedAreaBounds.south,selectedAreaBounds.west,selectedAreaBounds.north,selectedAreaBounds.east].map(v=>v.toFixed(3)).join(",")
+      : "nearby:"+Number($("radius").value||3000);
+  }
   function updateMapCenter(lat,lon){
     if(!poiMap||lat==null||lon==null)return;
-    const radius=Number($("radius").value||3000);
-    if(userMarker)poiMap.removeLayer(userMarker);if(radiusCircle)poiMap.removeLayer(radiusCircle);
-    userMarker=L.circleMarker([lat,lon],{radius:8,color:"#fff",weight:2,fillColor:"#dc2626",fillOpacity:1}).bindPopup("<b>Lokasi aktif</b><br>"+esc(currentLocationLabel||"Lokasi terpilih"));
-    radiusCircle=L.circle([lat,lon],{radius,color:"#dc2626",weight:1,dashArray:"5 5",fillColor:"#dc2626",fillOpacity:.035});
-    radiusCircle.addTo(poiMap);userMarker.addTo(poiMap);
-    poiMap.setView([lat,lon],radius<=1000?14:radius<=3000?13:12);
+    if(userMarker)poiMap.removeLayer(userMarker);if(radiusCircle)poiMap.removeLayer(radiusCircle);if(areaRectangle)poiMap.removeLayer(areaRectangle);
+    userMarker=L.circleMarker([lat,lon],{radius:8,color:"#fff",weight:2,fillColor:"#dc2626",fillOpacity:1}).bindPopup("<b>Lokasi aktif</b><br>"+esc(currentLocationLabel||"Lokasi terpilih")).addTo(poiMap);
+    if($("coverage")&&$("coverage").value==="area"&&validBounds(selectedAreaBounds)){
+      areaRectangle=L.rectangle([[selectedAreaBounds.south,selectedAreaBounds.west],[selectedAreaBounds.north,selectedAreaBounds.east]],{color:"#2563eb",weight:2,dashArray:"6 4",fillColor:"#60a5fa",fillOpacity:.05}).addTo(poiMap);
+      poiMap.fitBounds(areaRectangle.getBounds(),{padding:[12,12],maxZoom:11});
+    } else {
+      const radius=Number($("radius").value||3000);
+      radiusCircle=L.circle([lat,lon],{radius,color:"#dc2626",weight:1,dashArray:"5 5",fillColor:"#dc2626",fillOpacity:.035}).addTo(poiMap);
+      poiMap.setView([lat,lon],radius<=1000?14:radius<=3000?13:radius<=10000?11:10);
+    }
   }
   function distanceLabel(km){return km==null?"jarak tidak tersedia":km<1?Math.round(km*1000)+" m":km.toFixed(1)+" km";}
   function renderPOIs(elements,lat,lon){
@@ -390,9 +441,10 @@
     const unique=new Map();normalized.forEach(p=>unique.set(p.key,p));nearbyPoints=[...unique.values()].sort((a,b)=>(a.distance??9999)-(b.distance??9999));
     const active=lastRecommendations.find(o=>o.id===activeOpportunityId),wanted=active?(active.map_categories||[]):[];
     const relevant= p=>wanted.includes(p.category);
+    const areaMode=$("coverage")&&$("coverage").value==="area"&&validBounds(selectedAreaBounds);
     const within=Number($("radius").value||3000);
     $("poiCount").textContent=nearbyPoints.length+" titik";
-    $("poiSummary").textContent=nearbyPoints.length?nearbyPoints.length+" lokasi terpetakan dalam radius "+(within/1000)+" km; "+nearbyPoints.filter(relevant).length+" masuk kategori terkait ide aktif.":"Tidak ada titik ditemukan; data peta mungkin tidak lengkap.";
+    $("poiSummary").textContent=nearbyPoints.length?nearbyPoints.length+" lokasi terpetakan "+(areaMode?"dalam area administrasi terpilih":"dalam radius "+(within/1000)+" km")+"; "+nearbyPoints.filter(relevant).length+" berkategori terkait ide aktif.":"Tidak ada titik ditemukan; data peta mungkin tidak lengkap.";
     if(poiMarkers)poiMarkers.clearLayers();if(poiConnections)poiConnections.clearLayers();markerIndex=new Map();
     nearbyPoints.slice(0,100).forEach((p,i)=>{
       if(p.lat==null||p.lon==null)return;
@@ -403,7 +455,7 @@
       marker.addTo(poiMarkers);markerIndex.set(p.key,marker);
     });
     updateMapCenter(lat,lon);
-    poiMap.setView([lat,lon],within<=1000?14:within<=3000?13:12);
+    if(!(areaMode&&validBounds(selectedAreaBounds))) poiMap.setView([lat,lon],within<=1000?14:within<=3000?13:within<=10000?11:10);
     $("poiResults").innerHTML=nearbyPoints.length?nearbyPoints.slice(0,60).map(p=>{
       const isRelevant=relevant(p),q=[p.name,currentLocationLabel].filter(Boolean).join(" ");
       const mapsUrl="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);
@@ -420,30 +472,32 @@
     }));
   }
   async function searchNearby(){
-    const lat=number($("lat").value),lon=number($("lon").value),radius=Number($("radius").value);
+    const lat=number($("lat").value),lon=number($("lon").value),radius=Number($("radius").value||3000);
     if(lat==null||lon==null||lat< -90||lat>90||lon< -180||lon>180){$("locationStatus").textContent="Pilih lokasi perangkat atau cari kecamatan/kota terlebih dahulu.";return;}
+    const areaMode=$("coverage")&&$("coverage").value==="area";
+    if(areaMode&&!validBounds(selectedAreaBounds)){
+      $("locationStatus").textContent="Untuk memetakan seluruh kota/area, cari nama wilayah administratif terlebih dahulu (contoh: Jakarta, Indonesia).";
+      $("locationSearch").focus();return;
+    }
     currentLocation={lat,lon};currentLocationLabel=currentLocationLabel||"Lokasi terpilih";updateMapCenter(lat,lon);
-    $("locationStatus").textContent="Mencari titik sekitar "+currentLocationLabel+"…";$("poiSummary").textContent="Mencari toko, pasar, pemasok dan jasa…";
+    $("locationStatus").textContent=areaMode?"Memetakan seluruh area terpilih…":"Mencari titik sekitar "+currentLocationLabel+"…";
+    $("poiSummary").textContent="Mencari toko, pasar, pemasok, jasa, dan calon mitra…";
     $("poiResults").innerHTML='<div class="empty">Memuat data peta OpenStreetMap…</div>';
-    const key="gpir:overpass:v2:"+lat.toFixed(3)+":"+lon.toFixed(3)+":"+radius,cached=readTimedCache(key,POI_CACHE_TTL);
-    if(Array.isArray(cached)){renderPOIs(cached,lat,lon);$("locationStatus").textContent="Hasil sekitar dimuat dari cache sesi.";renderRecommendations(collectProfile());return;}
+    const key="gpir:overpass:v3:"+scopeKey()+":"+lat.toFixed(3)+":"+lon.toFixed(3),cached=readTimedCache(key,POI_CACHE_TTL);
+    if(Array.isArray(cached)){renderPOIs(cached,lat,lon);$("locationStatus").textContent="Hasil peta dimuat dari cache browser; verifikasi status tempat.";renderRecommendations(collectProfile());return;}
     if(Date.now()-lastOverpassRequestAt<1500){$("locationStatus").textContent="Tunggu sebentar sebelum mengulangi pencarian peta.";return;}
     lastOverpassRequestAt=Date.now();
-    const q='[out:json][timeout:25];('+
-      'nwr(around:'+radius+','+lat+','+lon+')["shop"];'+
-      'nwr(around:'+radius+','+lat+','+lon+')["amenity"~"marketplace|restaurant|cafe|fast_food|food_court|bakery|ice_cream|community_centre|school|hospital|clinic|car_repair|fuel"];'+
-      'nwr(around:'+radius+','+lat+','+lon+')["craft"];'+
-      'nwr(around:'+radius+','+lat+','+lon+')["office"~"company|commercial|wholesale"];'+
-      'nwr(around:'+radius+','+lat+','+lon+')["landuse"~"farmland|orchard|plant_nursery"];'+
-      ');out center tags 300;';
+    const shape=areaMode?'nwr('+selectedAreaBounds.south+','+selectedAreaBounds.west+','+selectedAreaBounds.north+','+selectedAreaBounds.east+')':'nwr(around:'+radius+','+lat+','+lon+')';
+    const q='[out:json][timeout:35];('+shape+'["shop"];'+shape+'["amenity"~"marketplace|restaurant|cafe|fast_food|food_court|bakery|ice_cream|community_centre|school|hospital|clinic|car_repair|fuel"];'+shape+'["craft"];'+shape+'["office"~"company|commercial|wholesale"];'+shape+'["landuse"~"farmland|orchard|plant_nursery"];);out center tags;';
     try{
       const response=await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(q),{headers:{"Accept":"application/json"}});
       if(!response.ok)throw new Error("HTTP "+response.status+". Endpoint publik mungkin sibuk.");
       const payload=await response.json(),unique=new Map();(payload.elements||[]).forEach(el=>unique.set(el.type+"/"+el.id,el));
       const list=[...unique.values()];writeTimedCache(key,list);renderPOIs(list,lat,lon);
-      $("locationStatus").textContent="Analisis selesai. Verifikasi status tempat sebelum mengambil keputusan.";renderRecommendations(collectProfile());
+      $("locationStatus").textContent="Analisis selesai. "+list.length+" titik ditemukan; verifikasi status tempat sebelum mengambil keputusan.";
+      renderRecommendations(collectProfile());
     }catch(error){$("locationStatus").textContent="Pencarian peta gagal; rekomendasi umum tetap tersedia.";
-      $("poiSummary").textContent="Layanan titik sekitar tidak merespons.";$("poiCount").textContent="—";
+      $("poiSummary").textContent="Layanan peta tidak merespons. Coba radius lokal atau ulangi beberapa saat lagi.";$("poiCount").textContent="—";
       $("poiResults").innerHTML='<div class="empty">Overpass gagal: '+esc(error.message)+'. Coba lagi nanti.</div>';}
   }
   function parseAddress(a){
@@ -459,7 +513,7 @@
     if(!item){
       $("locationSearchBtn").disabled=true;$("locationStatus").textContent="Mencari lokasi pilihan…";
       try{
-        const response=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&countrycodes=id&q="+encodeURIComponent(query),{headers:{"Accept":"application/json"}});
+        const response=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&q="+encodeURIComponent(query),{headers:{"Accept":"application/json"}});
         if(!response.ok)throw new Error("HTTP "+response.status);
         const results=await response.json();if(!results.length)throw new Error("Lokasi tidak ditemukan. Tambahkan kabupaten/provinsi.");
         item=results[0];writeTimedCache(key,item);
@@ -479,6 +533,7 @@
     if(!automatic)$("locationStatus").textContent="Meminta izin lokasi dari browser…";
     navigator.geolocation.getCurrentPosition(async pos=>{
       const lat=pos.coords.latitude,lon=pos.coords.longitude;$("lat").value=lat.toFixed(6);$("lon").value=lon.toFixed(6);
+      selectedAreaBounds=null;
       currentLocation={lat,lon};currentLocationLabel="Lokasi perangkat ("+lat.toFixed(3)+", "+lon.toFixed(3)+")";
       $("locationName").textContent=currentLocationLabel;$("geoBtn").disabled=false;$("geoBtn").textContent="◎ Deteksi lokasi saya";
       $("locationStatus").textContent="Lokasi terdeteksi; memeriksa titik terdekat…";updateMapCenter(lat,lon);await searchNearby();
@@ -504,11 +559,14 @@
     $("relationshipSummary").textContent="Hubungan dihitung dari bahan/skill, tipe usaha, calon pembeli, lokasi terpetakan dan padanan perdagangan.";
     $("relationshipStatus").textContent="IDE: "+businessTypeLabel(opp.business_type).toUpperCase();
     $("relationshipStatus").className="pill "+(opp.hasResourceFit||opp.hasSkillFit?"green":"gold");
-    $("relationshipVisual").innerHTML=nodes.map((n,i)=>'<div class="flow-step"><span class="step-no">LANGKAH '+(i+1)+'</span><h3>'+esc(n.label)+'</h3><strong>'+esc(n.value)+'</strong><p>'+esc(n.detail)+'</p></div>'+(i<nodes.length-1?'<span class="flow-arrow" aria-hidden="true">→</span>':"")).join("");
+    $("relationshipVisual").innerHTML=nodes.map((n,i)=>'<div class="flow-step '+(i===1?'is-active':'')+'"><span class="step-no">LANGKAH '+(i+1)+'</span><h3>'+esc(n.label)+'</h3><strong>'+esc(n.value)+'</strong><p>'+esc(n.detail)+'</p></div>'+(i<nodes.length-1?'<span class="flow-arrow" aria-hidden="true">→</span>':"")).join("");
+    $("pathwaySection")?.classList.add("is-active");
   }
   $("findBtn").addEventListener("click",()=>{
+    // Do not let a previous homepage category filter override the resources and skills just entered.
+    if($("businessTypeFilter")) $("businessTypeFilter").value="all";
+    activeOpportunityId=null;
     renderRecommendations(collectProfile());
-    // Bring the result into view so the user gets visible feedback after submitting the profile.
     const resultHeading=$("recommendationStatus")?.closest(".section-title");
     if(resultHeading) resultHeading.scrollIntoView({behavior:"smooth",block:"start"});
     else $("recommendations")?.scrollIntoView({behavior:"smooth",block:"start"});
@@ -522,7 +580,8 @@
   $("geoBtn").addEventListener("click",()=>useBrowserLocation({automatic:false}));
   $("locationSearchBtn").addEventListener("click",searchLocation);
   $("locationSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchLocation();}});
-  $("radius").addEventListener("change",()=>{if(currentLocation)searchNearby();});
+  $("radius").addEventListener("change",()=>{if(currentLocation&&$("coverage").value==="nearby")searchNearby();});
+  $("coverage").addEventListener("change",()=>{if(currentLocation)searchNearby();});
   $("businessTypeFilter").addEventListener("change",()=>renderRecommendations(collectProfile()));
   renderInventory();initMap();loadFeeds();
   const params=new URLSearchParams(window.location.search);
