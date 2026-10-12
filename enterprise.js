@@ -226,23 +226,53 @@
   function rankOpportunity(opp, profile) {
     const resourceMatches=getResourceMatches(opp,profile), skillMatches=getSkillMatches(opp,profile);
     const hasInputs=profile.resources.length>0||profile.skills.length>0;
-    const resourceScore=profile.resources.length?Math.min(60,resourceMatches.length*24):0;
-    const skillScore=profile.skills.length?Math.min(20,skillMatches.length*10):0;
+    // User fit remains the strongest signal. Scores are relative relevance, not success probability.
+    const resourceScore=profile.resources.length?Math.min(36,resourceMatches.length*18):0;
+    const skillScore=profile.skills.length?Math.min(18,skillMatches.length*9):0;
     const marketScore=opp.market_fit.includes(profile.market)?8:0;
     const segmentMatches=segmentFit(opp,profile.buyerSegment);
     const buyerScore=profile.buyerSegment==="mixed"?5:(segmentMatches?12:0);
     const capitalScore=profile.capital==="micro"&&opp.capital_level==="micro"?5:profile.capital==="small"?4:profile.capital==="medium"?3:2;
     const scaleBonus=profile.businessScale==="micro"&&opp.capital_level==="micro"?5:profile.businessScale==="small"?4:profile.businessScale==="medium"?3:5;
-    const evidence=matchingTradeRows(opp,profile,3), locationMatches=findNearbyLeads(opp);
+    const evidence=matchingTradeRows(opp,profile,5), locationMatches=findNearbyLeads(opp);
     const hasResourceFit=resourceMatches.length>0, hasSkillFit=skillMatches.length>0;
-    const tourismNearbyCount=nearbyTourismAttractions(3).length;
-    const tourismScore=tourismNearbyCount>0?(opp.tourism_fit==="high"?8:opp.tourism_fit==="medium"?4:0):0;
-    const rawScore=resourceScore+skillScore+marketScore+buyerScore+capitalScore+scaleBonus+tourismScore;
+
+    // Tourism evidence is local and distance-bounded. National arrivals or tourism fit
+    // labels never stand in for visitors at a specific destination.
+    const nearbyAttractions=nearbyTourismAttractions(3);
+    const tourismNearbyCount=nearbyAttractions.length;
+    const nearestTourismKm=tourismNearbyCount?Math.min(...nearbyAttractions.map(p=>number(p.distance)).filter(v=>v!=null)):null;
+    let tourismScore=0;
+    if(nearestTourismKm!=null){
+      const veryClose=nearestTourismKm<=1;
+      if(opp.tourism_fit==="high") tourismScore=veryClose?16:12;
+      else if(opp.tourism_fit==="medium") tourismScore=veryClose?10:7;
+      else if(opp.tourism_fit==="low") tourismScore=veryClose?3:1;
+    }
+
+    // Only nearby mapped non-tourism leads count here; attraction proximity is scored above.
+    const localLeads=locationMatches.filter(p=>{
+      const d=number(p.distance);
+      return p.category!=="tourism"&&d!=null&&d<=5;
+    });
+    const localLeadScore=Math.min(10,localLeads.reduce((sum,p)=>{
+      const d=number(p.distance);
+      return sum+(d<=1?2.5:d<=3?1.5:0.5);
+    },0));
+
+    // A matching import/trade observation is a weak external-market signal, not local sales.
+    const positiveGrowth=evidence.some(row=>number(row.yoy_growth_pct)!=null&&number(row.yoy_growth_pct)>0);
+    const tradeSignalScore=evidence.length?Math.min(12,4+Math.max(0,Math.min(4,evidence.length)-1)*2+(positiveGrowth?2:0)):0;
+    const marketContextAvailable=evidence.length>0||Boolean(currentLocation)||localLeads.length>0;
+    const rawScore=resourceScore+skillScore+marketScore+buyerScore+capitalScore+scaleBonus+tourismScore+localLeadScore+tradeSignalScore;
+    const maxScore=118; // 36 + 18 + 8 + 12 + 5 + 5 + 16 + 10 + 12
     return {...opp,business_type:businessType(opp),resourceMatches,skillMatches,evidenceCount:evidence.length,locationMatches,
-      locationScore:Math.min(15,locationMatches.length*3),buyerSegmentMatch:segmentMatches,
-      fitScore:hasInputs?Math.min(100,Math.round(rawScore)):null,
+      locationScore:localLeadScore,localLeadCount:localLeads.length,tradeSignalScore,hasTradeSignal:evidence.length>0,
+      buyerSegmentMatch:segmentMatches,
+      fitScore:hasInputs||marketContextAvailable?Math.min(100,Math.round(rawScore/maxScore*100)):null,
+      scoreMode:hasInputs?"profile":(currentLocation?"location":"market"),
       hasInputs,hasResourceFit,hasSkillFit,scaleAdvice:scaleAdvice(opp,profile.businessScale),
-      tourismNearbyCount,tourismScore,tourismFitActive:tourismNearbyCount>0&&["high","medium"].includes(opp.tourism_fit)};
+      tourismNearbyCount,nearestTourismKm,tourismScore,tourismFitActive:tourismNearbyCount>0&&["high","medium"].includes(opp.tourism_fit)};
   }
   function matchingTradeRows(opp, profile, limit = 50) {
     if (!tradeItems.length) return [];
@@ -278,9 +308,10 @@
   function localAreaText(profile) { return [profile.district,profile.province].filter(Boolean).join(", ")||currentLocationLabel||"lokasi terpilih"; }
   function renderRecommendations(profile) {
     const all=catalog.map(o=>rankOpportunity(o,profile)).sort((a,b)=>
+      (b.fitScore??-1)-(a.fitScore??-1)||
       Number(b.hasResourceFit)-Number(a.hasResourceFit)||Number(b.hasSkillFit)-Number(a.hasSkillFit)||
-      Number(b.tourismFitActive)-Number(a.tourismFitActive)||
-      b.locationMatches.length-a.locationMatches.length||(b.fitScore??-1)-(a.fitScore??-1)||b.evidenceCount-a.evidenceCount);
+      b.tourismScore-a.tourismScore||b.tradeSignalScore-a.tradeSignalScore||
+      b.locationScore-a.locationScore||b.evidenceCount-a.evidenceCount);
     lastRecommendations=all;
     const chosenType=$("businessTypeFilter")?$("businessTypeFilter").value:"all";
     const candidates=chosenType==="all"?all:all.filter(o=>o.business_type===chosenType);
@@ -293,10 +324,11 @@
     $("recommendationStatus").textContent=statuses.join(" · ")||"IDE AWAL — PERLU DIUJI";
     $("recommendationStatus").className="pill "+(matches.length||nearbyPoints.length?"green":"gold");
     let display;
-    if(chosenType==="all"&&!profile.resources.length&&!profile.skills.length){
-      // Show a balanced starter set across product sales, cultivation and services before user inputs exist.
+    const hasContextSignals=Boolean(currentLocation)||all.some(o=>o.evidenceCount>0||o.locationScore>0||o.tourismScore>0);
+    if(chosenType==="all"&&!profile.resources.length&&!profile.skills.length&&!hasContextSignals){
+      // Without a selected location, user inputs or matching trade signals, show a balanced starter set.
       display=["sell","grow","service"].flatMap(type=>all.filter(o=>o.business_type===type).slice(0,2))
-        .sort((a,b)=>b.locationMatches.length-a.locationMatches.length||(b.fitScore??-1)-(a.fitScore??-1)||b.evidenceCount-a.evidenceCount);
+        .sort((a,b)=>(b.fitScore??-1)-(a.fitScore??-1)||b.evidenceCount-a.evidenceCount);
     } else display=candidates.slice(0,6);
     if(!display.length){$("recommendations").innerHTML='<div class="panel empty">Tidak ada ide pada kategori ini. Coba jenis usaha lain.</div>';renderRelationshipFlow(null,profile);renderTradeTable([],profile);return;}
     const selectedBeforeRender=candidates.find(o=>o.id===activeOpportunityId)||display[0];
@@ -318,6 +350,15 @@
       const tourismNote=opp.tourismNearbyCount>0&&opp.tourism_fit!=="low"
         ? '<p class="tourism-fit-note">Atraksi wisata terpetakan ≤3 km: '+opp.tourismNearbyCount+' · Hipotesis pembeli: '+esc(opp.tourism_buyer_hypothesis||firstText(opp.sell_to,"perlu divalidasi"))+'</p>'
         : "";
+      const whyParts=[];
+      if(opp.resourceMatches.length)whyParts.push("resource cocok: "+opp.resourceMatches.slice(0,3).join(", "));
+      if(opp.skillMatches.length)whyParts.push("skill cocok: "+opp.skillMatches.slice(0,3).join(", "));
+      if(opp.tourismNearbyCount>0&&opp.tourismScore>0)whyParts.push(opp.tourismNearbyCount+" atraksi terpetakan dalam 3 km"+(opp.nearestTourismKm!=null?" (terdekat "+(opp.nearestTourismKm<1?Math.round(opp.nearestTourismKm*1000)+" m":opp.nearestTourismKm.toFixed(1)+" km")+")":"")+"; tipe usaha dinilai relevan untuk wisata");
+      if(opp.localLeadCount>0)whyParts.push(opp.localLeadCount+" titik calon kanal/pemasok yang dipetakan dalam 5 km");
+      if(opp.evidenceCount>0)whyParts.push(opp.evidenceCount+" kecocokan sinyal perdagangan/impor");
+      const contextReason=whyParts.length?whyParts.join(" · "):
+        (currentLocation?"Belum ada sinyal lokal atau perdagangan yang cocok terdeteksi; periksa ide ini lewat validasi lapangan.":"Tambahkan sumber daya/skill atau pilih lokasi untuk memberi konteks pada ranking.");
+      const contextNote='<div class="opportunity-context-note"><b>Kenapa masuk rekomendasi?</b> '+esc(contextReason)+'<span> Peta/indikator perdagangan adalah petunjuk untuk riset, bukan bukti transaksi lokal atau pelanggan aktif.</span></div>';
       const heritageNote=heritageContext&&opp.tourism_fit!=="low"
         ? '<p class="tiny">Konteks budaya untuk diteliti: <a href="'+esc(heritageContext.url||"https://ich.unesco.org/en/lists")+'" target="_blank" rel="noopener noreferrer">'+esc(heritageContext.name)+'</a>. Daftar UNESCO bukan bukti perajin berada dekat lokasi.</p>'
         : "";
@@ -332,7 +373,7 @@
       const onlineQuery=opp.online_input_search||(opp.products||[]).slice(0,2).join(" ");
       const foreignQuery=opp.international_search||(opp.products||[]).slice(0,2).join(" ")+" importer";
       const icon=type==="grow"?"🌱":type==="service"?"🛠️":"🛍️";
-      const fit=opp.fitScore==null?"Lengkapi input":opp.fitScore+"/100 cocok-input";
+      const fit=opp.fitScore==null?"Lengkapi input":opp.fitScore+"/100 "+(opp.hasInputs?"kecocokan profil":"sinyal konteks");
       const scaleLabels={micro:"Mikro / rumahan",small:"Kecil / UMKM berkembang",medium:"Menengah / SME supplier",scalable:"Mulai kecil lalu scale-up"};
       const scaleLabel=scaleLabels[profile.businessScale]||scaleLabels.micro;
       const buyerLabel=buyerSegmentLabel(profile.buyerSegment);
@@ -340,7 +381,7 @@
       const steps=Array.isArray(opp.start_steps)?opp.start_steps:[opp.first_test||"Wawancarai calon pembeli dan hitung biaya per unit."];
       const stepHtml="<ol>"+steps.map(s=>"<li>"+esc(s)+"</li>").join("")+"</ol>";
       return '<article class="rec '+(opp.id===activeOpportunityId?'is-selected':'')+'" data-opportunity-card="'+esc(opp.id)+'"><div class="kind-row"><span class="kind-badge '+typeClass+'">'+icon+' '+esc(businessTypeLabel(type))+'</span><span class="'+(opp.fitScore==null?"tiny":"fit")+'">'+esc(fit)+'</span></div>'+
-        '<h3>'+esc(opp.title)+'</h3><p class="action-summary">'+esc(opp.action_summary||opp.rationale)+'</p>'+tourismNote+heritageNote+
+        '<h3>'+esc(opp.title)+'</h3><p class="action-summary">'+esc(opp.action_summary||opp.rationale)+'</p>'+contextNote+tourismNote+heritageNote+
         '<div class="rec-detail-grid"><div class="rec-detail"><h4>Yang bisa dibuat / ditawarkan</h4><p><b>'+esc(what)+'</b></p><p class="tiny" style="margin-top:6px">'+esc(resourceText)+'</p><p class="tiny" style="margin-top:5px">'+esc(skillText)+'</p></div>'+
         '<div class="rec-detail"><h4>Yang perlu dibeli / disiapkan</h4><ul>'+buy+'</ul><p class="tiny" style="margin-top:6px">Modal pilot mikro indikatif: <b>'+esc(capitalRange(opp))+'</b></p><p class="tiny" style="margin-top:6px"><b>Skala:</b> '+esc(scaleLabel)+'</p><p class="tiny" style="margin-top:4px">'+esc(opp.scaleAdvice||"Sesuaikan skala dengan modal dan kemampuan.")+'</p></div>'+
         '<div class="rec-detail"><h4>Calon pembeli awal</h4><ul>'+sell+'</ul><p class="tiny" style="margin-top:6px"><b>Segmen pilihan:</b> '+esc(buyerLabel)+' · '+esc(buyerFitText)+'</p><p class="tiny" style="margin-top:6px">Kanal terpetakan: '+esc(leadText)+'</p></div>'+
