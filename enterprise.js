@@ -152,7 +152,12 @@
     if(currentLocation)statuses.push(nearbyPoints.length+" TITIK SEKITAR");
     $("recommendationStatus").textContent=statuses.join(" · ")||"IDE AWAL — PERLU DIUJI";
     $("recommendationStatus").className="pill "+(matches.length||nearbyPoints.length?"green":"gold");
-    const display=candidates.slice(0,6);
+    let display;
+    if(chosenType==="all"&&!profile.resources.length&&!profile.skills.length){
+      // Show a balanced starter set across product sales, cultivation and services before user inputs exist.
+      display=["sell","grow","service"].flatMap(type=>all.filter(o=>o.business_type===type).slice(0,2))
+        .sort((a,b)=>b.locationMatches.length-a.locationMatches.length||(b.fitScore??-1)-(a.fitScore??-1)||b.evidenceCount-a.evidenceCount);
+    } else display=candidates.slice(0,6);
     if(!display.length){$("recommendations").innerHTML='<div class="panel empty">Tidak ada ide pada kategori ini. Coba jenis usaha lain.</div>';renderRelationshipFlow(null,profile);renderTradeTable([],profile);return;}
     const area=localAreaText(profile);
     $("recommendations").innerHTML=display.map((opp,i)=>{
@@ -205,7 +210,7 @@
       const opp=catalog.find(o=>o.id===btn.dataset.evidence);renderTradeTable(matchingTradeRows(opp,profile,20),profile);
       $("tradeBody").closest(".panel").scrollIntoView({behavior:"smooth",block:"start"});
     }));
-    const selected=lastRecommendations.find(o=>o.id===activeOpportunityId)||display[0];
+    const selected=candidates.find(o=>o.id===activeOpportunityId)||display[0];
     if(selected){activeOpportunityId=selected.id;renderRelationshipFlow(selected,profile);}
     renderTradeTable(matchingTradeRows(null,profile,30),profile);
   }
@@ -493,13 +498,13 @@
       {label:businessTypeLabel(opp.business_type),value:firstText(opp.products,opp.title),detail:opp.action_summary||opp.rationale},
       {label:"CALON PEMBELI",value:firstText(opp.sell_to,"Identifikasi lewat wawancara"),detail:firstText(opp.channels,"Uji kanal sebelum investasi")},
       {label:"TITIK SEKITAR",value:leads.length?leads.map(p=>p.name+" · "+distanceLabel(p.distance)).join(" / "):"Belum ada titik kategori cocok",detail:leads.length+" lokasi peta yang masuk kategori terkait; verifikasi dulu"},
-      {label:"SINyal PASAR LUAR",value:trade.length?trade.map(t=>(t.market_name||t.market_iso3)+" · "+compactUSD(number(t.latest_import_usd))+" / "+(t.latest_year||"tahun?")).join(" / "):"Belum ada padanan pada feed",detail:"Impor tahunan tingkat negara, bukan buyer atau pesanan terverifikasi"}
+      {label:"SINYAL PASAR LUAR",value:trade.length?trade.map(t=>(t.market_name||t.market_iso3)+" · "+compactUSD(number(t.latest_import_usd))+" / "+(t.latest_year||"tahun?")).join(" / "):"Belum ada padanan pada feed",detail:"Impor tahunan tingkat negara, bukan buyer atau pesanan terverifikasi"}
     ];
     $("relationshipTitle").textContent="Rantai peluang: "+opp.title;
     $("relationshipSummary").textContent="Hubungan dihitung dari bahan/skill, tipe usaha, calon pembeli, lokasi terpetakan dan padanan perdagangan.";
     $("relationshipStatus").textContent="IDE: "+businessTypeLabel(opp.business_type).toUpperCase();
     $("relationshipStatus").className="pill "+(opp.hasResourceFit||opp.hasSkillFit?"green":"gold");
-    $("relationshipVisual").innerHTML=nodes.map((n,i)=>'<div class="flow-step"><span class="step-no">LANGKAH '+(i+1)+'</span><h3>'+esc(n.label)+'</h3><strong>'+esc(n.value)+'</strong><p>'+esc(n.detail)+'</p></div>'+(i<nodes.length-1?'<div class="flow-arrow" aria-hidden="true">→</div>':"")).join("");
+    $("relationshipVisual").innerHTML=nodes.map((n,i)=>'<div class="flow-step"><span class="step-no">LANGKAH '+(i+1)+'</span><h3>'+esc(n.label)+'</h3><strong>'+esc(n.value)+'</strong><p>'+esc(n.detail)+'</p></div>'+(i<nodes.length-1?'<span class="flow-arrow" aria-hidden="true">→</span>':"")).join("");
   }
   $("findBtn").addEventListener("click",()=>renderRecommendations(collectProfile()));
   $("clearBtn").addEventListener("click",clearProfile);
