@@ -174,7 +174,8 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
         }
         manifest_tmp = staging / "manifest.json"
         manifest_tmp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-
+        # Stage everything outside the output directory; the old outputs stay untouched
+        # until extraction and conversion have both succeeded.
         final_extract = output_dir / "extracted"
         final_json = output_dir / "sheets"
         old_extract = output_dir / "extracted.previous"
@@ -189,10 +190,12 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
         try:
             shutil.copytree(temp_extract, final_extract)
             shutil.copytree(temp_json, final_json)
-            manifest_tmp.replace(output_dir / "manifest.json")
+            shutil.copy2(manifest_tmp, output_dir / "manifest.json.tmp")
+            (output_dir / "manifest.json.tmp").replace(output_dir / "manifest.json")
         except Exception:
             shutil.rmtree(final_extract, ignore_errors=True)
             shutil.rmtree(final_json, ignore_errors=True)
+            (output_dir / "manifest.json.tmp").unlink(missing_ok=True)
             if old_extract.exists():
                 old_extract.replace(final_extract)
             if old_json.exists():
