@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "note": "Curated business hypotheses. The UI separates selling products, cultivation and services. Supplier/buyer links open search pages and are not verified stock, actual buyers or sales forecasts. Tourism fit is a planning hypothesis. It receives local ranking influence only when an explicitly mapped attraction lies within 3 km; it is not evidence of visitor numbers or demand.",
+  "note": "Curated SME business hypotheses. Tourism proximity, mapped POIs and trade/import matches are ranking signals, not proof of sales or guaranteed demand. Recommendations combine user resources and skills, budget and buyer segment, tourism relevance within 3 km, nearby mapped buyer/supplier leads, and matched international trade records. National tourism indicators are not site-level footfall; UN Comtrade imports are not local retail sales. Verify local permits, real buyers, transaction margins and repeat orders before investing.",
   "opportunities": [
     {
       "id": "coconut-value-added",
@@ -1497,6 +1497,208 @@
       "tourism_fit": "high",
       "tourism_buyer_hypothesis": "Wisatawan melalui mitra penginapan, operator tur dan kegiatan komunitas",
       "tourism_validation_test": "Uji satu rute dengan reservasi berbayar; cek keselamatan, kepuasan dan margin setelah biaya."
+    },
+    {
+      "id": "tourism-food-stall",
+      "title": "Warung kuliner lokal dan minuman praktis",
+      "products": [
+        "local meals",
+        "traditional snacks",
+        "coffee",
+        "tea",
+        "fresh drinks",
+        "takeaway meals"
+      ],
+      "resource_keywords": [
+        "food",
+        "makanan",
+        "kuliner",
+        "masakan",
+        "rice",
+        "beras",
+        "coffee",
+        "kopi",
+        "tea",
+        "teh",
+        "snack",
+        "camilan",
+        "minuman",
+        "local ingredients",
+        "bahan lokal"
+      ],
+      "skill_keywords": [
+        "cooking",
+        "memasak",
+        "food preparation",
+        "pengolahan pangan",
+        "hospitality",
+        "pelayanan",
+        "customer service",
+        "layanan pelanggan",
+        "costing",
+        "menghitung biaya"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 1000000,
+      "capital_max_idr": 12000000,
+      "market_fit": [
+        "local",
+        "both"
+      ],
+      "demand_keywords": [
+        "prepared food",
+        "food",
+        "snacks",
+        "coffee",
+        "tea",
+        "beverages",
+        "restaurant"
+      ],
+      "rationale": "Warung kecil atau menu takeaway dapat melayani kombinasi pengunjung, pengemudi/pemandu, pekerja sekitar dan warga. Kelayakan tergantung arus orang pada jam tertentu, izin lokasi, pesaing, biaya sewa, dan margin menu—bukan semata-mata kedekatan dengan atraksi.",
+      "first_test": "Pilih 2–3 menu, amati arus orang pada pagi/siang/sore selama beberapa hari, wawancarai 10 calon pembeli termasuk warga, lalu uji pre-order atau pop-up yang diizinkan sebelum menyewa tempat.",
+      "risks": [
+        "arus pengunjung musiman dan jam kunjungan yang tidak merata",
+        "izin berjualan, kebersihan pangan, air bersih dan pengelolaan sampah",
+        "biaya sewa, bahan mudah rusak dan margin yang tipis"
+      ],
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "sell",
+      "action_summary": "Uji warung takeaway ber-menu terbatas untuk pengunjung dan pasar lokal. Hitung transaksi berbayar per jam serta margin setelah bahan, gas, kemasan, sewa dan tenaga.",
+      "buy_from": [
+        "Pasar/pemasok bahan pangan lokal",
+        "Produsen minuman dan pemasok kemasan food-grade"
+      ],
+      "sell_to": [
+        "Pengunjung dan keluarga yang berwisata",
+        "Pengemudi, pemandu, pekerja dan pedagang sekitar",
+        "Warga lokal untuk menjaga permintaan di luar jam wisata"
+      ],
+      "channels": [
+        "Menu kecil dan cepat disajikan; uji jam buka berdasarkan observasi",
+        "Pre-order atau kerja sama resmi dengan penginapan/mitra lokal"
+      ],
+      "map_categories": [
+        "tourism",
+        "market",
+        "retail",
+        "food_buyer",
+        "service"
+      ],
+      "local_input_search": "pasar bahan pangan pemasok minuman kemasan food grade",
+      "online_input_search": "peralatan warung minuman kemasan food grade",
+      "local_buyer_search": "penginapan warung makan kafe sekitar",
+      "international_search": "local food beverage distributors",
+      "start_steps": [
+        "Amati arus orang pada beberapa rentang waktu dan hari, bukan hanya akhir pekan.",
+        "Hitung biaya per porsi, harga jual, margin dan titik impas sederhana.",
+        "Uji 2–3 menu lewat pre-order/pop-up yang memiliki izin; catat transaksi dan pembelian ulang."
+      ],
+      "tourism_fit": "high",
+      "tourism_buyer_hypothesis": "Visitors, tour guides/drivers, accommodation staff and local residents",
+      "tourism_validation_test": "Count passing potential buyers at several times, interview 10 visitors and residents, and test a small permitted menu before committing to rent."
+    },
+    {
+      "id": "tourism-craft-souvenir-kiosk",
+      "title": "Kios suvenir dan kerajinan lokal berbasis konsinyasi",
+      "products": [
+        "batik",
+        "woven crafts",
+        "bamboo crafts",
+        "rattan goods",
+        "wooden gifts",
+        "local souvenirs"
+      ],
+      "resource_keywords": [
+        "craft",
+        "kerajinan",
+        "batik",
+        "anyaman",
+        "bamboo",
+        "bambu",
+        "rattan",
+        "rotan",
+        "souvenir",
+        "suvenir",
+        "handmade",
+        "tenun",
+        "woven",
+        "local craft",
+        "keramik"
+      ],
+      "skill_keywords": [
+        "craft",
+        "kerajinan",
+        "sales",
+        "jualan",
+        "retail",
+        "curation",
+        "kurasi produk",
+        "design",
+        "desain",
+        "storytelling",
+        "cerita budaya",
+        "weaving",
+        "menenun"
+      ],
+      "capital_level": "micro",
+      "capital_min_idr": 500000,
+      "capital_max_idr": 6000000,
+      "market_fit": [
+        "local",
+        "both",
+        "international"
+      ],
+      "demand_keywords": [
+        "handicrafts",
+        "souvenirs",
+        "batik",
+        "woven goods",
+        "bamboo products",
+        "wooden gifts",
+        "ceramics"
+      ],
+      "rationale": "Konsinyasi dengan perajin dapat menguji selera pengunjung tanpa membeli stok banyak di awal. Kedekatan wisata hanya alasan untuk menguji kanal; pembelian nyata, harga yang diterima dan margin harus divalidasi.",
+      "first_test": "Kerja sama konsinyasi dengan 2–3 perajin untuk 5–10 barang, uji display sementara di tempat yang diizinkan, dan catat barang dilihat, ditanyakan, dibeli serta margin setelah komisi.",
+      "risks": [
+        "stok lambat bergerak dan barang rusak",
+        "asal-usul, kualitas dan konsistensi barang dari perajin",
+        "sewa/komisi lokasi, izin dan pembelian wisata yang musiman"
+      ],
+      "evidence_type": "opportunity_hypothesis",
+      "business_type": "sell",
+      "action_summary": "Mulai sebagai penjual/kurator suvenir dari perajin setempat dengan sistem konsinyasi atau pre-order, sebelum membuka kios permanen.",
+      "buy_from": [
+        "Perajin, kelompok perajin atau koperasi lokal",
+        "Pemasok label, display dan kemasan yang sesuai"
+      ],
+      "sell_to": [
+        "Pengunjung yang mencari produk khas dan mudah dibawa",
+        "Toko oleh-oleh, penginapan dan operator tur sebagai reseller",
+        "Pembeli online yang tertarik pada cerita asal produk"
+      ],
+      "channels": [
+        "Konsinyasi dan display kecil di lokasi berizin",
+        "Katalog WhatsApp/online dan pre-order untuk barang bernilai lebih tinggi"
+      ],
+      "map_categories": [
+        "tourism",
+        "retail",
+        "market",
+        "maker",
+        "supplier"
+      ],
+      "local_input_search": "perajin batik anyaman bambu kerajinan lokal",
+      "online_input_search": "kemasan suvenir display produk label kerajinan",
+      "local_buyer_search": "toko oleh oleh penginapan operator tur",
+      "international_search": "handicraft gift importers",
+      "start_steps": [
+        "Kurasi 5–10 barang dengan harga, asal perajin dan cerita produk yang jelas.",
+        "Sepakati komisi, pencatatan stok, penggantian barang rusak dan pembayaran dengan perajin.",
+        "Uji display yang diizinkan selama 2–4 minggu; ukur transaksi dan margin sebelum menyewa kios."
+      ],
+      "tourism_fit": "high",
+      "tourism_buyer_hypothesis": "Visitors, gift shops, accommodations and tour operators interested in locally made crafts",
+      "tourism_validation_test": "Run a small, permitted consignment display with 2–3 local artisans and track paid conversions, margins and restocking."
     }
   ]
 }
