@@ -37,6 +37,7 @@ const state={
  map:null,origin:null,originMarker:null,poiLayer:null,linkLayer:null,marketLayer:null,
  catalog:[],tradeRows:[],tradeFeed:null,tradePromise:null,countryContext:null,contextPromise:null,
  designatedSites:[],designatedPromise:null,tourismPlaces:[],tourismPromise:null,
+ unTourismManifest:null,unTourismDatasets:[],unTourismDataset:null,unTourismRaw:null,unTourismHeaders:[],unTourismRecords:[],unTourismLayer:null,
  pois:[],marketSignals:[],opportunities:[],active:false,analyzeSequence:0,lastOverpassAt:0,
  localBounds:null,globalBounds:null,marketBounds:{},lastTerms:[],dataStatus:"pending"
 };
@@ -318,6 +319,248 @@ function initDesignatedSitePicker(){
  document.addEventListener("click",event=>{if(!event.target.closest(".destination-combo"))closeDesignatedSiteOptions();});
  list.addEventListener("keydown",event=>{if(event.key==="Escape"){closeDesignatedSiteOptions();input.focus();}});
  ensureDestinationSource().then(()=>renderDesignatedSiteOptions(false)).catch(error=>{console.warn("Destination catalogue failed",error);designatedSiteStatus("Katalog tidak tersedia. Gunakan Cari lokasi untuk mencari nama tempat.","error");});
+}
+const UN_TOURISM_MANIFEST_URL="./data/un_tourism/manifest.json";
+const UN_TOURISM_SHEETS_URL="./data/un_tourism/sheets/";
+function statKey(value){return clean(value).replace(/[^a-z0-9]/g,"");}
+function statKeyAt(headers,exacts,contains=[]){
+ const keys=headers.map(statKey);
+ for(const exact of exacts){const i=keys.indexOf(statKey(exact));if(i>=0)return i;}
+ for(let i=0;i<keys.length;i++)if(contains.some(part=>keys[i].includes(statKey(part))))return i;
+ return -1;
+}
+function statYearHeaders(headers){
+ return headers.map((h,i)=>({index:i,year:Number(String(h||"").trim())}))
+  .filter(x=>/^(19|20)\d{2}$/.test(String(x.year)));
+}
+function statDatasetTitle(item){
+ const name=clean(item.workbook||"").replace(/_/g," ").replace(/\.xlsx?$/i,"");
+ const rules=[
+  [/inbound arrivals by region/,"International arrivals by region"],
+  [/inbound arrivals by purpose/,"International arrivals by purpose"],
+  [/inbound arrivals by transport/,"International arrivals by transport"],
+  [/inbound arrivals/,"International tourist arrivals"],
+  [/inbound expenditure/,"International visitor expenditure"],
+  [/outbound departures/,"Outbound departures"],
+  [/outbound expenditure/,"Outbound visitor expenditure"],
+  [/domestic trips/,"Domestic tourist trips"],
+  [/domestic accommodation/,"Domestic tourism accommodation"],
+  [/inbound accommodation/,"Inbound tourism accommodation"],
+  [/accommodation hotels/,"Hotel indicators"],
+  [/accommodation other indicators/,"Other accommodation indicators"],
+  [/tdgdp/,"Tourism contribution to GDP (SDG 8.9.1)"],
+  [/employed persons/,"Tourism employment (SDG 8.9.2)"],
+  [/tsa seea/,"Tourism Satellite Account / SEEA (SDG 12.b.1)"]
+ ];
+ return (rules.find(([re])=>re.test(name))||[null,(item.workbook||"UN Tourism dataset")])[1];
+}
+function setUnTourismStatus(message,tone="neutral"){
+ const el=$("unTourismStatus");if(!el)return;
+ el.textContent=message;
+ el.className="status-line"+(tone==="error"?" error":tone==="success"?" success":"");
+}
+async function loadUnTourismManifest(){
+ const select=$("unTourismDatasetSelect");
+ try{
+  const response=await fetch(UN_TOURISM_MANIFEST_URL,{cache:"no-cache",headers:{Accept:"application/json"}});
+  if(!response.ok)throw new Error("Manifest HTTP "+response.status);
+  const manifest=await response.json();
+  const dataSheets=(manifest.worksheets||[]).filter(item=>item.worksheet==="Data"&&item.file);
+  if(!dataSheets.length)throw new Error("Manifest tidak berisi data sheet yang dapat dipilih");
+  state.unTourismManifest=manifest;
+  state.unTourismDatasets=dataSheets;
+  select.innerHTML=dataSheets.map(item=>'<option value="'+esc(item.file)+'">'+esc(statDatasetTitle(item))+' · '+Number(item.rows||0).toLocaleString("id-ID")+' baris</option>').join("");
+  select.disabled=false;
+  const preferred=dataSheets.find(item=>/inbound_arrivals_12_2025__02_Data/i.test(item.file))||
+   dataSheets.find(item=>/inbound_arrivals.*02_Data/i.test(item.file))||
+   dataSheets[0];
+  if(preferred)select.value=preferred.file;
+  setUnTourismStatus("Manifest tersedia · "+dataSheets.length+" dataset resmi. Pilih satu dataset lalu klik Muat statistik.");
+ }catch(error){
+  select.innerHTML='<option value="">Dataset tidak tersedia</option>';select.disabled=true;
+  setUnTourismStatus("Gagal memuat manifest UN Tourism: "+error.message,"error");
+ }
+}
+function normalizeUnTourismWorksheet(raw,item){
+ const grid=Array.isArray(raw.data)?raw.data:[];
+ if(!grid.length)return {headers:[],records:[]};
+ const headers=grid[0].map((h,i)=>String(h==null||h===""?"Column "+(i+1):h).trim());
+ const countryIdx=statKeyAt(headers,["reporter_area_label","country_name","country","area_label","area_name","geo_area_name","geoareaname","reference_area","ref_area_label","geography"],["countryname"]);
+ const countryCodeIdx=statKeyAt(headers,["country_iso3","country_iso3_code","iso3","iso3_code","reporter_iso3","reporter_area_code","reporterareacode"],["countryiso3","iso3code"]);
+ const yearIdx=statKeyAt(headers,["year","time_period","time","period","reference_year"]);
+ const valueIdx=statKeyAt(headers,["value","obs_value","observation_value","data_value","observationvalue"]);
+ const indicatorIdx=statKeyAt(headers,["indicator_label","indicator_name","indicator","series_name","measure_label","variable"]);
+ const unitIdx=statKeyAt(headers,["unit","unit_of_measure","unit_measure","measurement_unit"]);
+ const wideYears=statYearHeaders(headers),longForm=yearIdx>=0&&valueIdx>=0,records=[];
+ const baseIndices=new Set([countryIdx,countryCodeIdx,yearIdx,valueIdx,indicatorIdx,unitIdx,...wideYears.map(x=>x.index)].filter(i=>i>=0));
+ headers.forEach((h,i)=>{if(/^(indicatorcode|indicatorpreviouscode|reporterareacode|partnerareacode|flag|flaglabel|notes|note|source|sourceurl|unitcode|obsstatus|observationstatus)$/.test(statKey(h)))baseIndices.add(i);});
+ for(let ri=1;ri<grid.length;ri++){
+  const row=grid[ri]||[];if(!row.some(v=>v!==null&&v!==""))continue;
+  let country=countryIdx>=0?row[countryIdx]:null;
+  if(country==null||country===""){
+   const firstString=row.find(v=>typeof v==="string"&&v.trim());country=firstString||"Area not identified";
+  }
+  const countryCode=countryCodeIdx>=0?String(row[countryCodeIdx]??"").trim():"";
+  const indicator=indicatorIdx>=0&&row[indicatorIdx]!=null&&row[indicatorIdx]!==""?String(row[indicatorIdx]):statDatasetTitle(item);
+  const unit=unitIdx>=0?row[unitIdx]:null,extras={};
+  headers.forEach((h,i)=>{if(!baseIndices.has(i)&&row[i]!=null&&row[i]!=="")extras[h]=row[i];});
+  const classification=Object.entries(extras).filter(([k])=>!/^(flag|flag label|notes?|indicator code|indicator previous code)$/i.test(k)).map(([k,v])=>k+": "+v).join(" · ");
+  const add=(year,value)=>records.push({country:String(country),countryCode,year,value:num(value),indicator:String(indicator),unit:unit==null?"":String(unit),classification,extras});
+  if(longForm)add(row[yearIdx]==null?null:num(row[yearIdx]),row[valueIdx]);
+  else if(wideYears.length)wideYears.forEach(y=>{const v=num(row[y.index]);if(v!=null)add(y.year,v);});
+  else{
+   const numericIdx=row.findIndex((v,i)=>i!==countryIdx&&num(v)!=null);
+   add(null,numericIdx>=0?row[numericIdx]:null);
+  }
+ }
+ return {headers,records};
+}
+function preferredUnTourismIndicator(records,dataset){
+ const names=[...new Set(records.map(row=>row.indicator).filter(Boolean))];
+ const title=clean(statDatasetTitle(dataset));
+ const regex=title.includes("expenditure")?/expenditure|spending/i:
+  title.includes("trip")?/trip|travel/i:
+  title.includes("accommodation")||title.includes("hotel")?/accommodation|hotel|bed|room/i:
+  title.includes("employment")?/employ|persons/i:
+  title.includes("gdp")?/gdp|tourism direct/i:
+  /arrival|arriv/i;
+ return names.find(name=>regex.test(name))||names[0]||"";
+}
+function populateUnTourismFilters(){
+ const records=state.unTourismRecords;
+ const indicators=[...new Set(records.map(row=>row.indicator).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+ const indicatorSelect=$("unTourismIndicatorSelect");
+ indicatorSelect.innerHTML=indicators.map(name=>'<option value="'+esc(name)+'">'+esc(name)+'</option>').join("");
+ const dataset=state.unTourismDataset;
+ const preferred=preferredUnTourismIndicator(records,dataset);
+ if(indicators.includes(preferred))indicatorSelect.value=preferred;
+ const years=[...new Set(records.map(row=>row.year).filter(Number.isFinite))].sort((a,b)=>a-b);
+ $("unTourismYearSelect").innerHTML=years.map(year=>'<option value="'+year+'">'+year+'</option>').join("");
+ if(years.length)$("unTourismYearSelect").value=String(years[years.length-1]);
+ const breakdown=$("unTourismBreakdownSelect");
+ const skip=new Set(["indicatorcode","indicatorpreviouscode","reporterareacode","partnerareacode","flag","flaglabel","notes","note","source","sourceurl","unit","unitofmeasure","year","value","indicatorlabel","indicatorname","indicator","country","countryname","reporterarealabel","arealabel","areaname","geoareaname"]);
+ const fields=state.unTourismHeaders.filter(h=>!skip.has(statKey(h))).map(key=>({
+  key,values:[...new Set(records.map(row=>row.extras[key]).filter(v=>v!=null&&v!=="").map(String))]
+ })).filter(field=>field.values.length>1&&field.values.length<=80).sort((a,b)=>{
+  const priority=["total","purpose","transport","partner","region","sex","type","category"];
+  const score=field=>{const i=priority.findIndex(value=>statKey(field.key).includes(value));return i<0?99:i;};
+  return score(a)-score(b)||a.key.localeCompare(b.key);
+ });
+ breakdown.innerHTML='<option value="">Auto · hanya negara dengan satu nilai</option>'+fields.flatMap(field=>field.values.map(value=>'<option value="'+esc(field.key+"::"+value)+'">'+esc(field.key+" = "+value)+'</option>')).join("");
+ $("unTourismFilters").hidden=records.length===0;
+ $("unTourismShowBtn").disabled=!years.length||!indicators.length;
+}
+async function loadUnTourismDataset(){
+ const file=$("unTourismDatasetSelect").value;
+ const dataset=state.unTourismDatasets.find(item=>item.file===file);
+ if(!dataset){setUnTourismStatus("Pilih dataset UN Tourism terlebih dahulu.","error");return;}
+ const button=$("unTourismLoadBtn");button.disabled=true;button.textContent="Memuat…";
+ $("unTourismFilters").hidden=true;
+ setUnTourismStatus("Mengunduh dan membaca "+statDatasetTitle(dataset)+"… File besar dapat memerlukan beberapa saat.");
+ try{
+  const response=await fetch(UN_TOURISM_SHEETS_URL+encodeURIComponent(dataset.file),{cache:"force-cache",headers:{Accept:"application/json"}});
+  if(!response.ok)throw new Error("Dataset HTTP "+response.status);
+  const raw=await response.json(),parsed=normalizeUnTourismWorksheet(raw,dataset);
+  if(!parsed.records.length)throw new Error("Worksheet tidak menghasilkan observasi yang dapat dibaca. Periksa header data.");
+  state.unTourismDataset=dataset;state.unTourismRaw=raw;state.unTourismHeaders=parsed.headers;state.unTourismRecords=parsed.records;
+  populateUnTourismFilters();
+  const years=[...new Set(parsed.records.map(row=>row.year).filter(Number.isFinite))];
+  setUnTourismStatus("Dataset siap · "+parsed.records.length.toLocaleString("id-ID")+" observasi · "+new Set(parsed.records.map(row=>row.country)).size+" negara/area · tahun "+(years.length?Math.min(...years)+"–"+Math.max(...years):"tidak tersedia")+". Pilih indikator/tahun, lalu tampilkan di peta.","success");
+ }catch(error){
+  state.unTourismDataset=null;state.unTourismRaw=null;state.unTourismHeaders=[];state.unTourismRecords=[];
+  setUnTourismStatus("Gagal memuat statistik: "+error.message,"error");
+ }finally{button.disabled=false;button.textContent="Muat statistik";}
+}
+function mapCountryCoordinate(row,countries){
+ const iso=String(row.countryCode||"").toUpperCase();
+ if(/^[A-Z]{3}$/.test(iso)&&countries[iso]){
+  const c=countries[iso],lat=num(c.latitude),lon=num(c.longitude);
+  if(lat!=null&&lon!=null)return {iso,lat,lon,name:c.name||row.country};
+ }
+ const target=clean(row.country).replace(/^the /,"");
+ for(const [code,country] of Object.entries(countries)){
+  const candidate=clean(country.name||"").replace(/^the /,"");
+  if(candidate===target||candidate.replace(/[^a-z0-9]/g,"")===target.replace(/[^a-z0-9]/g,"")){
+   const lat=num(country.latitude),lon=num(country.longitude);
+   if(lat!=null&&lon!=null)return {iso:code,lat,lon,name:country.name||row.country};
+  }
+ }
+ const aliases={
+  "united states of america":"united states","usa":"united states","russian federation":"russia",
+  "viet nam":"vietnam","iran islamic republic of":"iran","lao peoples democratic republic":"laos",
+  "republic of korea":"south korea","democratic peoples republic of korea":"north korea",
+  "bolivia plurinational state of":"bolivia","venezuela bolivarian republic of":"venezuela",
+  "türkiye":"turkey","czechia":"czech republic","brunei darussalam":"brunei"
+ };
+ const alias=aliases[target];
+ if(alias){
+  for(const [code,country] of Object.entries(countries)){
+   if(clean(country.name||"")===alias){
+    const lat=num(country.latitude),lon=num(country.longitude);
+    if(lat!=null&&lon!=null)return {iso:code,lat,lon,name:country.name||row.country};
+   }
+  }
+ }
+ return null;
+}
+function renderUnTourismLayer(){
+ if(!state.unTourismRecords.length||!state.unTourismDataset){setUnTourismStatus("Muat dataset terlebih dahulu.","error");return;}
+ const indicator=$("unTourismIndicatorSelect").value,year=num($("unTourismYearSelect").value),breakdown=$("unTourismBreakdownSelect").value;
+ const rows=state.unTourismRecords.filter(row=>row.indicator===indicator&&row.year===year&&row.value!=null&&(
+  !breakdown||String(row.extras[breakdown.slice(0,breakdown.indexOf("::"))]??"")===breakdown.slice(breakdown.indexOf("::")+2)
+ ));
+ if(!rows.length){setUnTourismStatus("Tidak ada nilai untuk indikator dan tahun tersebut. Pilih filter lain.","error");return;}
+ const byCountry=new Map();
+ rows.forEach(row=>{const key=clean(row.country);if(!byCountry.has(key))byCountry.set(key,[]);byCountry.get(key).push(row);});
+ const uniqueRows=[],ambiguous=[];
+ for(const group of byCountry.values()){
+  if(group.length===1)uniqueRows.push(group[0]);else ambiguous.push(group[0].country);
+ }
+ const showBtn=$("unTourismShowBtn");showBtn.disabled=true;showBtn.textContent="Menyiapkan layer…";
+ Promise.resolve(ensureCountryContext()).then(context=>{
+  const countries=context&&context.countries||{},points=[];
+  uniqueRows.forEach(row=>{const coordinate=mapCountryCoordinate(row,countries);if(coordinate)points.push({row,coordinate});});
+  const layer=state.unTourismLayer;
+  layer.clearLayers();
+  if(state.map.hasLayer(layer))state.map.removeLayer(layer);
+  if(!points.length){
+   setUnTourismStatus("Tidak ada titik negara yang cocok dengan nama pada dataset ini. Data statistik tidak dipetakan agar lokasi tidak ditebak.","error");
+   return;
+  }
+  const maxValue=Math.max(...points.map(point=>Math.abs(point.row.value)),1);
+  const units=[...new Set(points.map(point=>point.row.unit).filter(Boolean))];
+  points.forEach(({row,coordinate})=>{
+   const ratio=Math.log1p(Math.abs(row.value))/Math.log1p(maxValue);
+   const radius=5+Math.round(10*ratio);
+   const marker=L.circleMarker([coordinate.lat,coordinate.lon],{
+    radius,weight:1.5,color:"#ffffff",opacity:1,fillColor:"#2563eb",fillOpacity:.72
+   });
+   const valueText=new Intl.NumberFormat("id-ID",{maximumFractionDigits:2}).format(row.value);
+   const unitText=row.unit?" "+esc(row.unit):"";
+   const sourceUrl="https://www.untourism.int/tourism-statistics/tourism-statistics-database";
+   marker.bindPopup('<div class="potential-popup"><b>'+esc(coordinate.name)+'</b><div>'+esc(row.indicator)+'</div><p><strong>'+esc(valueText)+unitText+'</strong></p><small>Tahun '+esc(row.year)+' · Statistik nasional/area, bukan hitungan pengunjung atraksi.</small><br><a href="'+sourceUrl+'" target="_blank" rel="noopener noreferrer">Sumber: UN Tourism ↗</a></div>');
+   marker.bindTooltip(coordinate.name+": "+valueText,{direction:"top",sticky:true});
+   marker.addTo(layer);
+  });
+  layer.addTo(state.map);
+  state.map.setView([18,10],2);
+  const note=ambiguous.length?(" "+ambiguous.length+" negara tidak ditampilkan karena memiliki beberapa baris kategori; pilih Klasifikasi untuk mempersempit."): "";
+  const unmatched=uniqueRows.length-points.length;
+  const unitNote=units.length===1?" Unit: "+units[0]+".":" Unit mengikuti baris sumber.";
+  setUnTourismStatus("Layer aktif · "+points.length+" marker negara untuk "+indicator+" ("+year+"). Ukuran marker menunjukkan nilai relatif dalam dataset terpilih; titik memakai koordinat referensi negara/ibu kota, bukan batas wilayah."+unitNote+note+(unmatched?" "+unmatched+" negara dilewati karena koordinat/nama tidak cocok.":""),"success");
+ }).catch(error=>setUnTourismStatus("Gagal menyiapkan titik negara: "+error.message,"error"))
+ .finally(()=>{showBtn.disabled=false;showBtn.textContent="Tampilkan statistik di peta";});
+}
+function clearUnTourismLayer(){
+ if(state.unTourismLayer){state.unTourismLayer.clearLayers();if(state.map.hasLayer(state.unTourismLayer))state.map.removeLayer(state.unTourismLayer);}
+ setUnTourismStatus("Layer UN Tourism disembunyikan. Pin analisis lokasi tidak berubah.");
+}
+function initUnTourismLayer(){
+ state.unTourismLayer=L.layerGroup();
+ $("unTourismLoadBtn").addEventListener("click",loadUnTourismDataset);
+ $("unTourismShowBtn").addEventListener("click",renderUnTourismLayer);
+ $("unTourismClearBtn").addEventListener("click",clearUnTourismLayer);
+ loadUnTourismManifest();
 }
 function initMap(){
  state.map=L.map("potentialMap",{worldCopyJump:true,minZoom:2,maxZoom:18,preferCanvas:true,zoomControl:true}).setView([18,10],2);
@@ -709,6 +952,7 @@ async function init(){
  if(!window.L){setStatus("Pustaka peta gagal dimuat. Coba muat ulang halaman.","error");return;}
  initMap();
  initDesignatedSitePicker();
+ initUnTourismLayer();
  $("locationSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchLocation();}});
  $("searchLocationBtn").addEventListener("click",searchLocation);
  $("myLocationBtn").addEventListener("click",useMyLocation);
