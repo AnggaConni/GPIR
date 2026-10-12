@@ -15,7 +15,7 @@ An open-data starter to screen product–market opportunities using UN Comtrade 
 
 ## Setup and deploy
 1. In GitHub, open **Settings → Pages → Deploy from a branch**, choose `main` and `/ (root)`.
-2. For more comprehensive refreshes, add a repository secret named `COMTRADE_API_KEY` under **Settings → Secrets and variables → Actions**.
+2. Add a repository secret named `UN_COMTRADE_API_KEY` under **Settings → Secrets and variables → Actions**. The workflow maps it to `COMTRADE_API_KEY` for Python; `COMTRADE_API_KEY` is also supported as a fallback secret name.
 3. Run **Actions → Update trade data → Run workflow**.
 4. Open the Pages URL published in Settings → Pages.
 
@@ -34,7 +34,7 @@ Open `http://localhost:8080`.
 
 ## Configuration
 Edit `config/markets.json` to set ISO-3 reporter markets. Optional environment variables:
-- `COMTRADE_API_KEY` — recommended API key.
+- `COMTRADE_API_KEY` — environment variable read by Python; in GitHub Actions it is populated from the `UN_COMTRADE_API_KEY` repository secret (or the legacy `COMTRADE_API_KEY` secret).
 - `COMTRADE_START_YEAR` / `COMTRADE_END_YEAR` — requested annual range.
 - `COMTRADE_MAX_RECORDS` — per-call maximum records.
 - `market-context.js` — fetches public World Bank country/indicator context directly from the browser and caches it for 12 hours.
