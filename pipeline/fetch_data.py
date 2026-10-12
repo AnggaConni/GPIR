@@ -22,8 +22,6 @@ DATA_DIR = ROOT / "data"
 CONFIG_DIR = ROOT / "config"
 OUTPUT = DATA_DIR / "data.json"
 COMTRADE_REFERENCE_URL = "https://comtradeapi.un.org/files/v1/app/reference/Reporters.json"
-WB_COUNTRIES_URL = "https://api.worldbank.org/v2/country?format=json&per_page=400"
-WB_API = "https://api.worldbank.org/v2/country/all/indicator/{indicator}?format=json&mrnev=1&per_page=20000"
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("gpir")
@@ -84,42 +82,6 @@ def get_reporter_reference(session: requests.Session) -> dict[str, dict[str, Any
     if not mapping:
         raise RuntimeError("UN Comtrade reporters reference has no usable countries")
     return mapping
-
-
-def fetch_wb_context(session: requests.Session) -> dict[str, dict[str, Any]]:
-    payload = fetch_json(session, WB_COUNTRIES_URL)
-    rows = payload[1] if isinstance(payload, list) and len(payload) > 1 and isinstance(payload[1], list) else []
-    countries: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        iso3 = str(row.get("iso3Code") or "").strip().upper()
-        if len(iso3) != 3:
-            continue
-        countries[iso3] = {
-            "iso3": iso3, "name": str(row.get("name") or iso3),
-            "latitude": as_float(row.get("latitude")), "longitude": as_float(row.get("longitude")),
-            "region": (row.get("region") or {}).get("value"),
-            "income_level": (row.get("incomeLevel") or {}).get("value"),
-            "gdp_per_capita_usd": None, "gdp_per_capita_year": None,
-            "population": None, "population_year": None,
-        }
-    for indicator, value_key, year_key in (
-        ("NY.GDP.PCAP.CD", "gdp_per_capita_usd", "gdp_per_capita_year"),
-        ("SP.POP.TOTL", "population", "population_year"),
-    ):
-        try:
-            response = fetch_json(session, WB_API.format(indicator=indicator))
-            observations = response[1] if isinstance(response, list) and len(response) > 1 and isinstance(response[1], list) else []
-            for row in observations:
-                iso3 = str(row.get("countryiso3code") or "").upper()
-                if iso3 not in countries:
-                    continue
-                value = as_float(row.get("value"))
-                if value is not None:
-                    countries[iso3][value_key] = value
-                    countries[iso3][year_key] = int(row["date"]) if str(row.get("date", "")).isdigit() else row.get("date")
-        except (requests.RequestException, ValueError) as exc:
-            log.warning("World Bank indicator %s unavailable: %s", indicator, exc)
-    return countries
 
 
 def fetch_trade_rows(session: requests.Session, reporter_code: int, year: int, api_key: str, max_records: int) -> tuple[list[dict[str, Any]], str]:
@@ -264,10 +226,17 @@ def main() -> int:
         log.warning("Could not resolve reporter codes for: %s", ", ".join(unresolved))
     if not selected:
         raise RuntimeError("No requested ISO-3 values resolve to UN Comtrade reporters")
-    countries = fetch_wb_context(session)
-    for iso, reporter in selected.items():
-        countries.setdefault(iso, {"iso3": iso, "name": reporter["name"], "latitude": None, "longitude": None, "region": None, "income_level": None, "gdp_per_capita_usd": None, "gdp_per_capita_year": None, "population": None, "population_year": None})
-        countries[iso]["name"] = reporter["name"]
+    # Keep the scheduled Python collector focused on the quota-limited trade source.
+    # Public macro context is loaded directly by the browser in market-context.js.
+    countries = {
+        iso: {
+            "iso3": iso, "name": reporter["name"],
+            "latitude": None, "longitude": None, "region": None, "income_level": None,
+            "gdp_per_capita_usd": None, "gdp_per_capita_year": None,
+            "population": None, "population_year": None,
+        }
+        for iso, reporter in selected.items()
+    }
     raw: dict[tuple[str, int], list[dict[str, Any]]] = {}
     failures = []
     mode = "live" if api_key else "preview"
@@ -301,8 +270,8 @@ def main() -> int:
             "market_iso3_covered": participating, "successful_comtrade_calls": calls, "failed_comtrade_calls": failures,
             "raw_trade_rows": sum(len(rows) for rows in raw.values()), "product_market_rows": len(items),
             "trade_unit": "reported import value USD, UN Comtrade primaryValue",
-            "sources": [{"name": "UN Comtrade", "url": "https://comtradeplus.un.org/", "role": "Merchandise trade, not retail sales"},
-                        {"name": "World Bank API v2", "url": "https://api.worldbank.org/v2/", "role": "Country coordinates and macro context"}],
+            "sources": [{"name": "UN Comtrade", "url": "https://comtradeplus.un.org/", "role": "Merchandise trade; quota-limited scheduled collection, not retail sales"}],
+            "frontend_context": {"name": "World Bank Indicators API v2", "url": "https://api.worldbank.org/v2/", "role": "Browser-side country coordinates and macro context; not stored in the trade feed"},
             "score_method": "Percentile composite v1: 40% import growth, 35% latest value, 15% growth consistency, 10% GDP per capita; weights renormalized for available inputs.",
             "limitations": ["Selected reporters only; this is not complete global coverage.", "Import data are not retail sell-through, sales, or profit.", "Missing observations and HS classification revisions can affect trends.", "Preview data may be truncated."],
             "api_key_configured": bool(api_key)
