@@ -78,6 +78,7 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: python pipeline/fetch_tourism_data.py
       - name: Refresh official UN Tourism bulk statistics
+        continue-on-error: true
         env:
           UN_TOURISM_BULK_URL: ${{ vars.UN_TOURISM_BULK_URL || 'https://pre-webunwto.s3.amazonaws.com/s3fs-public/2026-05/UN_Tourism_bulk_data_download_05_2026.zip' }}
           PYTHONUNBUFFERED: "1"
