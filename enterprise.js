@@ -71,6 +71,7 @@
       district: $("district").value.trim(),
       province: $("province").value.trim(),
       capital: $("capital").value,
+      businessStage: $("businessStage") ? $("businessStage").value : "start",
       businessScale: $("businessScale") ? $("businessScale").value : "micro",
       buyerSegment: $("buyerSegment") ? $("buyerSegment").value : "mixed",
       market: $("targetMarket").value,
@@ -223,6 +224,36 @@
       scalable:"Mulai dengan pilot mikro; naikkan kapasitas setelah ada pesanan berulang dan biaya per unit terukur."
     })[scale] || "Mulai dari skala yang sesuai modal dan kemampuan saat ini.";
   }
+  function businessStagePlan(opp, stage) {
+    const type=businessType(opp);
+    if(stage!=="grow"){
+      return {
+        title:"Langkah mulai & validasi",
+        items:Array.isArray(opp.start_steps)&&opp.start_steps.length?opp.start_steps.slice(0,3):[
+          opp.first_test||"Wawancarai calon pembeli dan hitung biaya per unit sebelum memulai."
+        ]
+      };
+    }
+    if(type==="grow"){
+      return {title:"Langkah mengembangkan SME",items:[
+        "Catat biaya benih/input, hasil dan kualitas per siklus; bandingkan dengan permintaan dan jadwal pembelian buyer.",
+        "Standarkan spesifikasi dan waktu pasok, lalu minta komitmen pembelian berulang dari 2–3 buyer.",
+        "Tambah kapasitas hanya setelah kualitas, pasokan, arus kas dan margin tetap terjaga."
+      ]};
+    }
+    if(type==="service"){
+      return {title:"Langkah mengembangkan SME",items:[
+        "Ukur lead, booking berbayar, pembatalan, jam kerja dan margin per layanan selama 4 minggu.",
+        "Buat SOP, paket harga dan kalender kapasitas agar layanan dapat diulang dengan mutu konsisten.",
+        "Tawarkan paket berulang kepada 3–5 buyer bisnis; rekrut atau tambah alat hanya jika kapasitas benar-benar penuh."
+      ]};
+    }
+    return {title:"Langkah mengembangkan SME",items:[
+      "Audit penjualan 4–8 minggu: margin per unit, produk terlaris, barang rusak/terbuang dan repeat order.",
+      "Standarkan kualitas, pemasok, kemasan, harga grosir dan lead time untuk buyer bisnis.",
+      "Uji pesanan ulang dari 3–5 buyer sebelum menambah stok, mesin, tempat atau tenaga kerja."
+    ]};
+  }
   function rankOpportunity(opp, profile) {
     const resourceMatches=getResourceMatches(opp,profile), skillMatches=getSkillMatches(opp,profile);
     const hasInputs=profile.resources.length>0||profile.skills.length>0;
@@ -234,6 +265,10 @@
     const buyerScore=profile.buyerSegment==="mixed"?5:(segmentMatches?12:0);
     const capitalScore=profile.capital==="micro"&&opp.capital_level==="micro"?5:profile.capital==="small"?4:profile.capital==="medium"?3:2;
     const scaleBonus=profile.businessScale==="micro"&&opp.capital_level==="micro"?5:profile.businessScale==="small"?4:profile.businessScale==="medium"?3:5;
+    const minCapital=number(opp.capital_min_idr);
+    const stageScore=profile.businessStage==="grow"
+      ?Math.min(5,(Array.isArray(opp.sell_to)&&opp.sell_to.length>=3?3:1)+(Array.isArray(opp.channels)&&opp.channels.length>=2?2:0))
+      :(minCapital!=null&&minCapital<=2500000?5:minCapital!=null&&minCapital<=5000000?3:0);
     const evidence=matchingTradeRows(opp,profile,5), locationMatches=findNearbyLeads(opp);
     const hasResourceFit=resourceMatches.length>0, hasSkillFit=skillMatches.length>0;
 
@@ -265,10 +300,10 @@
     const positiveGrowth=evidence.some(row=>number(row.yoy_growth_pct)!=null&&number(row.yoy_growth_pct)>0);
     const tradeSignalScore=evidence.length?Math.min(12,4+Math.max(0,Math.min(4,evidence.length)-1)*2+(positiveGrowth?2:0)):0;
     const marketContextAvailable=evidence.length>0||tourismNearbyCount>0||localLeads.length>0;
-    const rawScore=resourceScore+skillScore+marketScore+buyerScore+capitalScore+scaleBonus+tourismScore+localLeadScore+tradeSignalScore;
-    const maxScore=122; // 36 + 18 + 8 + 12 + 5 + 5 + 16 + 10 + 12
+    const rawScore=resourceScore+skillScore+marketScore+buyerScore+capitalScore+scaleBonus+stageScore+tourismScore+localLeadScore+tradeSignalScore;
+    const maxScore=127; // prior 122 points + up to 5 points for stage suitability
     return {...opp,business_type:businessType(opp),resourceMatches,skillMatches,evidenceCount:evidence.length,locationMatches,
-      locationScore:localLeadScore,localLeadCount:localLeads.length,tradeSignalScore,hasTradeSignal:evidence.length>0,
+      locationScore:localLeadScore,localLeadCount:localLeads.length,tradeSignalScore,stageScore,hasTradeSignal:evidence.length>0,
       buyerSegmentMatch:segmentMatches,
       fitScore:hasInputs||marketContextAvailable?Math.min(100,Math.round(rawScore/maxScore*100)):null,
       scoreMode:hasInputs?"profile":(currentLocation?"location":"market"),
@@ -379,16 +414,17 @@
       const scaleLabel=scaleLabels[profile.businessScale]||scaleLabels.micro;
       const buyerLabel=buyerSegmentLabel(profile.buyerSegment);
       const buyerFitText=profile.buyerSegment==="mixed"?"Segmen pembeli masih terbuka":opp.buyerSegmentMatch?"Sesuai segmen pelanggan yang dipilih":"Validasi segmen pelanggan alternatif";
-      const steps=Array.isArray(opp.start_steps)?opp.start_steps:[opp.first_test||"Wawancarai calon pembeli dan hitung biaya per unit."];
-      const stepHtml="<ol>"+steps.map(s=>"<li>"+esc(s)+"</li>").join("")+"</ol>";
-      return '<article class="rec '+(opp.id===activeOpportunityId?'is-selected':'')+'" data-opportunity-card="'+esc(opp.id)+'"><div class="kind-row"><span class="kind-badge '+typeClass+'">'+icon+' '+esc(businessTypeLabel(type))+'</span><span class="'+(opp.fitScore==null?"tiny":"fit")+'">'+esc(fit)+'</span></div>'+
+      const stagePlan=businessStagePlan(opp,profile.businessStage);
+      const stepHtml="<ol>"+stagePlan.items.map(s=>"<li>"+esc(s)+"</li>").join("")+"</ol>";
+      const stageBadge=profile.businessStage==="grow"?"📈 Kembangkan SME":"🌱 Mulai usaha";
+      return '<article class="rec '+(opp.id===activeOpportunityId?'is-selected':'')+'" data-opportunity-card="'+esc(opp.id)+'"><div class="kind-row"><span class="kind-badge '+typeClass+'">'+icon+' '+esc(businessTypeLabel(type))+'</span><span class="kind-badge">'+stageBadge+'</span><span class="'+(opp.fitScore==null?"tiny":"fit")+'">'+esc(fit)+'</span></div>'+
         '<h3>'+esc(opp.title)+'</h3><p class="action-summary">'+esc(opp.action_summary||opp.rationale)+'</p>'+contextNote+tourismNote+heritageNote+
         '<div class="rec-detail-grid"><div class="rec-detail"><h4>Yang bisa dibuat / ditawarkan</h4><p><b>'+esc(what)+'</b></p><p class="tiny" style="margin-top:6px">'+esc(resourceText)+'</p><p class="tiny" style="margin-top:5px">'+esc(skillText)+'</p></div>'+
         '<div class="rec-detail"><h4>Yang perlu dibeli / disiapkan</h4><ul>'+buy+'</ul><p class="tiny" style="margin-top:6px">Modal pilot mikro indikatif: <b>'+esc(capitalRange(opp))+'</b></p><p class="tiny" style="margin-top:6px"><b>Skala:</b> '+esc(scaleLabel)+'</p><p class="tiny" style="margin-top:4px">'+esc(opp.scaleAdvice||"Sesuaikan skala dengan modal dan kemampuan.")+'</p></div>'+
         '<div class="rec-detail"><h4>Calon pembeli awal</h4><ul>'+sell+'</ul><p class="tiny" style="margin-top:6px"><b>Segmen pilihan:</b> '+esc(buyerLabel)+' · '+esc(buyerFitText)+'</p><p class="tiny" style="margin-top:6px">Kanal terpetakan: '+esc(leadText)+'</p></div>'+
         '<div class="rec-detail"><h4>Cara mulai mencari pelanggan</h4><ul>'+channels+'</ul><p class="tiny" style="margin-top:6px">'+esc(getMarketText(opp,profile))+'</p></div>'+
         '<div class="rec-detail"><h4>Sinyal pasar luar</h4><p>'+esc(tradeText)+'</p><p class="tiny" style="margin-top:5px">Impor negara bukan bukti buyer tertentu atau penjualan retail.</p>'+foodNote+'</div>'+
-        '<div class="rec-detail"><h4>Langkah uji pertama</h4><div class="tiny">'+stepHtml+'</div><ul>'+((opp.risks||[]).slice(0,2).map(r=>"<li>"+esc(r)+"</li>").join(""))+'</ul></div></div>'+
+        '<div class="rec-detail"><h4>'+esc(stagePlan.title)+'</h4><div class="tiny">'+stepHtml+'</div><ul>'+((opp.risks||[]).slice(0,2).map(r=>"<li>"+esc(r)+"</li>").join(""))+'</ul></div></div>'+
         '<div class="external-links"><a href="'+esc(businessSearchUrl("https://www.google.com/maps/search/?api=1&query=",supplierQuery))+'" target="_blank" rel="noopener noreferrer">Cari pemasok sekitar ↗</a>'+
         '<a href="'+esc(businessSearchUrl("https://www.google.com/maps/search/?api=1&query=",buyerQuery))+'" target="_blank" rel="noopener noreferrer">Cari calon pembeli ↗</a>'+
         '<a href="'+esc(businessSearchUrl("https://www.tokopedia.com/search?st=product&q=",onlineQuery))+'" target="_blank" rel="noopener noreferrer">Cari input di Tokopedia ↗</a>'+
