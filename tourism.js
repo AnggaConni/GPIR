@@ -201,8 +201,8 @@ function refreshDimensionOptions(baseRows){
   select.innerHTML='<option value="">Semua klasifikasi</option>';
   state.dimensionKey="";
   state.dimensionOptions=[];
-  const skip=/^(indicator code|indicator previous code|reporter area code|partner area code|flag|flag label|notes?|source|source url|unit|unit of measure|year|value|indicator label|indicator name|indicator)$/i;
-  const keys=state.headers.filter(h=>!skip.test(h)&&!["country","country name","reporter area label","reporter_area_label"].includes(h.toLowerCase()));
+  const skip=new Set(["indicatorcode","indicatorpreviouscode","reporterareacode","partnerareacode","flag","flaglabel","notes","note","source","sourceurl","unit","unitofmeasure","year","value","indicatorlabel","indicatorname","indicator","country","countryname","reporterarealabel","arealabel","areaname","geoareaname"]);
+  const keys=state.headers.filter(h=>!skip.has(keyNorm(h)));
   const priority=["partner_area_label","partner area label","purpose","transport","accommodation","region","category","visitor type"];
   const candidates=keys.map(k=>{
     const vals=[...new Set(baseRows.map(r=>r.extras[k]).filter(v=>v!=null&&v!=="").map(v=>String(v)))];
@@ -215,7 +215,7 @@ function refreshDimensionOptions(baseRows){
   if(!candidates.length){select.disabled=true;return;}
   state.dimensionKey=candidates[0].key;
   state.dimensionOptions=candidates[0].values;
-  select.innerHTML+='<option value="__FIELD__">'+esc("Filter: "+state.dimensionKey)+'</option>';
+  select.innerHTML+='<option value="__FIELD__">'+esc("Pilih nilai untuk "+state.dimensionKey)+'</option>';
   candidates[0].values.sort((a,b)=>a.localeCompare(b)).forEach(v=>select.insertAdjacentHTML("beforeend",'<option value="'+esc(state.dimensionKey+"::"+v)+'">'+esc(String(v))+'</option>'));
   select.disabled=false;
 }
