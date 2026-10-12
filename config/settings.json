@@ -1,0 +1,12 @@
+{
+  "start_year": 2019,
+  "end_year": 2025,
+  "reporter_codes": [360, 156, 276, 840, 392, 356, 76, 826, 410, 784],
+  "hs_chapters": ["85", "84", "87", "39", "94", "90", "29", "30", "73", "44", "09", "61", "62", "64"],
+  "comtrade_max_records": 50000,
+  "world_bank_indicators": {
+    "population": "SP.POP.TOTL",
+    "gdp_per_capita": "NY.GDP.PCAP.CD",
+    "gdp_growth": "NY.GDP.MKTP.KD.ZG"
+  }
+}
