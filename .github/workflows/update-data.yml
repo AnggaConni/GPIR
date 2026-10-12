@@ -6,7 +6,7 @@ on:
   push:
     paths:
       - "pipeline/**"
-      - "config/markets.json"
+      - "config/**"
       - "tests/**"
       - "requirements.txt"
       - ".github/workflows/update-data.yml"
@@ -15,9 +15,12 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -37,7 +40,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/data.json
-            git commit -m "chore(data): refresh trade opportunity signals"
+            git commit -m "chore(data): refresh global product signals"
             git push
           else
             echo "No data changes detected."
