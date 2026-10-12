@@ -1,5 +1,6 @@
 import importlib.util
 import unittest
+from unittest.mock import Mock
 from pathlib import Path
 
 PIPELINE = Path(__file__).resolve().parents[1] / "pipeline" / "fetch_data.py"
@@ -35,6 +36,33 @@ class PipelineTransformationTests(unittest.TestCase):
             {"cmdCode": "854231", "cmdDesc": "Integrated circuits", "primaryValue": 1000}]}
         items = GPIR.build_items(rows, self.reporters, self.countries, [2024], "live")
         self.assertEqual([item["product_code"] for item in items], ["854231"])
+
+    def test_authenticated_trade_request_uses_subscription_header(self):
+        session = Mock()
+        response = session.get.return_value
+        response.json.return_value = {"data": [{"cmdCode": "854231"}]}
+
+        rows, mode = GPIR.fetch_trade_rows(session, 842, 2024, "test-api-key", 1000)
+
+        self.assertEqual(mode, "live")
+        self.assertEqual(rows, [{"cmdCode": "854231"}])
+        _, kwargs = session.get.call_args
+        self.assertEqual(kwargs["headers"], {"Ocp-Apim-Subscription-Key": "test-api-key"})
+        self.assertNotIn("subscription-key", kwargs["params"])
+
+    def test_missing_key_uses_limited_preview_endpoint(self):
+        session = Mock()
+        response = session.get.return_value
+        response.json.return_value = {"data": []}
+
+        rows, mode = GPIR.fetch_trade_rows(session, 842, 2024, "", 10000)
+
+        self.assertEqual(mode, "preview")
+        self.assertEqual(rows, [])
+        args, kwargs = session.get.call_args
+        self.assertIn("/public/v1/preview/", args[0])
+        self.assertIsNone(kwargs["headers"])
+        self.assertEqual(kwargs["params"]["maxrecords"], 500)
 
     def test_cagr_handles_nonpositive_or_single_year_data(self):
         self.assertIsNone(GPIR.safe_cagr(0, 100, 3))
