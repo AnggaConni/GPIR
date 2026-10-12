@@ -181,7 +181,7 @@ function buildSearchTerms(){
    const hay=[o.title,...(o.products||[]),...(o.resource_keywords||[]),...(o.demand_keywords||[])].join(" ");
    return userTerms.some(term=>clean(hay).includes(term)||term.includes(clean(o.title||"")));
   }).slice(0,4);
-  opportunityTerms=matched.flatMap(o=>[...(o.products||[]),...(o.demand_keywords||[]),...(o.resource_keywords||[]),o.title||"");
+  opportunityTerms=matched.flatMap(o=>[...(o.products||[]),...(o.demand_keywords||[]),...(o.resource_keywords||[]),o.title||""]);
  }
  return [...new Set([...userTerms,...expandTerms(opportunityTerms.join(","))])].filter(t=>t.length>=3).slice(0,70);
 }
