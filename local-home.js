@@ -56,7 +56,7 @@ function relevantCategories(){const o=selectedIdea();return new Set(o&&o.map_cat
 function renderPoints(elements){if(!coords)return;const unique=new Map();(elements||[]).forEach(el=>{const t=el.tags||{},lat=num(el.lat!=null?el.lat:el.center&&el.center.lat),lon=num(el.lon!=null?el.lon:el.center&&el.center.lon),cat=classify(el),key=el.type+"/"+el.id;unique.set(key,{raw:el,key,name:t.name||t.brand||t.operator||"Lokasi tanpa nama",cat,lat,lon,dist:lat==null||lon==null?null:km(coords.lat,coords.lon,lat,lon)});});
  points=[...unique.values()].sort((a,b)=>(a.dist??9999)-(b.dist??9999));drawPoints();updateTourismStatus();renderRecommendations();}
 function drawPoints(){if(!map||!markers||!lines||!coords)return;markers.clearLayers();lines.clearLayers();const cats=relevantCategories();
- const mapPoints=points.length<=350?points:points.filter((p,i)=>i%Math.ceil(points.length/350)===0).slice(0,350);mapPoints.forEach((p,i)=>{if(p.lat==null||p.lon==null)return;const rel=cats.has(p.cat);
+ const mapPoints=points.length<=350?points:points.filter((p,i)=>i%Math.ceil(points.length/350)===0).slice(0,350);mapPoints.forEach((p,i)=>{if(p.lat==null||p.lon==null)return;const rel=cats.has(p.cat)&&(p.cat!=="tourism"||(p.dist!=null&&p.dist<=3));
   if(i<35)L.polyline([[coords.lat,coords.lon],[p.lat,p.lon]],{color:rel?"#0d9488":(colors[p.cat]||colors.other),weight:rel?2:1,opacity:rel?.65:.25,dashArray:rel?"":"4 5"}).addTo(lines);
   L.circleMarker([p.lat,p.lon],{radius:rel?7:5,color:"#fff",weight:1,fillColor:colors[p.cat]||colors.other,fillOpacity:.9}).bindPopup("<b>"+esc(p.name)+"</b><br>"+esc(poiLabel(p.cat))+"<br>"+esc(kmLabel(p.dist))).addTo(markers);
  });
