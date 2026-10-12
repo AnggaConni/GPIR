@@ -359,7 +359,11 @@
     try {
       const responses = await Promise.allSettled([
         fetch(CATALOG_URL, { cache: "no-store" }),
-        fetch(TRADE_URL + "?t=" + Date.now(), { cache: "no-store" })
+        fetch(TRADE_URL + "?t=" + Date.now(), { cache: "no-store" }),
+        fetch(TOURISM_URL, { cache: "no-store" }),
+        fetch(HERITAGE_URL, { cache: "no-store" }),
+        fetch(FOOD_CATALOG_URL, { cache: "no-store" }),
+        fetch(TOURISM_STATS_URL, { cache: "no-store" })
       ]);
       if (responses[0].status === "fulfilled" && responses[0].value.ok) {
         const json = await responses[0].value.json();
@@ -373,6 +377,22 @@
       } else {
         tradeFeed = null; tradeItems = [];
       }
+      if (responses[2].status === "fulfilled" && responses[2].value.ok) {
+        const snapshot = await responses[2].value.json();
+        tourismSnapshot = Array.isArray(snapshot.items) ? snapshot.items : [];
+      }
+      if (responses[3].status === "fulfilled" && responses[3].value.ok) {
+        const snapshot = await responses[3].value.json();
+        heritageItems = Array.isArray(snapshot.items) ? snapshot.items : [];
+      }
+      if (responses[4].status === "fulfilled" && responses[4].value.ok) {
+        const snapshot = await responses[4].value.json();
+        foodProducts = Array.isArray(snapshot.items) ? snapshot.items : [];
+      }
+      if (responses[5].status === "fulfilled" && responses[5].value.ok) {
+        const snapshot = await responses[5].value.json();
+        tourismStats = Array.isArray(snapshot.countries) ? snapshot.countries : [];
+      }
       if (!tradeFeed || !tradeFeed.meta) {
         $("tradeStatus").textContent = "FEED TIDAK TERSEDIA";
       } else if (tradeFeed.meta.mode === "preview") {
@@ -384,6 +404,7 @@
       }
       const profile = collectProfile();
       renderRecommendations(profile);
+      updateTourismStatus();
     } catch (error) {
       console.error("GPIR feeds could not be loaded", error);
       $("tradeStatus").textContent = "FEED TIDAK TERSEDIA";
