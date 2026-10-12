@@ -1,0 +1,10 @@
+{
+  "metadata": {
+    "title": "Global Product Intelligence Radar",
+    "generated_at": null,
+    "data_status": "awaiting_live_data",
+    "source": "No real trade records loaded yet",
+    "notes": "This file intentionally contains no fabricated sample statistics. Run scripts/build_data.py with working API access to populate records."
+  },
+  "records": []
+}
