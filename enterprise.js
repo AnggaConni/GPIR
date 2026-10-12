@@ -417,6 +417,21 @@
       const profile = collectProfile();
       renderRecommendations(profile);
       updateTourismStatus();
+      const summary=$("tourismDataSummary");
+      if(summary){
+        const lang=window.GPIRi18n&&window.GPIRi18n.getLanguage?window.GPIRi18n.getLanguage():"en";
+        const counts={a:tourismSnapshot.length,b:heritageItems.length,c:foodProducts.length,d:tourismStats.length};
+        const templates={
+          id:"Snapshot backend · atraksi: {a} · catatan budaya UNESCO: {b} · katalog pangan: {c} · negara dengan konteks wisata: {d}. Data ini bukan penjualan atau hitungan pengunjung per lokasi.",
+          en:"Backend snapshots · attractions: {a} · UNESCO cultural records: {b} · packaged-food records: {c} · countries with tourism context: {d}. These are not sales or visitor counts for individual sites.",
+          es:"Instantáneas backend · atracciones: {a} · registros culturales UNESCO: {b} · alimentos envasados: {c} · países con contexto turístico: {d}. No son ventas ni conteos de visitantes por lugar.",
+          fr:"Instantanés backend · attractions : {a} · notices culturelles UNESCO : {b} · produits alimentaires emballés : {c} · pays avec contexte touristique : {d}. Ce ne sont ni des ventes ni des comptes de visiteurs par site.",
+          ar:"لقطات الخلفية · المعالم: {a} · سجلات اليونسكو الثقافية: {b} · المنتجات الغذائية المعبأة: {c} · الدول ذات سياق السياحة: {d}. هذه ليست بيانات مبيعات أو أعداد زوار لمواقع فردية.",
+          zh:"后端快照 · 景点：{a} · UNESCO 文化记录：{b} · 包装食品目录：{c} · 有旅游背景数据的国家：{d}。这些不是销售数据，也不是单个景点的游客计数。",
+          ru:"Снимки бэкенда · достопримечательности: {a} · культурные записи ЮНЕСКО: {b} · упакованные продукты: {c} · страны с туристическим контекстом: {d}. Это не продажи и не число посетителей отдельных объектов."
+        };
+        summary.textContent=(templates[lang]||templates.en).replace("{a}",counts.a).replace("{b}",counts.b).replace("{c}",counts.c).replace("{d}",counts.d);
+      }
     } catch (error) {
       console.error("GPIR feeds could not be loaded", error);
       $("tradeStatus").textContent = "FEED TIDAK TERSEDIA";
