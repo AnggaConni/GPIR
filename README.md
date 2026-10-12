@@ -4,14 +4,14 @@ An open-data starter to screen product–market opportunities using UN Comtrade 
 
 ## Features
 - Responsive dashboard, interactive country map, product search, country filters and opportunity rankings.
-- Python pipeline using UN Comtrade and World Bank APIs.
+- Python pipeline for quota-limited UN Comtrade trade data; browser-side World Bank API enrichment for country context.
 - Six-digit HS product observations with yearly growth, CAGR and explainable percentile scoring.
 - Weekly scheduled and manual GitHub Actions refresh.
 - Tests for product code filtering and scoring safeguards.
 
 ## Data sources
 - [UN Comtrade API](https://comtradeapi.un.org/) — reported merchandise trade, not retail sales.
-- [World Bank Indicators API v2](https://api.worldbank.org/v2/) — geographic and macroeconomic context.
+- [World Bank Indicators API v2](https://api.worldbank.org/v2/) — geographic and macroeconomic context, fetched asynchronously in the frontend.
 
 ## Setup and deploy
 1. In GitHub, open **Settings → Pages → Deploy from a branch**, choose `main` and `/ (root)`.
@@ -37,11 +37,13 @@ Edit `config/markets.json` to set ISO-3 reporter markets. Optional environment v
 - `COMTRADE_API_KEY` — recommended API key.
 - `COMTRADE_START_YEAR` / `COMTRADE_END_YEAR` — requested annual range.
 - `COMTRADE_MAX_RECORDS` — per-call maximum records.
+- `market-context.js` — fetches public World Bank country/indicator context directly from the browser and caches it for 12 hours.
 - `MARKET_ISO3` — comma-separated market override.
 - `REQUEST_SLEEP_SECONDS` — pause between calls.
 
 ## Interpretation
 - Import values are trade statistics, not marketplace sales, consumer spending, or profit.
+- There is no completed-sales/retail feed connected yet. The current annual trade feed cannot produce a rolling 30-day sales trend. See the opportunity finder documentation for a safe 30-day data model and access requirements.
 - The first market set is a subset, not a complete census of global trade.
 - HS classification revisions, missing years, reporter updates and price effects can affect trend comparisons.
 - Missing data is unknown, not zero.
@@ -61,7 +63,7 @@ Open `enterprise.html` from the GitHub Pages site to explore microenterprise ide
 **Evidence warning:** the UI fit score measures relevance to submitted inputs only. UN Comtrade values are reported imports, not local marketplace sell-through. Overpass locations do not prove the business is open or that it has stock. Catalogue ideas are hypotheses, not sales predictions. See [Local Enterprise Opportunity Finder documentation](docs/LOCAL_ENTERPRISE_OPPORTUNITY_FINDER.md) for source limitations, costs, validation gates, and roadmap.
 
 ## Integration
-The output schema in `data/data.json` includes `meta`, `countries`, and `items`; see `docs/HORIZON_SCANNING_INTEGRATION.md` for a pattern to consume the JSON feed.
+The output schema in `data/data.json` includes `meta`, `countries`, and `items`; the World Bank context is loaded separately in the browser and is not baked into the scheduled trade snapshot. see `docs/HORIZON_SCANNING_INTEGRATION.md` for a pattern to consume the JSON feed.
 
 ## License
 Project code: MIT (see `LICENSE`). Upstream datasets remain subject to their own terms.
