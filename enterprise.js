@@ -307,7 +307,7 @@
     const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(dLon / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(x));
   }
-  function renderPOIs(elements, lat, lon) {
+  function safeHttpUrl(value) {\n    try { const url = new URL(String(value || ""), window.location.href); return (url.protocol === "http:" || url.protocol === "https:") ? url.href : ""; } catch (_) { return ""; }\n  }\n  function renderPOIs(elements, lat, lon) {
     $("poiCount").textContent = elements.length + " lokasi";
     $("poiSummary").textContent = elements.length ? ("Ditemukan " + elements.length + " titik terpetakan; belum diverifikasi di lapangan.") : "Tidak ada titik yang cocok pada hasil ini.";
     const html = elements.map(el => {
@@ -324,7 +324,7 @@
     }).sort((a,b) => (a.distance ?? 9999) - (b.distance ?? 9999));
     $("poiResults").innerHTML = html.length ? html.slice(0, 60).map(p =>
       '<div class="poi-item"><b>' + esc(p.name) + '</b><span>' + esc(p.type) + (p.distance == null ? "" : " · " + (p.distance < 1 ? (p.distance * 1000).toFixed(0) + " m" : p.distance.toFixed(1) + " km")) + '</span>' +
-      (p.el.tags && p.el.tags.website ? '<a href="' + esc(p.el.tags.website) + '" target="_blank" rel="noopener">Website ↗</a>' : "") + '</div>'
+      (p.el.tags && safeHttpUrl(p.el.tags.website) ? '<a href="' + esc(safeHttpUrl(p.el.tags.website)) + '" target="_blank" rel="noopener noreferrer">Website ↗</a>' : "") + '</div>'
     ).join("") : '<div class="empty">Tidak ada hasil. Coba radius lebih luas atau koordinat lain.</div>';
     if (poiMarkers) {
       poiMarkers.clearLayers();
