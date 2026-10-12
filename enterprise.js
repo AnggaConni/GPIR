@@ -283,6 +283,18 @@
         (currentLocation?"Belum ada titik kategori cocok; bukan berarti pembeli tidak ada.":"Tentukan lokasi untuk memetakan kanal yang tersedia.");
       const trade=matchingTradeRows(opp,profile,2);
       const tradeText=trade.length?trade.map(t=>(t.market_name||t.market_iso3)+": "+compactUSD(number(t.latest_import_usd))+" ("+(t.latest_year||"tahun?")+")").join(" · "):"Belum ada padanan perdagangan yang cocok.";
+      const foodExamples=matchingFoodProducts(opp,profile,2);
+      const foodExampleText=foodExamples.map(p=>p.name+(p.brands?" · "+p.brands:"")).join(" / ");
+      const heritageContext=matchingHeritageContext(opp,profile);
+      const tourismNote=opp.tourismNearbyCount>0&&opp.tourism_fit!=="low"
+        ? '<p class="tourism-fit-note">Atraksi wisata terpetakan ≤3 km: '+opp.tourismNearbyCount+' · Hipotesis pembeli: '+esc(opp.tourism_buyer_hypothesis||firstText(opp.sell_to,"perlu divalidasi"))+'</p>'
+        : "";
+      const heritageNote=heritageContext&&opp.tourism_fit!=="low"
+        ? '<p class="tiny">Konteks budaya untuk diteliti: <a href="'+esc(heritageContext.url||"https://ich.unesco.org/en/lists")+'" target="_blank" rel="noopener noreferrer">'+esc(heritageContext.name)+'</a>. Daftar UNESCO bukan bukti perajin berada dekat lokasi.</p>'
+        : "";
+      const foodNote=foodExampleText
+        ? '<p class="tiny">Contoh katalog kemasan (Open Food Facts): '+esc(foodExampleText)+'. Metadata produk, bukan data penjualan.</p>'
+        : "";
       const buy=(opp.buy_from||["Pemasok lokal yang bisa diverifikasi","Bandingkan harga, kualitas dan ongkir"]).slice(0,3).map(x=>"<li>"+esc(x)+"</li>").join("");
       const sell=(opp.sell_to||["Wawancarai calon pembeli lokal"]).slice(0,3).map(x=>"<li>"+esc(x)+"</li>").join("");
       const channels=(opp.channels||["Pre-order skala kecil","Ukur penjualan dan pesanan ulang"]).slice(0,2).map(x=>"<li>"+esc(x)+"</li>").join("");
@@ -299,12 +311,12 @@
       const steps=Array.isArray(opp.start_steps)?opp.start_steps:[opp.first_test||"Wawancarai calon pembeli dan hitung biaya per unit."];
       const stepHtml="<ol>"+steps.map(s=>"<li>"+esc(s)+"</li>").join("")+"</ol>";
       return '<article class="rec '+(opp.id===activeOpportunityId?'is-selected':'')+'" data-opportunity-card="'+esc(opp.id)+'"><div class="kind-row"><span class="kind-badge '+typeClass+'">'+icon+' '+esc(businessTypeLabel(type))+'</span><span class="'+(opp.fitScore==null?"tiny":"fit")+'">'+esc(fit)+'</span></div>'+
-        '<h3>'+esc(opp.title)+'</h3><p class="action-summary">'+esc(opp.action_summary||opp.rationale)+'</p>'+
+        '<h3>'+esc(opp.title)+'</h3><p class="action-summary">'+esc(opp.action_summary||opp.rationale)+'</p>'+tourismNote+heritageNote+
         '<div class="rec-detail-grid"><div class="rec-detail"><h4>Yang bisa dibuat / ditawarkan</h4><p><b>'+esc(what)+'</b></p><p class="tiny" style="margin-top:6px">'+esc(resourceText)+'</p><p class="tiny" style="margin-top:5px">'+esc(skillText)+'</p></div>'+
         '<div class="rec-detail"><h4>Yang perlu dibeli / disiapkan</h4><ul>'+buy+'</ul><p class="tiny" style="margin-top:6px">Modal pilot mikro indikatif: <b>'+esc(capitalRange(opp))+'</b></p><p class="tiny" style="margin-top:6px"><b>Skala:</b> '+esc(scaleLabel)+'</p><p class="tiny" style="margin-top:4px">'+esc(opp.scaleAdvice||"Sesuaikan skala dengan modal dan kemampuan.")+'</p></div>'+
         '<div class="rec-detail"><h4>Calon pembeli awal</h4><ul>'+sell+'</ul><p class="tiny" style="margin-top:6px"><b>Segmen pilihan:</b> '+esc(buyerLabel)+' · '+esc(buyerFitText)+'</p><p class="tiny" style="margin-top:6px">Kanal terpetakan: '+esc(leadText)+'</p></div>'+
         '<div class="rec-detail"><h4>Cara mulai mencari pelanggan</h4><ul>'+channels+'</ul><p class="tiny" style="margin-top:6px">'+esc(getMarketText(opp,profile))+'</p></div>'+
-        '<div class="rec-detail"><h4>Sinyal perdagangan luar</h4><p>'+esc(tradeText)+'</p><p class="tiny" style="margin-top:5px">Impor negara bukan bukti buyer tertentu atau penjualan retail.</p></div>'+
+        '<div class="rec-detail"><h4>Sinyal pasar luar</h4><p>'+esc(tradeText)+'</p><p class="tiny" style="margin-top:5px">Impor negara bukan bukti buyer tertentu atau penjualan retail.</p>'+foodNote+'</div>'+
         '<div class="rec-detail"><h4>Langkah uji pertama</h4><div class="tiny">'+stepHtml+'</div><ul>'+((opp.risks||[]).slice(0,2).map(r=>"<li>"+esc(r)+"</li>").join(""))+'</ul></div></div>'+
         '<div class="external-links"><a href="'+esc(businessSearchUrl("https://www.google.com/maps/search/?api=1&query=",supplierQuery))+'" target="_blank" rel="noopener noreferrer">Cari pemasok sekitar ↗</a>'+
         '<a href="'+esc(businessSearchUrl("https://www.google.com/maps/search/?api=1&query=",buyerQuery))+'" target="_blank" rel="noopener noreferrer">Cari calon pembeli ↗</a>'+
