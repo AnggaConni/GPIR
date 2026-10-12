@@ -95,10 +95,10 @@ async function searchNearby(){if(!coords)return;const radius=Number($("homeRadiu
  if(Date.now()-lastRequest<1500){$("homeLocationStatus").textContent="Tunggu sebentar sebelum mencari lagi.";return;}lastRequest=Date.now();
  $("homeLocationStatus").textContent="Mencari titik pasar, toko, pemasok dan jasa…";$("homePoiCount").textContent="Mencari…";
  const shape=areaMode?'nwr('+placeBounds.south+','+placeBounds.west+','+placeBounds.north+','+placeBounds.east+')':'nwr(around:'+radius+','+lat+','+lon+')';
- const q='[out:json][timeout:35];('+shape+'["shop"];'+shape+'["amenity"~"marketplace|restaurant|cafe|fast_food|food_court|bakery|ice_cream|community_centre|school|hospital|clinic|car_repair|fuel"];'+shape+'["craft"];'+shape+'["office"~"company|commercial|wholesale"];'+shape+'["landuse"~"farmland|orchard|plant_nursery"];);out center tags;';
+ const q='[out:json][timeout:35];('+shape+'["tourism"~"attraction|museum|gallery|viewpoint|theme_park|zoo|aquarium|artwork|picnic_site"];'+shape+'["historic"~"monument|memorial|ruins|castle|archaeological_site"];'+shape+'["natural"~"beach|waterfall|hot_spring|cave_entrance"];'+shape+'["leisure"~"park|garden"];'+shape+'["shop"];'+shape+'["amenity"~"marketplace|restaurant|cafe|fast_food|food_court|bakery|ice_cream|community_centre|school|hospital|clinic|car_repair|fuel"];'+shape+'["craft"];'+shape+'["office"~"company|commercial|wholesale"];'+shape+'["landuse"~"farmland|orchard|plant_nursery"];);out center tags;';
  try{const r=await fetch("https://overpass-api.de/api/interpreter?data="+encodeURIComponent(q),{headers:{"Accept":"application/json"}});if(!r.ok)throw new Error("HTTP "+r.status);
   const j=await r.json(),u=new Map();(j.elements||[]).forEach(el=>u.set(el.type+"/"+el.id,el));const rows=[...u.values()];cacheWrite(key,rows);renderPoints(rows);
-  $("homeLocationStatus").textContent=points.length+" titik ditemukan dalam radius "+(radius/1000)+" km. Verifikasi sebelum membeli/menjual.";
+  $("homeLocationStatus").textContent=points.length+" titik ditemukan dalam cakupan peta. Zona wisata dekat tetap dibatasi ≤3 km.";
  }catch(e){$("homeLocationStatus").textContent="Layanan peta tidak tersedia saat ini. Ide usaha umum masih bisa digunakan.";$("homePoiCount").textContent="Titik tidak tersedia";}}
 async function searchLocation(){const q=$("homeLocationQuery").value.trim();if(q.length<3){$("homeLocationStatus").textContent="Masukkan nama kecamatan/kota yang lebih lengkap.";return;}
  const key="gpir:geocode:search:"+q.toLowerCase();let item=cacheRead(key,GEOCODE_TTL);
@@ -115,7 +115,8 @@ function detectLocation(automatic){if(!navigator.geolocation){$("homeLocationSta
  {enableHighAccuracy:false,timeout:12000,maximumAge:300000});}
 async function init(){try{const r=await fetch(CATALOG_URL,{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);const j=await r.json();catalog=Array.isArray(j.opportunities)?j.opportunities:[];}
  catch(e){$("homeRecommendations").innerHTML='<div class="empty">Katalog ide belum bisa dimuat; coba muat ulang.</div>';return;}
- catalog=catalog.map(o=>({...o,business_type:o.business_type||(o.id==="local-aggregation"||o.id==="textile-craft-micro"?"service":"sell")}));
+ catalog=catalog.map(o=>({...o,business_type:o.business_type||(o.id==="local-aggregation"||o.id==="textile-craft-micro"||o.id==="craft-workshop-experience"||o.id==="local-tour-guide-experience"?"service":"sell")}));
+  try{const tourismResponse=await fetch(TOURISM_URL,{cache:"no-store"});if(tourismResponse.ok){const tourismJson=await tourismResponse.json();tourismSnapshot=Array.isArray(tourismJson.items)?tourismJson.items:[];}}catch(_){}
  initMap();renderRecommendations();
  $("homeSearchLocation").addEventListener("click",searchLocation);
  $("homeLocationQuery").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchLocation();}});
