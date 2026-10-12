@@ -14,6 +14,7 @@ import math
 import os
 import re
 import shutil
+import tempfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -108,8 +109,7 @@ def export_workbook(path: Path, output_dir: Path, source_url: str, generated_at:
                 rows.pop()
             if not rows:
                 continue
-            stem, sheet_slug = slug(path.stem), slug(sheet.title)
-            out_path = output_dir / f"{stem}__{sheet_index:02d}_{sheet_slug}.json"
+            out_path = output_dir / f"{slug(path.stem)}__{sheet_index:02d}_{slug(sheet.title)}.json"
             payload = {
                 "schema_version": "1.0.0", "generated_at": generated_at,
                 "meta": {
@@ -122,9 +122,7 @@ def export_workbook(path: Path, output_dir: Path, source_url: str, generated_at:
                 "data": rows
             }
             out_path.parent.mkdir(parents=True, exist_ok=True)
-            tmp = out_path.with_suffix(out_path.suffix + ".tmp")
-            tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
-            tmp.replace(out_path)
+            out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
             reports.append({"file": str(out_path.relative_to(output_dir)), "workbook": path.name,
                             "worksheet": sheet.title, "rows": len(rows),
                             "columns": max((len(row) for row in rows), default=0)})
@@ -141,24 +139,19 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
         raise ValueError(f"Archive is missing or invalid: {archive}")
 
     generated_at = utc_now()
-    # Extract into a fresh temporary sibling and only replace the prior extraction once
-    # the new archive has been fully extracted and validated.
     output_dir.mkdir(parents=True, exist_ok=True)
-    temp_extract = output_dir / "extracted.next"
-    if temp_extract.exists():
-        shutil.rmtree(temp_extract)
-    extracted = safe_extract(archive, temp_extract)
-    workbooks = [p for p in extracted if p.suffix.lower() in {".xlsx", ".xlsm"}]
-    if not workbooks:
-        shutil.rmtree(temp_extract, ignore_errors=True)
-        raise ValueError("No .xlsx or .xlsm workbooks were found in the ZIP. Inspect archive contents.")
-
-    temp_json = output_dir / "sheets.next"
-    if temp_json.exists():
-        shutil.rmtree(temp_json)
-    temp_json.mkdir(parents=True, exist_ok=True)
-    report: list[dict[str, Any]] = []
-    try:
+    # Stage extraction and all JSON output outside the published snapshot, then swap
+    # only after a complete successful conversion. An interrupted run keeps old output.
+    with tempfile.TemporaryDirectory(prefix="gpir-un-tourism-") as temp_root:
+        staging = Path(temp_root)
+        temp_extract = staging / "extracted"
+        extracted = safe_extract(archive, temp_extract)
+        workbooks = [p for p in extracted if p.suffix.lower() in {".xlsx", ".xlsm"}]
+        if not workbooks:
+            raise ValueError("No .xlsx or .xlsm workbooks were found in the ZIP. Inspect archive contents.")
+        temp_json = staging / "sheets"
+        temp_json.mkdir(parents=True, exist_ok=True)
+        report: list[dict[str, Any]] = []
         for workbook_path in workbooks:
             report.extend(export_workbook(workbook_path, temp_json, url, generated_at))
         if not report:
@@ -179,9 +172,9 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
             },
             "worksheets": report
         }
-        manifest_tmp = output_dir / "manifest.json.tmp"
+        manifest_tmp = staging / "manifest.json"
         manifest_tmp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        # Commit output directories only after every workbook conversion succeeds.
+
         final_extract, final_json = output_dir / "extracted", output_dir / "sheets"
         old_extract, old_json = output_dir / "extracted.previous", output_dir / "sheets.previous"
         for old in (old_extract, old_json):
@@ -191,15 +184,20 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
             final_extract.replace(old_extract)
         if final_json.exists():
             final_json.replace(old_json)
-        temp_extract.replace(final_extract)
-        temp_json.replace(final_json)
-        manifest_tmp.replace(output_dir / "manifest.json")
+        try:
+            shutil.copytree(temp_extract, final_extract)
+            shutil.copytree(temp_json, final_json)
+            (staging / "manifest.json").replace(output_dir / "manifest.json")
+        except Exception:
+            shutil.rmtree(final_extract, ignore_errors=True)
+            shutil.rmtree(final_json, ignore_errors=True)
+            if old_extract.exists():
+                old_extract.replace(final_extract)
+            if old_json.exists():
+                old_json.replace(final_json)
+            raise
         shutil.rmtree(old_extract, ignore_errors=True)
         shutil.rmtree(old_json, ignore_errors=True)
-    except Exception:
-        shutil.rmtree(temp_extract, ignore_errors=True)
-        shutil.rmtree(temp_json, ignore_errors=True)
-        raise
     LOG.info("Exported %d worksheets from %d workbooks to %s", len(report), len(workbooks), output_dir / "sheets")
     return manifest
 
