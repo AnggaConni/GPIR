@@ -3,9 +3,23 @@
 const $=id=>document.getElementById(id),CATALOG_URL="./data/opportunity_catalog.json",TOURISM_URL="./data/tourism_places.json";
 const POI_TTL=6*60*60*1000,GEOCODE_TTL=30*24*60*60*1000;
 const colors={tourism:"#db2777",retail:"#2563eb",market:"#d97706",food_buyer:"#b45309",supplier:"#7c3aed",maker:"#7c3aed",service:"#0891b2",institution:"#059669",other:"#64748b"};
-let catalog=[],tourismSnapshot=[],map=null,markers=null,lines=null,userMarker=null,radiusCircle=null,areaRectangle=null,coords=null,placeLabel="",placeBounds=null,points=[],activeIdea=null,lastRequest=0;
+let catalog=[],tourismSnapshot=[],tradeItems=Array.isArray(window.GPIRTradeItems)?window.GPIRTradeItems:[],map=null,markers=null,lines=null,userMarker=null,radiusCircle=null,areaRectangle=null,coords=null,placeLabel="",placeBounds=null,points=[],activeIdea=null,lastRequest=0;
 const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const num=v=>v==null||v===""||!Number.isFinite(Number(v))?null:Number(v);
+const cleanTerm=v=>String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().trim();
+function tradeMatches(opp,limit=5){
+ if(!Array.isArray(tradeItems)||!tradeItems.length)return [];
+ const terms=[...(opp.demand_keywords||[]),...(opp.products||[]),...(opp.resource_keywords||[])].map(cleanTerm).filter(t=>t.length>=4);
+ const found=new Map();
+ tradeItems.forEach(row=>{
+  const title=cleanTerm(row.product_name||(row.product&&row.product.name)||"");
+  if(!title||!terms.some(term=>title.includes(term)||term.includes(title)))return;
+  const id=[row.product_code||row.hs_code||"",row.market_iso3||"",row.latest_year||row.year||""].join("|");
+  if(!found.has(id))found.set(id,row);
+ });
+ return [...found.values()].sort((a,b)=>(num(b.latest_year)||0)-(num(a.latest_year)||0)||(num(b.latest_import_usd)||0)-(num(a.latest_import_usd)||0)).slice(0,limit);
+}
+function compactUSD(v){return v==null?"—":new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",notation:"compact",maximumFractionDigits:1}).format(v);}
 const money=v=>v==null?"—":new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(v);
 function cacheRead(key,ttl){for(const getStore of [()=>sessionStorage,()=>localStorage]){try{const store=getStore(),o=JSON.parse(store.getItem(key)||"null");if(o&&o.savedAt&&Date.now()-o.savedAt<ttl)return o.data;}catch(_){}}return null;}
 function cacheWrite(key,data){const s=JSON.stringify({savedAt:Date.now(),data});try{sessionStorage.setItem(key,s);}catch(_){}if(key.startsWith("gpir:geocode:"))try{localStorage.setItem(key,s);}catch(_){}}
@@ -79,31 +93,72 @@ function drawPoints(){if(!map||!markers||!lines||!coords)return;markers.clearLay
  });
  updateMap();$("homePoiCount").textContent=points.length+" titik";
 }
-function renderRecommendations(){if(!catalog.length)return;const filter=typeFilter();const tourismCount=nearbyTourismAttractions(3).length;const scored=catalog.map(o=>{const localCount=points.filter(p=>(o.map_categories||[]).includes(p.cat)&&(p.cat!=="tourism"||(p.dist!=null&&p.dist<=3))).length;const tourismBonus=tourismCount>0?(o.tourism_fit==="high"?6:o.tourism_fit==="medium"?3:0):0;return {...o,business_type:ideaType(o),localCount,tourismNearbyCount:tourismCount,tourismBonus,rankingScore:localCount+tourismBonus};});
+function renderRecommendations(){
+ if(!catalog.length)return;
+ const filter=typeFilter();
+ const attractions=nearbyTourismAttractions(3);
+ const tourismCount=attractions.length;
+ const nearestTourismKm=attractions.length?Math.min(...attractions.map(p=>num(p.dist)).filter(v=>v!=null)):null;
+ const scored=catalog.map(o=>{
+  const categories=Array.isArray(o.map_categories)?o.map_categories:[];
+  const nearbyRelevant=points.filter(p=>{
+   const d=num(p.dist);
+   return categories.includes(p.cat)&&d!=null&&(p.cat==="tourism"?d<=3:d<=5);
+  });
+  const localLeads=nearbyRelevant.filter(p=>p.cat!=="tourism");
+  const localScore=Math.min(10,localLeads.reduce((sum,p)=>sum+(p.dist<=1?2.5:p.dist<=3?1.5:.5),0));
+  let tourismBonus=0;
+  if(nearestTourismKm!=null){
+   const veryClose=nearestTourismKm<=1;
+   if(o.tourism_fit==="high")tourismBonus=veryClose?16:12;
+   else if(o.tourism_fit==="medium")tourismBonus=veryClose?10:7;
+   else if(o.tourism_fit==="low")tourismBonus=veryClose?3:1;
+  }
+  const tradeRows=tradeMatches(o,5);
+  const positiveGrowth=tradeRows.some(row=>num(row.yoy_growth_pct)!=null&&num(row.yoy_growth_pct)>0);
+  const tradeBonus=tradeRows.length?Math.min(12,4+Math.max(0,Math.min(4,tradeRows.length)-1)*2+(positiveGrowth?2:0)):0;
+  return {...o,business_type:ideaType(o),localCount:nearbyRelevant.length,localLeadCount:localLeads.length,
+   tourismNearbyCount:tourismCount,nearestTourismKm,tourismBonus,tradeRows,tradeBonus,localScore,
+   rankingScore:localScore+tourismBonus+tradeBonus};
+ }).sort((a,b)=>b.rankingScore-a.rankingScore||(num(a.capital_min_idr)||0)-(num(b.capital_min_idr)||0));
+ const contextAvailable=Boolean(coords&&points.length)||scored.some(o=>o.tradeRows.length>0);
  let display;
- if(filter==="all"){display=["sell","grow","service"].map(t=>scored.filter(o=>o.business_type===t).sort((a,b)=>b.rankingScore-a.rankingScore)[0]).filter(Boolean);}
- else display=scored.filter(o=>o.business_type===filter).sort((a,b)=>b.rankingScore-a.rankingScore).slice(0,3);
+ if(filter==="all"&&contextAvailable)display=scored.slice(0,3);
+ else if(filter==="all")display=["sell","grow","service"].map(t=>scored.filter(o=>o.business_type===t).sort((a,b)=>b.rankingScore-a.rankingScore)[0]).filter(Boolean);
+ else display=scored.filter(o=>o.business_type===filter).slice(0,3);
  if(!coords)$("homeLocationStatus").textContent="Contoh ide ditampilkan. Deteksi lokasi atau cari lokasi pilihan untuk memetakan tempat sekitar.";
- $("homeRecommendations").innerHTML=display.map(o=>{const t=o.business_type,tag=t==="grow"?"grow":t==="service"?"service":"sell",title=o.title,prod=(o.products||[]).slice(0,3).join(" · ");
+ $("homeRecommendations").innerHTML=display.map(o=>{
+  const t=o.business_type,tag=t==="grow"?"grow":t==="service"?"service":"sell",title=o.title,prod=(o.products||[]).slice(0,3).join(" · ");
   const buy=(o.buy_from||["Pemasok yang dapat diverifikasi"]).slice(0,2).join(" · "),buyers=(o.sell_to||["Wawancarai calon pembeli"]).slice(0,2).join(" · ");
   const supplierQ=[o.local_input_search||"pemasok bahan",placeLabel].filter(Boolean).join(" "),buyerQ=[o.local_buyer_search||(o.sell_to||["calon pembeli"]).slice(0,2).join(" "),placeLabel].filter(Boolean).join(" ");
-  const onlineQ=o.online_input_search||prod,foreignQ=o.international_search||prod+" importer";
-  const searchMaps="https://www.google.com/maps/search/?api=1&query=";
+  const onlineQ=o.online_input_search||prod,foreignQ=o.international_search||prod+" importer",searchMaps="https://www.google.com/maps/search/?api=1&query=";
   const relationButton='<button class="primary" data-home-idea="'+esc(o.id)+'">Lihat hubungan →</button>';
-  const tourismNote=o.tourismNearbyCount>0&&o.tourism_fit!=="low"&&o.tourism_buyer_hypothesis?'<p class="home-tourism-note">Atraksi wisata terpetakan ≤3 km: '+o.tourismNearbyCount+' · Hipotesis pembeli: '+esc(o.tourism_buyer_hypothesis)+'</p>':"";
-  return '<article class="home-rec-card '+(activeIdea===o.id?"home-selected":"")+'"><span class="home-rec-tag '+tag+'">'+esc(labelType(t))+'</span><h3>'+esc(title)+'</h3><p class="home-rec-action-summary">'+esc(o.action_summary||o.rationale||"Uji dulu dengan calon pembeli.")+'</p>'+tourismNote+'<p><b>Produk / jasa:</b> '+esc(prod)+'</p><p><b>Modal awal indikatif:</b> '+esc(money(o.capital_min_idr))+'–'+esc(money(o.capital_max_idr))+'</p><p><b>Perlu disiapkan:</b> '+esc(buy)+'</p><p><b>Calon pembeli:</b> '+esc(buyers)+'</p><p><b>Tempat sekitar:</b> '+esc(coords?o.localCount+" titik berkategori terkait":"Pilih lokasi untuk mencari titik")+'</p><div class="home-rec-actions"><a href="'+esc(searchMaps+encodeURIComponent(supplierQ))+'" target="_blank" rel="noopener noreferrer">Cari pemasok ↗</a><a href="'+esc(searchMaps+encodeURIComponent(buyerQ))+'" target="_blank" rel="noopener noreferrer">Cari calon pembeli ↗</a><a href="'+esc("https://www.tokopedia.com/search?st=product&q="+encodeURIComponent(onlineQ))+'" target="_blank" rel="noopener noreferrer">Beli bahan ↗</a><a href="'+esc("https://www.google.com/search?q="+encodeURIComponent(foreignQ+" supplier"))+'" target="_blank" rel="noopener noreferrer">Cari pemasok luar ↗</a></div><div class="home-rec-actions">'+relationButton+'<a class="primary" href="'+esc(finderUrl(t))+'">Rencana lengkap →</a></div></article>';
+  const tourismNote=o.tourismNearbyCount>0&&o.tourism_fit!=="low"&&o.tourism_buyer_hypothesis
+   ?'<p class="home-tourism-note">Atraksi wisata terpetakan ≤3 km: '+o.tourismNearbyCount+' · Hipotesis pembeli: '+esc(o.tourism_buyer_hypothesis)+'</p>':"";
+  const tradeNote=o.tradeRows.length
+   ?'<p class="tiny"><b>Sinyal perdagangan cocok:</b> '+esc(o.tradeRows.slice(0,2).map(row=>(row.market_name||row.market_iso3||"Pasar")+": "+compactUSD(num(row.latest_import_usd))+" ("+(row.latest_year||"tahun?")+")").join(" · "))+'. Data impor bukan penjualan retail lokal.</p>'
+   :'<p class="tiny">Belum ada sinyal impor yang cocok ditemukan; ini tidak membuktikan bahwa pasar tidak ada.</p>';
+  const basis=[];if(o.tourismBonus)basis.push("wisata dekat");if(o.localScore)basis.push("titik usaha sekitar");if(o.tradeBonus)basis.push("data perdagangan");
+  const basisText=basis.length?basis.join(" + "):"ide awal; lengkapi konteks atau validasi";
+  return '<article class="home-rec-card '+(activeIdea===o.id?"home-selected":"")+'"><span class="home-rec-tag '+tag+'">'+esc(labelType(t))+'</span><h3>'+esc(title)+'</h3><p class="home-rec-action-summary">'+esc(o.action_summary||o.rationale||"Uji dulu dengan calon pembeli.")+'</p>'+tourismNote
+   +'<p class="tiny"><b>Basis rekomendasi:</b> '+esc(basisText)+' · Skor konteks bukan prediksi penjualan.</p>'+tradeNote
+   +'<p><b>Produk / jasa:</b> '+esc(prod)+'</p><p><b>Modal awal indikatif:</b> '+esc(money(o.capital_min_idr))+'–'+esc(money(o.capital_max_idr))+'</p><p><b>Perlu disiapkan:</b> '+esc(buy)+'</p><p><b>Calon pembeli:</b> '+esc(buyers)+'</p><p><b>Tempat sekitar:</b> '+esc(coords?o.localCount+" titik berkategori terkait":"Pilih lokasi untuk mencari titik")+'</p><div class="home-rec-actions"><a href="'+esc(searchMaps+encodeURIComponent(supplierQ))+'" target="_blank" rel="noopener noreferrer">Cari pemasok ↗</a><a href="'+esc(searchMaps+encodeURIComponent(buyerQ))+'" target="_blank" rel="noopener noreferrer">Cari calon pembeli ↗</a><a href="'+esc("https://www.tokopedia.com/search?st=product&q="+encodeURIComponent(onlineQ))+'" target="_blank" rel="noopener noreferrer">Beli bahan ↗</a><a href="'+esc("https://www.google.com/search?q="+encodeURIComponent(foreignQ+" supplier"))+'" target="_blank" rel="noopener noreferrer">Cari pemasok luar ↗</a></div><div class="home-rec-actions">'+relationButton+'<a class="primary" href="'+esc(finderUrl(t))+'">Rencana lengkap →</a></div></article>';
  }).join("");
  $("homeRecommendations").querySelectorAll("[data-home-idea]").forEach(b=>b.addEventListener("click",()=>{activeIdea=b.dataset.homeIdea;renderRecommendations();renderRelationship();drawPoints();}));
- $("homeOpenFinder").href=finderUrl(filter);renderRelationship();}
+ $("homeOpenFinder").href=finderUrl(filter);renderRelationship();
+}
 function renderRelationship(){const o=selectedIdea();if(!o){$("homeRelationship").innerHTML='<div class="empty">Pilih satu ide.</div>';return;}
   const relevant=points.filter(p=>(o.map_categories||[]).includes(p.cat)&&(p.cat!=="tourism"||p.dist!=null&&p.dist<=3)).slice(0,2),nearText=relevant.length?relevant.map(p=>p.name+" ("+kmLabel(p.dist)+")").join(" · "):"Belum ada titik usaha kategori terkait";
   const attractions=nearbyTourismAttractions(3).slice(0,2),tourText=attractions.length?attractions.map(p=>p.name+" ("+kmLabel(p.dist)+")").join(" · "):"Tidak ada atraksi terpetakan dalam 3 km";
+  const tradeEvidence=tradeMatches(o,2);
+  const tradeText=tradeEvidence.length?tradeEvidence.map(row=>(row.product_name||"Produk")+" · "+(row.market_name||row.market_iso3||"pasar")+(row.latest_year?" · "+row.latest_year:"")).join(" / "):o.international_search||"Riset buyer sesuai produk";
+  const tradeDescription=tradeEvidence.length?"Baris impor yang cocok ditemukan; bukan penjualan retail lokal atau order buyer.":"Belum ada baris perdagangan yang cocok; lakukan validasi lokal.";
   const nodes=[
   ["INPUT / LOKASI",placeLabel||"Lokasi belum dipilih","Sumber daya dan keterampilan masih perlu dikonfirmasi"],
   [labelType(ideaType(o)),(o.products||[]).slice(0,2).join(" · "),o.action_summary||o.rationale],
   ["CALON PEMBELI",(o.sell_to||[]).slice(0,2).join(" · "),"Segmen untuk diwawancarai, bukan buyer terkonfirmasi"],
   ["WISATA & USAHA SEKITAR",tourText+(relevant.length?"; "+nearText:""),"Hanya atraksi ≤3 km dianggap dekat; data peta bukan bukti pelanggan"],
-  ["PASAR LUAR",o.international_search||"Riset buyer sesuai produk","Pencarian bukan daftar order; impor bukan retail sales"]
+  [tradeEvidence.length?"SINYAL PERDAGANGAN":"RISET PASAR LUAR",tradeText,tradeDescription]
   ];
   $("homeRelationshipTitle").textContent="Rantai peluang · "+o.title;
   $("homeRelationship").innerHTML=nodes.map((n,i)=>'<div class="home-flow-step '+(i===1?"is-active":"")+(o.id===activeIdea?" home-selected":"")+'"><b>'+esc(n[0])+'</b><strong>'+esc(n[1])+'</strong><small>'+esc(n[2])+'</small></div>').join("");}
@@ -130,10 +185,12 @@ function detectLocation(automatic){if(!navigator.geolocation){$("homeLocationSta
  navigator.geolocation.getCurrentPosition(async p=>{$("homeDetectLocation").disabled=false;$("homeDetectLocation").textContent="◎ Deteksi lokasi saya";updateLocation(p.coords.latitude,p.coords.longitude,"Lokasi perangkat ("+p.coords.latitude.toFixed(3)+", "+p.coords.longitude.toFixed(3)+")");await searchNearby();},
  e=>{$("homeDetectLocation").disabled=false;$("homeDetectLocation").textContent="◎ Deteksi lokasi saya";const msg=e.code===1?"izin lokasi belum diberikan":e.code===2?"posisi tidak tersedia":"permintaan lokasi terlalu lama";$("homeLocationStatus").textContent=automatic?"Lokasi otomatis tidak tersedia ("+msg+"). Cari lokasi pilihan atau tekan Deteksi lokasi saya.":"Lokasi tidak dapat diakses ("+msg+"). Cari lokasi secara manual.";},
  {enableHighAccuracy:false,timeout:12000,maximumAge:300000});}
+window.addEventListener("gpir-trade-feed-ready",()=>{tradeItems=Array.isArray(window.GPIRTradeItems)?window.GPIRTradeItems:[];renderRecommendations();});
 async function init(){try{const r=await fetch(CATALOG_URL,{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);const j=await r.json();catalog=Array.isArray(j.opportunities)?j.opportunities:[];}
  catch(e){$("homeRecommendations").innerHTML='<div class="empty">Katalog ide belum bisa dimuat; coba muat ulang.</div>';return;}
  catalog=catalog.map(o=>({...o,business_type:o.business_type||(o.id==="local-aggregation"||o.id==="textile-craft-micro"||o.id==="craft-workshop-experience"||o.id==="local-tour-guide-experience"?"service":"sell")}));
   try{const tourismResponse=await fetch(TOURISM_URL,{cache:"no-store"});if(tourismResponse.ok){const tourismJson=await tourismResponse.json();tourismSnapshot=Array.isArray(tourismJson.items)?tourismJson.items:[];}}catch(_){}
+  if(Array.isArray(window.GPIRTradeItems))tradeItems=window.GPIRTradeItems;
  initMap();renderRecommendations();
  $("homeSearchLocation").addEventListener("click",searchLocation);
  $("homeLocationQuery").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchLocation();}});
