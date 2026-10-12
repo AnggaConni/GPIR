@@ -1,0 +1,1 @@
+"""GPIR automated tests."""
