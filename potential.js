@@ -148,15 +148,8 @@ function populateDestinationFilters(){
  if(source==="unesco"){
   categorySelect.innerHTML='<option value="all">Semua situs UNESCO</option><option value="world_heritage">World Heritage Site</option><option value="geopark">Global Geopark</option><option value="biosphere_reserve">Biosphere Reserve</option>';
  }else{
-  const options=[
-   ["all","Semua destinasi wisata"],
-   ["travel_guide","Travel guide / destination"],
-   ["tourist_attraction","Tourist attraction"],
-   ["cultural_attraction","Cultural attraction"],
-   ["nature_attraction","Nature attraction"],
-   ["visitor_attraction","Visitor attraction"],
-   ["arts_and_crafts","Arts & crafts"]
-  ];
+  const labels=destinationCategoryLabels(),available=[...new Set(state.tourismPlaces.map(site=>site.category).filter(Boolean))].sort((a,b)=>(labels[a]||a).localeCompare(labels[b]||b));
+  const options=[["all","Semua destinasi wisata"],...available.map(value=>[value,labels[value]||value.replaceAll("_"," ")])];
   categorySelect.innerHTML=options.map(([value,label])=>'<option value="'+value+'">'+label+'</option>').join("");
  }
  if([...categorySelect.options].some(o=>o.value===oldCategory))categorySelect.value=oldCategory;
@@ -170,7 +163,7 @@ function populateDestinationFilters(){
  if(note){
   note.innerHTML=source==="unesco"
    ? 'Situs resmi UNESCO dengan titik koordinat referensi. <a href="https://data.unesco.org/" target="_blank" rel="noopener noreferrer">UNESCO DataHub ↗</a>'
-   : 'Katalog titik wisata/panduan wisata berkoordinat; cakupan mengikuti data sumber. <a href="https://www.untourism.int/tourism-statistics/tourism-statistics-database" target="_blank" rel="noopener noreferrer">UN Tourism Statistics ↗</a> menyediakan statistik negara/region, bukan koordinat atraksi.';
+   : 'Katalog saat ini memuat '+state.tourismPlaces.length+' titik panduan wisata berkoordinat; ini bukan inventaris atraksi global lengkap. <a href="https://www.untourism.int/tourism-statistics/tourism-statistics-database" target="_blank" rel="noopener noreferrer">UN Tourism Statistics ↗</a> berisi statistik negara/region, bukan koordinat atraksi.';
  }
 }
 function designatedSiteMatches(query=""){
