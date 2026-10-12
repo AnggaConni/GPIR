@@ -103,9 +103,24 @@
   function businessTypeLabel(type) {
     return type === "grow" ? "Tanam / budidaya" : type === "service" ? "Usaha jasa" : "Jual produk / olahan";
   }
+  function nearbyTourismAttractions(limitKm = Infinity) {
+    if (!currentLocation) return [];
+    const rows = [];
+    nearbyPoints.filter(p => p.category === "tourism" && p.distance != null).forEach(p => rows.push({...p, tourismSource:"OpenStreetMap"}));
+    tourismSnapshot.filter(item => item && item.kind === "tourist_attraction" && number(item.lat) != null && number(item.lon) != null).forEach(item => {
+      const distance = distanceKm(currentLocation.lat,currentLocation.lon,Number(item.lat),Number(item.lon));
+      if (distance <= limitKm) rows.push({key:"snapshot:"+item.id,name:item.name||"Unnamed mapped attraction",category:"tourism",type:"Atraksi wisata / budaya",distance,lat:Number(item.lat),lon:Number(item.lon),url:item.url||"",source:item.source||"Tourism snapshot",tourismSource:item.source||"Tourism snapshot"});
+    });
+    const unique = [];
+    rows.sort((a,b)=>(a.distance??9999)-(b.distance??9999)).forEach(row => {
+      const duplicate = unique.some(existing => clean(existing.name) === clean(row.name) && existing.distance != null && row.distance != null && Math.abs(existing.distance-row.distance) < 0.12);
+      if (!duplicate) unique.push(row);
+    });
+    return unique.filter(row => row.distance == null || row.distance <= limitKm);
+  }
   function findNearbyLeads(opp) {
     const wanted = Array.isArray(opp.map_categories) ? opp.map_categories : [];
-    return wanted.length ? nearbyPoints.filter(p=>wanted.includes(p.category)).sort((a,b)=>(a.distance??9999)-(b.distance??9999)) : [];
+    return wanted.length ? nearbyPoints.filter(p => wanted.includes(p.category) && (p.category !== "tourism" || (p.distance != null && p.distance <= 3))).sort((a,b)=>(a.distance??9999)-(b.distance??9999)) : [];
   }
   function buyerSegmentLabel(segment) {
     return ({consumers:"Konsumen rumah tangga",msme:"UMKM: mikro, kecil, menengah",business:"Perusahaan / institusi / grosir",export:"Importir / distributor luar negeri",mixed:"Campuran / belum ditentukan"})[segment] || "Campuran / belum ditentukan";
