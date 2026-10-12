@@ -140,8 +140,8 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
 
     generated_at = utc_now()
     output_dir.mkdir(parents=True, exist_ok=True)
-    # Stage extraction and all JSON output outside the published snapshot, then swap
-    # only after a complete successful conversion. An interrupted run keeps old output.
+    # Stage extraction and JSON exports in a temporary directory outside the published
+    # snapshot. Keep the previous complete outputs unless every conversion succeeds.
     with tempfile.TemporaryDirectory(prefix="gpir-un-tourism-") as temp_root:
         staging = Path(temp_root)
         temp_extract = staging / "extracted"
@@ -175,8 +175,10 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
         manifest_tmp = staging / "manifest.json"
         manifest_tmp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-        final_extract, final_json = output_dir / "extracted", output_dir / "sheets"
-        old_extract, old_json = output_dir / "extracted.previous", output_dir / "sheets.previous"
+        final_extract = output_dir / "extracted"
+        final_json = output_dir / "sheets"
+        old_extract = output_dir / "extracted.previous"
+        old_json = output_dir / "sheets.previous"
         for old in (old_extract, old_json):
             if old.exists():
                 shutil.rmtree(old)
@@ -187,7 +189,7 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
         try:
             shutil.copytree(temp_extract, final_extract)
             shutil.copytree(temp_json, final_json)
-            (staging / "manifest.json").replace(output_dir / "manifest.json")
+            manifest_tmp.replace(output_dir / "manifest.json")
         except Exception:
             shutil.rmtree(final_extract, ignore_errors=True)
             shutil.rmtree(final_json, ignore_errors=True)
