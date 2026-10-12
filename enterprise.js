@@ -561,7 +561,7 @@
     const unique=new Map();normalized.forEach(p=>unique.set(p.key,p));nearbyPoints=[...unique.values()].sort((a,b)=>(a.distance??9999)-(b.distance??9999));
     updateTourismStatus();
     const active=lastRecommendations.find(o=>o.id===activeOpportunityId),wanted=active?(active.map_categories||[]):[];
-    const relevant= p=>wanted.includes(p.category);
+    const relevant= p=>wanted.includes(p.category)&&(p.category!=="tourism"||(p.distance!=null&&p.distance<=3));
     const areaMode=$("coverage")&&$("coverage").value==="area"&&validBounds(selectedAreaBounds);
     const within=Number($("radius").value||3000);
     $("poiCount").textContent=nearbyPoints.length+" titik";
