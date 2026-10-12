@@ -318,6 +318,33 @@ function renderChart(rows){
   $("chartNote").textContent="Seri tahunan sesuai nilai pada sumber; tidak mengisi atau menginterpolasi data yang kosong.";
   $("chartBadge").textContent=data.length+" TITIK";$("chartBadge").className="pill green";
 }
+function updateSMEContext(){
+  const el=$("smeMarketContext");
+  if(!el)return;
+  if(!state.records.length){
+    el.textContent="UN Tourism belum dimuat. Setelah memilih worksheet, gunakan indikator dan tahun untuk membingkai pertanyaan validasi pasar—bukan sebagai ramalan penjualan.";
+    return;
+  }
+  const country=$("countrySelect").value;
+  const indicator=$("indicatorSelect").value;
+  if(!country||!indicator){
+    el.textContent="Data UN Tourism tersedia. Pilih satu negara/area dan indikator untuk menampilkan konteks yang relevan bagi diskusi rencana usaha.";
+    return;
+  }
+  const candidates=state.records.filter(r=>r.country===country&&r.indicator===indicator&&Number.isFinite(r.year)&&r.value!=null&&matchesBreakdown(r));
+  if(!candidates.length){
+    el.textContent="Tidak ada nilai numerik untuk pilihan statistik ini. Data kosong tidak dianggap nol; coba indikator atau klasifikasi lain.";
+    return;
+  }
+  const latestYear=Math.max(...candidates.map(r=>r.year));
+  const latest=candidates.filter(r=>r.year===latestYear);
+  if(latest.length!==1){
+    el.textContent="Konteks UN Tourism untuk "+country+": "+indicator+". Ada beberapa kategori pada "+latestYear+"; pilih klasifikasi tambahan agar seri tidak tercampur. Statistik ini bersifat nasional/area, bukan bukti permintaan di atraksi tertentu.";
+    return;
+  }
+  const item=latest[0];
+  el.textContent="Konteks UN Tourism: "+country+" · "+indicator+" · "+latestYear+": "+formatNumber(item.value)+(item.unit?" "+item.unit:"")+". Gunakan angka ini untuk merancang wawancara buyer dan uji pasar; bukan jumlah pengunjung di objek tertentu, bukti order, atau prediksi omzet.";
+}
 function renderStats(){
   if(!state.records.length)return;
   const rows=getFilteredRows();state.filtered=rows;
@@ -328,6 +355,7 @@ function renderStats(){
   $("statYears").textContent=years.length?(Math.min(...years)+"–"+Math.max(...years)):"Tidak tersedia";
   $("statUnit").textContent=latestUnit(rows);
   renderChart(rows);
+  updateSMEContext();
   const shown=rows.slice(0,state.shown);
   $("statsBody").innerHTML=shown.length?shown.map(r=>'<tr><td>'+esc(r.country)+'</td><td>'+esc(r.year??"—")+'</td><td>'+esc(r.indicator)+'</td><td>'+esc(formatNumber(r.value))+'</td><td>'+esc(r.unit||"—")+'</td><td>'+esc(r.classification||"—")+'</td></tr>').join(""):'<tr><td colspan="6" class="empty">Tidak ada observasi yang cocok dengan filter.</td></tr>';
   $("tableSummary").textContent="Menampilkan "+Math.min(state.shown,rows.length).toLocaleString("id-ID")+" dari "+rows.length.toLocaleString("id-ID")+" observasi tersaring.";
