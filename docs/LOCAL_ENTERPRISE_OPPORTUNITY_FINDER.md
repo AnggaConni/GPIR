@@ -13,7 +13,7 @@ The feature is a decision-support aid. It does not promise that a product will s
 - `index.html` + `local-home.js`: homepage quick-start panel with geolocation permission, manual location search, nearby map, one recommended idea per business category, supplier/buyer search links and relationship flow.
 - `i18n.js`: shared language selector on home and detail pages. Includes Indonesian, English and all six official UN languages; defaults to browser preferences, supports manual switching, and stores the choice in local storage.
 - `enterprise.html`: detailed responsive Finder. The homepage passes coordinates, location label, radius and business type as query parameters.
-- `enterprise.js`: rule-based idea-fit matching, explicit product/cultivation/service recommendations, location search, permission-based first-load geolocation, nearby OSM/Overpass lookup with browser cache, a local relationship-flow visual, marketplace search links and local inventory management.
+- `enterprise.js`: integrated rule-based ranking across user fit, nearby tourist attractions, mapped local buyer/supplier/retail leads, and matched UN Comtrade import signals; start-vs-grow action plans; location search, permission-based first-load geolocation, nearby OSM/Overpass lookup with browser cache, relationship-flow visual, marketplace search links and local inventory management.
 - `data/opportunity_catalog.json`: curated hypotheses, product ideas, resource/skill keywords, illustrative starting-capital bands, first validation test, and risk prompts.
 - `data/data.json`: scheduled UN Comtrade feed. Current schema contains `meta`, `countries`, and `items`; public macro data are deliberately not duplicated into this file.
 - `market-context.js`: async browser-side World Bank enrichment, with graceful fallback if the API or network is unavailable.
@@ -29,17 +29,21 @@ The feature is a decision-support aid. It does not promise that a product will s
 5. **Matching and evidence layer:** an input-fit score ranks ideas against self-reported resources, skills, capital and target market. Nearby mapped places are a separate lead/channel hint; annual trade rows are a separate country-level import signal. Neither proves sales or buyer intent. The relationship flow connects local input → product/service → candidate buyers → mapped local leads → candidate trade-market research.
 6. **Future shared service (optional):** if communities need cross-device/shared supplier data, add a backend such as Supabase with authentication, role-based row-level security, explicit consent, audit trail, and a moderation workflow. Do not put community-written records into a public repository by default.
 
-## Score semantics
+## Integrated SME ranking semantics
 
-The initial **Fit to inputs** score is a rule-based relevance ranking:
-- up to 60 points for matching locally reported resource keywords;
-- up to 15 for skills;
-- up to 15 for target-market fit;
-- up to 10 for capital-tier alignment.
+The Finder now ranks opportunities from several evidence layers rather than treating tourism proximity as a separate recommendation product:
 
-The score is **not** a probability of success, product popularity, or expected revenue. The UI therefore shows market evidence and fit separately. The current version does not estimate a validated demand probability.
+- **User fit:** matching resource keywords (up to 36 points), matching skills (up to 18), target-market fit (up to 8), buyer-segment fit (up to 12), capital tier (up to 5), and desired scale (up to 5).
+- **Business stage:** starting a business modestly favours lower illustrative entry costs; developing an existing SME favours ideas with clearer repeat-buyer/channel paths (up to 5 points). The action plan also changes: start mode focuses on small experiments, while grow mode focuses on repeat purchase, consistency, margin, capacity and cash flow.
+- **Tourism proximity:** a mapped tourism point within 1 km or 1–3 km can raise ideas with a matching tourism-fit hypothesis (up to 16 points). No tourism boost is applied when no mapped attraction is within 3 km.
+- **Local business ecosystem:** relevant mapped non-tourism points such as markets, retail, food buyers, suppliers and makers within 5 km contribute up to 10 points.
+- **Trade signal:** matching product/import rows in the GPIR trade feed contribute up to 12 points. The UI labels this as a trade/import signal, not local sales.
 
-The opportunity catalogue includes approximate microenterprise startup-cost bands in IDR. These are planning placeholders, not official averages or supplier quotes. They must be replaced or calibrated using local quotes, actual equipment needs, food-safety requirements, packaging, distribution, permits, and working capital.
+The combined score is normalized to 0–100 for ranking and should be read as relevance to the selected profile and available contextual signals—not a probability of success, demand forecast, sales estimate or expected revenue. If no tourism point is nearby, ideas can still rank highly when local resources/skills, mapped channels or trade signals fit.
+
+Mapped POIs are leads and can be incomplete or stale; they are not confirmed buyers, open shops, available stock or visitor counts. Tourism fit labels in the catalogue are planning hypotheses. UN Comtrade reports cross-border trade, not retail sell-through or proof of demand in a particular town. World Bank/UN Tourism country indicators are context, not site-level footfall.
+
+The opportunity catalogue includes approximate microenterprise startup-cost bands in IDR. These are planning placeholders, not official averages or supplier quotes. Calibrate them using local quotes, actual equipment needs, food-safety requirements, packaging, distribution, permits, rent and working capital.
 
 ## Data source register
 
