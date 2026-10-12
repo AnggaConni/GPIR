@@ -10,9 +10,7 @@ Outputs:
 
 - `data/un_tourism/manifest.json` — source archive, retrieval time, workbook/sheet counts and caveats.
 - `data/un_tourism/sheets/*.json` — one JSON per worksheet, with provenance and row/column metadata.
-- `data/un_tourism/extracted/` — extracted source workbooks used for conversion.
-
-The archive is saved locally to `data/source_archives/` during a workflow run but is not published in the commit allowlist; only JSON results and the manifest are committed. This avoids needlessly storing the whole ZIP in the website repository.
+- Source workbooks are extracted into a temporary working directory and removed after conversion. Only JSON results and the manifest are published; neither the ZIP nor extracted Excel workbooks are committed.
 
 ## Run locally
 
@@ -31,7 +29,7 @@ By default the importer downloads the May 2026 public archive supplied for this 
 
 ## GitHub Actions
 
-The weekly data-refresh workflow runs the importer and commits generated JSON under `data/un_tourism/`. The optional repository Actions variable `UN_TOURISM_BULK_URL` can override the default archive URL. The workflow downloads the archive into the runner, and does not commit the ZIP itself.
+The weekly data-refresh workflow runs the importer and commits generated JSON under `data/un_tourism/`. The optional repository Actions variable `UN_TOURISM_BULK_URL` can override the default archive URL. The ZIP and intermediate Excel files stay out of the published output.
 
 ## Important interpretation notes
 
