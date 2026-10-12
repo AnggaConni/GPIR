@@ -95,7 +95,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/data.json data/tourism_places.json data/ich_heritage.json data/food_products.json data/tourism_stats.json data/un_tourism/
+          git add data/data.json data/tourism_places.json data/ich_heritage.json data/designated_sites.json data/food_products.json data/tourism_stats.json data/un_tourism/
           if git diff --cached --quiet; then
             echo "No data changes to commit."
           else
@@ -130,7 +130,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/tourism_places.json data/ich_heritage.json data/food_products.json data/tourism_stats.json
+          git add data/tourism_places.json data/ich_heritage.json data/designated_sites.json data/food_products.json data/tourism_stats.json
           if git diff --cached --quiet; then
             echo "No tourism snapshot changes."
           else
