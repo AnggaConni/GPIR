@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local Enterprise Opportunity Finder | GPIR</title>
+<meta name="description" content="Temukan ide usaha mikro berbasis sumber daya lokal dan validasi dengan data pasar terbuka.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#f4f6fa;--paper:#fff;--ink:#17243b;--muted:#65748a;--line:#e0e7f0;--navy:#10264a;--blue:#2368cf;--teal:#0d8d7c;--gold:#fff4d4;--goldline:#efd796;--green:#e8f7ef;--greenline:#b9e4ce;--red:#fff0ef;--redline:#f0c9c5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}a{color:var(--blue)}button,input,select,textarea{font:inherit}button,.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:10px 13px;cursor:pointer;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:12px}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button:hover,.btn:hover{filter:brightness(.98)}header{background:linear-gradient(115deg,#10264a,#1c4f78 65%,#0d7975);color:white;padding:23px max(18px,calc((100vw - 1320px)/2));display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}.brand{display:flex;align-items:center;gap:12px}.logo{height:44px;width:44px;border-radius:12px;background:#ffffff18;border:1px solid #ffffff55;display:grid;place-items:center;font-size:24px}.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-weight:750;font-size:10px;opacity:.8}.brand h1{margin:2px 0;font-size:21px;letter-spacing:-.025em}.brand p{margin:0;font-size:12px;color:#cfdded}.header-actions{display:flex;gap:8px;flex-wrap:wrap}header .btn{background:#ffffff12;color:white;border-color:#ffffff55}main{max-width:1320px;margin:0 auto;padding:22px 18px 48px}.notice{border:1px solid var(--goldline);background:var(--gold);color:#644907;border-radius:11px;padding:12px 15px;margin-bottom:14px;font-size:12px}.section-title{display:flex;align-items:end;justify-content:space-between;gap:15px;margin:24px 0 11px}.section-title h2{margin:0;font-size:17px;letter-spacing:-.02em}.section-title p{margin:3px 0 0;color:var(--muted);font-size:12px}.tiny{font-size:10px;color:var(--muted)}.layout{display:grid;grid-template-columns:1.05fr .95fr;gap:14px}.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;min-width:0}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}.panel-head h2,.panel-head h3{font-size:14px;margin:0}.panel-head p{font-size:11px;color:var(--muted);margin:3px 0 0}.pad{padding:16px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{min-width:0}.field.full{grid-column:1/-1}.field label{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800;margin:0 0 5px}.field input,.field select,.field textarea{display:block;width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);outline-color:#9cc1fa}.field textarea{min-height:76px;resize:vertical}.field .hint{font-size:10px;color:var(--muted);margin-top:4px}.pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:4px 8px;font-size:10px;font-weight:800;background:#edf4ff;color:#205da5}.pill.green{background:#e5f7ef;color:#127657}.pill.gold{background:#fff3cf;color:#855e00}.pill.gray{background:#eef1f5;color:#566375}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}.stat span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}.stat strong{display:block;font-size:23px;margin:5px 0 0}.stat small{font-size:10px;color:var(--muted)}.rec-list{display:grid;grid-template-columns:1fr 1fr;gap:12px}.rec{background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px;display:flex;flex-direction:column;gap:9px}.rec h3{font-size:14px;margin:0}.rec .subtitle{font-size:11px;color:var(--muted);margin-top:-5px}.rec p{font-size:12px;color:#38465b;margin:0}.rec .top{display:flex;justify-content:space-between;gap:8px;align-items:start}.fit{font-weight:850;color:var(--teal);font-size:13px;white-space:nowrap}.rec ul{margin:0;padding-left:17px;font-size:11px;color:#48566a}.rec .actions{margin-top:auto}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}.table-wrap{overflow:auto;max-height:350px}table{width:100%;border-collapse:collapse;font-size:11px}th{text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;font-size:10px;background:#fafbfd;position:sticky;top:0}td,th{padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top}td b{font-size:11px}.empty{padding:20px;text-align:center;color:var(--muted);font-size:12px}.evidence-note{padding:10px 13px;background:#f7f9fc;font-size:10px;color:var(--muted);border-top:1px solid var(--line)}.inventory-form{display:grid;grid-template-columns:1.2fr .65fr .55fr .75fr;gap:8px;align-items:end}.inventory-list{display:grid;gap:7px;margin-top:12px}.inventory-item{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:9px;padding:9px 11px}.inventory-item b{font-size:12px}.inventory-item small{display:block;color:var(--muted);font-size:10px}.inventory-item button{padding:5px 8px;font-size:10px}.map-tools{display:flex;gap:8px;flex-wrap:wrap;padding:13px 15px;border-bottom:1px solid var(--line)}#poiMap{height:280px}.poi-results{max-height:320px;overflow:auto}.poi-item{padding:9px 13px;border-bottom:1px solid var(--line);font-size:11px}.poi-item b{font-size:12px}.poi-item span{display:block;color:var(--muted);font-size:10px}.source-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.source-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}.source-card h3{font-size:12px;margin:0 0 5px}.source-card p{font-size:11px;color:var(--muted);margin:0 0 8px}.source-card .status{font-size:10px;font-weight:800}.source-card a{font-size:11px;font-weight:700}.cost-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.cost{padding:15px;border-radius:12px;background:#fff;border:1px solid var(--line)}.cost strong{font-size:19px;display:block}.cost b{font-size:12px}.cost p{font-size:11px;color:var(--muted);margin-bottom:0}.disclaimer{font-size:11px;color:var(--muted);margin-top:13px}footer{border-top:1px solid var(--line);padding-top:18px;margin-top:28px;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;color:var(--muted);font-size:10px}
+@media(max-width:960px){.layout,.two-col{grid-template-columns:1fr}.source-grid{grid-template-columns:1fr 1fr}.cost-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){main{padding:14px 10px 32px}.brand h1{font-size:18px}.form-grid,.rec-list,.source-grid,.cost-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.stats{grid-template-columns:1fr 1fr 1fr;gap:6px}.stat{padding:10px}.stat strong{font-size:19px}.inventory-form{grid-template-columns:1fr 1fr}.section-title{align-items:start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">⌁</div><div><div class="eyebrow">GPIR · Local Enterprise</div><h1>Local Enterprise Opportunity Finder</h1><p>Temukan ide usaha dari potensi lokal dan validasi dengan sinyal pasar</p></div></div>
+  <div class="header-actions"><a class="btn" href="./index.html">← Global Product Radar</a><a class="btn" href="https://github.com/AnggaConni/GPIR" target="_blank" rel="noopener">Source code ↗</a></div>
+</header>
+<main>
+  <div class="notice"><b>Alat bantu keputusan, bukan ramalan penjualan.</b> Rekomendasi di halaman ini adalah hipotesis awal berdasarkan kecocokan input pengguna dan katalog ide usaha. Sinyal impor, listing, lokasi, dan statistik produksi memiliki makna berbeda. Tidak ada jaminan produk akan laku atau usaha untung.</div>
+
+  <div class="section-title"><div><h2>1 · Ceritakan kondisi usaha Anda</h2><p>Mulai dari kecamatan/kota kecil, modal mikro, keterampilan, dan sumber daya yang benar-benar tersedia.</p></div><span class="pill">LOCAL-FIRST · OPEN DATA</span></div>
+  <div class="layout">
+    <section class="panel">
+      <div class="panel-head"><div><h2>Profil usaha</h2><p>Informasi ini digunakan untuk menyesuaikan ide, bukan dibagikan ke server.</p></div><span class="pill gray">INPUT PENGGUNA</span></div>
+      <div class="pad">
+        <div class="form-grid">
+          <div class="field"><label for="district">Kecamatan / kota kecil</label><input id="district" placeholder="Contoh: Wonosari"></div>
+          <div class="field"><label for="province">Kabupaten / provinsi</label><input id="province" placeholder="Contoh: Gunungkidul, DIY"></div>
+          <div class="field"><label for="capital">Modal awal</label><select id="capital"><option value="micro">Sangat terbatas (usaha mikro)</option><option value="small">Usaha kecil / peralatan dasar</option><option value="growth">Produksi / pengolahan lebih besar</option></select></div>
+          <div class="field"><label for="targetMarket">Target pasar</label><select id="targetMarket"><option value="both">Pasar lokal + kemungkinan ekspor</option><option value="local">Lokal / regional dahulu</option><option value="international">Pasar internasional</option></select></div>
+          <div class="field full"><label for="resources">Sumber daya yang tersedia</label><textarea id="resources" placeholder="Contoh: kelapa, singkong, ikan, bambu, kakao, rempah, limbah pertanian…"></textarea><div class="hint">Pisahkan dengan koma. Cantumkan hanya sumber daya yang benar-benar ada atau bisa diperoleh.</div></div>
+          <div class="field full"><label for="skills">Keterampilan / aset yang dimiliki</label><textarea id="skills" placeholder="Contoh: memasak, menjahit, pengeringan, sepeda motor untuk distribusi, ruang kosong, kelompok tani…"></textarea></div>
+        </div>
+        <div class="actions"><button class="primary" id="findBtn">Temukan ide yang cocok ↗</button><button id="clearBtn">Reset input</button></div>
+        <p class="disclaimer">Kecocokan tinggi artinya ide cocok dengan input Anda, bukan peluang sukses  tinggi. Modal yang ditampilkan adalah kisaran ilustratif awal untuk diuji dengan harga lokal.</p>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><div><h2>Resource inventory komunitas</h2><p>Catat jumlah, musim, dan harga indikatif agar rekomendasi makin kontekstual.</p></div><span class="pill gray">TERSIMPAN DI PERANGKAT</span></div>
+      <div class="pad">
+        <div class="inventory-form">
+          <div class="field"><label for="invName">Sumber daya</label><input id="invName" placeholder="Mis. kelapa tua"></div>
+          <div class="field"><label for="invQty">Volume</label><input id="invQty" type="number" min="0" step="any" placeholder="100"></div>
+          <div class="field"><label for="invUnit">Satuan</label><select id="invUnit"><option>kg</option><option>ton</option><option>liter</option><option>ikat</option><option>pcs</option><option>pohon</option><option>lainnya</option></select></div>
+          <div class="field"><label for="invPrice">Harga / satuan (Rp)</label><input id="invPrice" type="number" min="0" step="any" placeholder="opsional"></div>
+          <div class="field"><label for="invSeason">Ketersediaan</label><select id="invSeason"><option value="year-round">Sepanjang tahun</option><option value="seasonal">Musiman</option><option value="surplus">Surplus tertentu</option><option value="unknown">Belum diketahui</option></select></div>
+          <div class="field"><label for="invArea">Lokasi sumber</label><input id="invArea" placeholder="Dusun / desa"></div>
+          <div class="field"><label for="invQuality">Kualitas / catatan</label><input id="invQuality" placeholder="Mis. kering, grade B"></div>
+          <button class="primary" id="addInventory">Tambah resource</button>
+        </div>
+        <div id="inventoryList" class="inventory-list"><div class="empty">Belum ada resource yang dicatat.</div></div>
+        <div class="actions"><button id="exportInventory">Ekspor inventaris JSON</button><label class="btn" for="importInventory" style="cursor:pointer">Impor JSON</label><input id="importInventory" type="file" accept="application/json,.json" hidden><button id="clearInventory">Hapus inventaris</button></div>
+        <p class="disclaimer">Inventaris disimpan di localStorage browser ini. Data tidak dikirim ke server dan tidak otomatis dibagikan ke pengguna lain. Jangan masukkan data rahasia.</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="section-title"><div><h2>2 · Rekomendasi usaha untuk diteliti</h2><p>Ide diperingkat berdasarkan kecocokan sumber daya, keterampilan, target pasar dan pilihan modal.</p></div><span id="recommendationStatus" class="pill gray">MENUNGGU INPUT</span></div>
+  <div class="stats">
+    <div class="stat"><span>Ide ditampilkan</span><strong id="recCount">0</strong><small>Hipotesis untuk validasi</small></div>
+    <div class="stat"><span>Sumber daya cocok</span><strong id="resourceMatches">0</strong><small>Menurut input Anda</small></div>
+    <div class="stat"><span>Sinyal perdagangan</span><strong id="tradeMatches">0</strong><small>Item GPIR yang cocok</small></div>
+  </div>
+  <div id="recommendations" class="rec-list"><div class="panel empty">Masukkan sumber daya lalu klik “Temukan ide yang cocok”.</div></div>
+
+  <div class="section-title"><div><h2>3 · Bukti pasar: perdagangan, bukan asumsi penjualan</h2><p>Jika feed GPIR berisi data yang cocok dengan kata kunci, sinyalnya muncul di sini.</p></div><span id="tradeStatus" class="pill gray">MEMUAT FEED</span></div>
+  <section class="panel">
+    <div class="panel-head"><div><h2>Trade signals dari UN Comtrade</h2><p>Impor yang dilaporkan per produk/negara dapat membantu menemukan pasar untuk diteliti.</p></div><a href="https://comtradeapi.un.org/" target="_blank" rel="noopener">Sumber API ↗</a></div>
+    <div class="table-wrap"><table><thead><tr><th>Produk / kode HS</th><th>Pasar pelapor</th><th>Tahun</th><th>Nilai impor</th><th>Pertumbuhan</th><th>Status data</th></tr></thead><tbody id="tradeBody"><tr><td colspan="6" class="empty">Feed sedang dimuat…</td></tr></tbody></table></div>
+    <div class="evidence-note" id="tradeNote">Nilai impor merupakan arus perdagangan resmi yang dilaporkan. Bukan jumlah unit terjual di marketplace dan bukan bukti bahwa produk lokal pasti laku.</div>
+  </section>
+
+  <div class="section-title"><div><h2>4 · Apa yang ada di sekitar?</h2><p>Cari pasar, toko, bengkel, restoran, pengrajin, dan tempat terpetakan sebagai calon mitra atau kompetitor.</p></div><span class="pill">OPENSTREETMAP</span></div>
+  <div class="layout">
+    <section class="panel">
+      <div class="panel-head"><div><h2>Temukan titik usaha sekitar</h2><p>Gunakan lokasi perangkat atau isi koordinat secara manual.</p></div></div>
+      <div class="pad">
+        <div class="form-grid">
+          <div class="field"><label for="lat">Latitude</label><input id="lat" type="number" step="any" placeholder="-7.8"></div>
+          <div class="field"><label for="lon">Longitude</label><input id="lon" type="number" step="any" placeholder="110.4"></div>
+          <div class="field"><label for="radius">Radius pencarian</label><select id="radius"><option value="1000">1 km</option><option value="3000" selected>3 km</option><option value="5000">5 km</option><option value="10000">10 km</option></select></div>
+          <div class="field"><label>Lokasi perangkat</label><button id="geoBtn" type="button">Gunakan lokasi saya</button></div>
+        </div>
+        <div class="actions"><button class="primary" id="nearbyBtn">Cari titik terpetakan</button><a href="https://overpass-turbo.eu/" target="_blank" rel="noopener" class="btn">Buka Overpass Turbo ↗</a></div>
+        <p class="disclaimer">Peta komunitas tidak lengkap. Jumlah lokasi bukan ukuran omzet, jumlah pelanggan atau market share. Overpass publik bisa sibuk; gunakan seperlunya.</p>
+      </div>
+      <div id="poiMap"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><div><h2>Hasil titik sekitar</h2><p id="poiSummary">Belum ada pencarian.</p></div><span id="poiCount" class="pill gray">0 lokasi</span></div>
+      <div id="poiResults" class="poi-results"><div class="empty">Isi koordinat atau gunakan lokasi perangkat.</div></div>
+      <div class="evidence-note">Lokasi usaha ditampilkan sesuai data OSM. Pastikan kembali apakah usaha masih aktif sebelum menjadikannya target atau indikator persaingan.</div>
+    </section>
+  </div>
+
+  <div class="section-title"><div><h2>5 · Konektor data dan biaya</h2><p>Versi awal dapat dijalankan dengan biaya API hampir nol, tetapi tetap memiliki batas kuota dan kelengkapan.</p></div></div>
+  <div class="source-grid">
+    <article class="source-card"><h3>UN Comtrade</h3><p>Impor/ekspor menurut HS, negara dan tahun. Data aktual perdagangan; tidak sama dengan retail sell-through.</p><div class="status">BIAYA: GRATIS DENGAN LIMIT / KEY</div><p><a href="https://comtradeapi.un.org/" target="_blank" rel="noopener">Dokumentasi API ↗</a></p></article>
+    <article class="source-card"><h3>SIPEDAS Kementan</h3><p>Data hortikultura menurut wilayah dan periode, sesuai modul. Token/API key dan izin akses perlu diperiksa.</p><div class="status">BIAYA: CEK AKSES DATA</div><p><a href="https://sipedas.pertanian.go.id/api/default/index" target="_blank" rel="noopener">Dokumentasi ↗</a></p></article>
+    <article class="source-card"><h3>BPS WebAPI</h3><p>Statistik penduduk dan ekonomi wilayah; bukan angka permintaan produk. Perlu pengaturan akses/API key.</p><div class="status">BIAYA: API STATISTIK</div><p><a href="https://webapi.bps.go.id/developer" target="_blank" rel="noopener">Dokumentasi ↗</a></p></article>
+    <article class="source-card"><h3>OpenStreetMap / Overpass</h3><p>Lokasi pasar, toko dan fasilitas yang dipetakan; tidak menunjukkan stok atau omzet. API publik punya batas penggunaan wajar.</p><div class="status">BIAYA: GRATIS · RATE LIMIT</div><p><a href="https://overpass-turbo.eu/" target="_blank" rel="noopener">Jelajahi data ↗</a></p></article>
+    <article class="source-card"><h3>World Bank / FAOSTAT</h3><p>Indikator ekonomi global dan statistik pangan/pertanian untuk konteks daerah atau pasar ekspor.</p><div class="status">BIAYA: OPEN DATA</div><p><a href="https://api.worldbank.org/v2/" target="_blank" rel="noopener">World Bank ↗</a> · <a href="https://www.fao.org/faostat/" target="_blank" rel="noopener">FAOSTAT ↗</a></p></article>
+    <article class="source-card"><h3>Marketplace APIs</h3><p>Harga dan listing tersedia pada beberapa API; data penjualan kompetitor sering dibatasi atau perlu persetujuan khusus.</p><div class="status">BIAYA: BERGANTUNG AKSES</div><p><a href="https://developer.ebay.com/develop/api/buy/browse_api" target="_blank" rel="noopener">eBay Browse ↗</a></p></article>
+  </div>
+
+  <div class="section-title"><div><h2>6 · Perkiraan biaya implementasi</h2><p>Estimasi untuk perangkat lunak, bukan modal yang diperlukan untuk menjalankan usaha.</p></div></div>
+  <div class="cost-grid">
+    <article class="cost"><b>MVP statis</b><strong>Rp0 biaya hosting*</strong><p>GitHub Pages, halaman statis, JSON, inventaris lokal di browser, dan data dari endpoint publik selama tetap dalam kuota/policy.</p></article>
+    <article class="cost"><b>Data lebih lengkap</b><strong>Rp0–bervariasi</strong><p>API gratis dan kunci akses bisa cukup untuk prototipe. Data komersial, kuota lebih tinggi, backend dan basis data dapat memerlukan biaya tambahan.</p></article>
+    <article class="cost"><b>Operasional komunitas</b><strong>Perlu dihitung lokal</strong><p>Verifikasi harga, sampel produk, transportasi, kemasan, uji kualitas, izin, dan wawancara calon pembeli bukan biaya API.</p></article>
+  </div>
+  <p class="disclaimer">*Dengan asumsi repository publik, penggunaan sesuai kebijakan platform dan tanpa domain berbayar. Belum termasuk tenaga kerja, konektivitas, API komersial, inspeksi lapangan, atau biaya pengujian produk. Tarif dan limit dapat berubah; verifikasi di sumber resmi.</p>
+
+  <footer><span>GPIR · Local Enterprise Opportunity Finder · Prototype v0.1</span><span>Ide usaha ≠ permintaan terverifikasi ≠ keuntungan.</span></footer>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="./enterprise.js"></script>
+</body>
+</html>
