@@ -121,7 +121,7 @@ function renderRecommendations(){
    tourismNearbyCount:tourismCount,nearestTourismKm,tourismBonus,tradeRows,tradeBonus,localScore,
    rankingScore:localScore+tourismBonus+tradeBonus};
  }).sort((a,b)=>b.rankingScore-a.rankingScore||(num(a.capital_min_idr)||0)-(num(b.capital_min_idr)||0));
- const contextAvailable=Boolean(coords&&points.length)||scored.some(o=>o.tradeRows.length>0);
+ const contextAvailable=scored.some(o=>o.rankingScore>0);
  let display;
  if(filter==="all"&&contextAvailable)display=scored.slice(0,3);
  else if(filter==="all")display=["sell","grow","service"].map(t=>scored.filter(o=>o.business_type===t).sort((a,b)=>b.rankingScore-a.rankingScore)[0]).filter(Boolean);
