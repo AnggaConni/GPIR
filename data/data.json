@@ -1,10 +1,36 @@
 {
-  "metadata": {
-    "title": "Global Product Intelligence Radar",
-    "generated_at": null,
-    "data_status": "awaiting_live_data",
-    "source": "No real trade records loaded yet",
-    "notes": "This file intentionally contains no fabricated sample statistics. Run scripts/build_data.py with working API access to populate records."
+  "schema_version": "1.0.0",
+  "generated_at": null,
+  "meta": {
+    "project": "Global Product Intelligence Radar",
+    "mode": "awaiting_live_data",
+    "status": "awaiting-live-data",
+    "years_requested": [],
+    "markets_requested": 10,
+    "markets_with_data": 0,
+    "market_iso3_covered": [],
+    "successful_comtrade_calls": 0,
+    "failed_comtrade_calls": [],
+    "raw_trade_rows": 0,
+    "product_market_rows": 0,
+    "sources": [
+      {
+        "name": "UN Comtrade",
+        "url": "https://comtradeplus.un.org/",
+        "role": "Reported merchandise trade; not retail sales"
+      },
+      {
+        "name": "World Bank Indicators API v2",
+        "url": "https://api.worldbank.org/v2/",
+        "role": "Country coordinates and macro context"
+      }
+    ],
+    "limitations": [
+      "No live dataset has been generated yet.",
+      "Run Actions → Update trade data to fetch trade records.",
+      "Trade values are not retail sales or profitability."
+    ]
   },
-  "records": []
+  "countries": [],
+  "items": []
 }
