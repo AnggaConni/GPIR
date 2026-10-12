@@ -48,7 +48,7 @@ class TourismNormalizationTests(unittest.TestCase):
         self.assertEqual(got["barcode"], "899999")
         self.assertEqual(got["brands"], "Example")
         self.assertEqual(got["evidence_type"], "packaged_product_catalogue_not_sales")
-        self.assertIn("not sales", got["evidence_type"])
+        self.assertEqual(got["evidence_type"], "packaged_product_catalogue_not_sales")
 
     def test_opentripmap_is_gracefully_skipped_without_key(self):
         class NeverCallSession:

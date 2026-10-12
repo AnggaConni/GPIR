@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": null,
+  "meta": {
+    "source": "Open Food Facts",
+    "status": "awaiting-refresh",
+    "note": "Packaged product catalogue metadata only; not sales, stock or market share."
+  },
+  "items": []
+}

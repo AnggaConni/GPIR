@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": null,
+  "meta": {
+    "source": "UNESCO DataHub",
+    "dataset": "ich001",
+    "status": "awaiting-refresh",
+    "note": "Cultural context only; not a nearby artisan directory."
+  },
+  "items": []
+}

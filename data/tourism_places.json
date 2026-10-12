@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": null,
+  "meta": {
+    "scope": "Initial empty snapshot; run the scheduled tourism collector to populate records.",
+    "tourism_nearby_primary_threshold_km": 3,
+    "tourism_very_near_threshold_km": 1,
+    "seed_areas": 0,
+    "place_records": 0,
+    "source_status": {},
+    "limitations": [
+      "No tourism places collected yet.",
+      "Mapped places are leads, not confirmed active attractions or customers."
+    ]
+  },
+  "items": []
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": null,
+  "meta": {
+    "source_status": {},
+    "note": "Annual country-level tourism context, not attraction-level visitor counts.",
+    "UN_Tourism_access": "access_required"
+  },
+  "countries": []
+}
