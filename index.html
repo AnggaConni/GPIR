@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>GPIR — Global Product Intelligence Radar</title>
 <meta name="description" content="Explore product-market opportunities using open global trade data.">
-<link rel="preconnect" href="https://unpkg.com"><link rel="preconnect" href="https://tile.openstreetmap.org">
+<link rel="preconnect" href="https://unpkg.com"><link rel="preconnect" href="https://tile.openstreetmap.org"><link rel="preconnect" href="https://api.worldbank.org">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--bg:#f4f6fa;--panel:#fff;--ink:#152238;--muted:#68778d;--line:#e3e8f0;--accent:#1666db;--teal:#0f988b}
@@ -25,5 +25,5 @@ header{background:linear-gradient(115deg,#10264a,#1b4a7a 65%,#116d77);color:whit
 <div class="panel"><div class="panel-head"><div><h2>Data sources & interpretation</h2><p>Observed trade data, not global retail sales</p></div></div><div class="source-list"><div class="source"><div class="source-icon">⇄</div><div><b>UN Comtrade</b><p>Reported merchandise imports/exports by product and period; data may be revised or delayed.</p><a href="https://comtradeapi.un.org/" target="_blank" rel="noopener">API documentation ↗</a></div></div><div class="source"><div class="source-icon">◎</div><div><b>World Bank Indicators API</b><p>GDP per capita and population offer market context, not product demand evidence.</p><a href="https://api.worldbank.org/v2/" target="_blank" rel="noopener">API documentation ↗</a></div></div><div class="source"><div class="source-icon">!</div><div><b>Exploratory ranking</b><p>A high score does not prove unmet demand, sales, or profitability. Validate tariffs, logistics, competition and regulation.</p></div></div></div></div></section>
 <footer><span>GPIR · Open-data product opportunity screening</span><span id="updatedAt">Data build: unknown</span></footer>
 </main>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="market-context.js"></script><script src="app.js"></script>
 </body></html>
