@@ -91,7 +91,7 @@ jobs:
 
   refresh-tourism:
     name: Refresh tourism and culture snapshots
-    if: github.event_name == 'push' && contains(github.event.head_commit.modified, 'pipeline/fetch_tourism_data.py')
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, 'bootstrap-tourism-snapshot')
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 30

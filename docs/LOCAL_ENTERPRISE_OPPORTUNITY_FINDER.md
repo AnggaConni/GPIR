@@ -178,3 +178,7 @@ Set optional repository secret \`OPENTRIPMAP_API_KEY\` to enable OpenTripMap sna
 Dynamic proximity remains based on the visitor's current/selected coordinates and on-demand nearby OSM query. The proximity bands are **very close ≤1 km**, **nearby ≤3 km**, and **outside the local-tourism boost >3 km**. If the UI's general map radius is 10–15 km, that wider radius is for exploration only; it must not cause a 10 km attraction to be described as nearby. No precise visitor coordinate is sent to the scheduled backend.
 
 The collector stores metadata/title/coordinates for Wikimedia/Wikivoyage rather than article bodies, adds required source attribution and license notices, and keeps the source evidence types distinct. Tourist attractions are map leads; a mapped POI is not a verified visitor count, customer, seller, stock or order.
+
+
+### Initial snapshot and refresh controls
+The one-time collector bootstrap is explicitly triggered by the commit message token `bootstrap-tourism-snapshot`; it refreshes tourism/culture/product snapshots without re-running the quota-limited UN Comtrade collector. After that, the existing weekly schedule and manual workflow dispatch perform the regular combined refresh. The OpenTripMap connector remains optional behind the `OPENTRIPMAP_API_KEY` Actions secret; no client-side API key is required. Successful CI tests only prove normalization/structure and do not themselves imply any live API returned data.

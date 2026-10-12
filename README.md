@@ -85,3 +85,7 @@ The pathway combines visitor resources/skills with a curated idea catalogue, map
 
 ### Tourism-linked local economy
 A scheduled Python collector builds tourism/place, travel-guide, UNESCO intangible-heritage, packaged-food catalogue, and country-level tourism-context snapshots in \`data/tourism_places.json\`, \`data/ich_heritage.json\`, \`data/food_products.json\`, and \`data/tourism_stats.json\`. Add the optional Actions secret \`OPENTRIPMAP_API_KEY\` for OpenTripMap. Tourist proximity is a separate local signal: within 1 km = very close; within 3 km = nearby; beyond 3 km is not used as the local tourism boost. World Bank arrivals are annual country statistics, not attraction footfall; UN Tourism direct database access is marked access-required unless official access/export is available.
+
+
+### Initial tourism snapshot
+The initial tourism/heritage/food snapshots are bootstrapped by a one-time GitHub Actions push whose commit message contains `bootstrap-tourism-snapshot`. Later automatic refreshes are handled by the weekly schedule or manual `workflow_dispatch`; the one-time bootstrap does not loop on the data commit. Set the optional Actions secret `OPENTRIPMAP_API_KEY` to enable OpenTripMap. Other collector endpoints can still be rate-limited or unavailable, and empty/failed feeds are reported rather than presented as verified demand.
