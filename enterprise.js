@@ -307,7 +307,15 @@
     const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(dLon / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(x));
   }
-  function safeHttpUrl(value) {\n    try { const url = new URL(String(value || ""), window.location.href); return (url.protocol === "http:" || url.protocol === "https:") ? url.href : ""; } catch (_) { return ""; }\n  }\n  function renderPOIs(elements, lat, lon) {
+  function safeHttpUrl(value) {
+    try {
+      const url = new URL(String(value || ""), window.location.href);
+      return (url.protocol === "http:" || url.protocol === "https:") ? url.href : "";
+    } catch (_) {
+      return "";
+    }
+  }
+  function renderPOIs(elements, lat, lon) {
     $("poiCount").textContent = elements.length + " lokasi";
     $("poiSummary").textContent = elements.length ? ("Ditemukan " + elements.length + " titik terpetakan; belum diverifikasi di lapangan.") : "Tidak ada titik yang cocok pada hasil ini.";
     const html = elements.map(el => {
