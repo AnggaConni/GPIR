@@ -196,6 +196,14 @@ function normaliseWorksheet(raw, dataset){
 function enableStats(enabled){
   ["countrySelect","indicatorSelect","statsSearch","breakdownSelect","yearFrom","yearTo","sortSelect","showMore"].forEach(id=>{$(id).disabled=!enabled;});
 }
+function refreshBreakdownForSelection(){
+  const country=$("countrySelect").value;
+  const indicator=$("indicatorSelect").value;
+  const baseRows=state.records.filter(r=>(!country||r.country===country)&&(!indicator||r.indicator===indicator));
+  const previous=$("breakdownSelect").value;
+  refreshDimensionOptions(baseRows);
+  if(previous&&[...$("breakdownSelect").options].some(o=>o.value===previous))$("breakdownSelect").value=previous;
+}
 function refreshDimensionOptions(baseRows){
   const select=$("breakdownSelect");
   select.innerHTML='<option value="">Semua klasifikasi</option>';
@@ -237,7 +245,7 @@ function fillFilterSelects(){
   $("yearFrom").value=years.length?String(years[0]):"";
   $("yearTo").value=years.length?String(years[years.length-1]):"";
   enableStats(true);
-  refreshDimensionOptions(state.records);
+  refreshBreakdownForSelection();
 }
 function loadMessage(rowCount){
   return "Worksheet dimuat: "+rowCount.toLocaleString("id-ID")+" observasi. Filter berdasarkan negara, indikator, tahun, atau klasifikasi. Nilai tidak diisi otomatis bila sumber mencatat data kosong.";
@@ -395,7 +403,8 @@ $("clearProfile").addEventListener("click",()=>{
 });
 ["businessStage","businessType","capital","targetBuyer"].forEach(id=>$(id).addEventListener("change",renderRecommendations));
 $("loadDataset").addEventListener("click",loadDataset);
-["countrySelect","indicatorSelect","statsSearch","breakdownSelect","yearFrom","yearTo","sortSelect"].forEach(id=>$(id).addEventListener("change",()=>{state.shown=100;if(state.records.length)renderStats();}));
+["countrySelect","indicatorSelect"].forEach(id=>$(id).addEventListener("change",()=>{state.shown=100;if(state.records.length){refreshBreakdownForSelection();renderStats();}}));
+["statsSearch","breakdownSelect","yearFrom","yearTo","sortSelect"].forEach(id=>$(id).addEventListener("change",()=>{state.shown=100;if(state.records.length)renderStats();}));
 $("statsSearch").addEventListener("input",()=>{state.shown=100;if(state.records.length)renderStats();});
 $("showMore").addEventListener("click",()=>{state.shown+=100;renderStats();});
 loadSmallData();
