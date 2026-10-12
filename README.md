@@ -4,6 +4,7 @@ An open-data starter to screen product–market opportunities using UN Comtrade 
 
 ## Features
 - Location-first homepage with permission-based geolocation, manual location search, nearby mapped places, and starter recommendations for selling, cultivation and services.
+- Shared language selector for Indonesian, English, and the six official UN languages; users may choose manually or use browser-language detection.
 - Responsive global dashboard, interactive map, product search, country filters and opportunity rankings.
 - Python pipeline for quota-limited UN Comtrade trade data; browser-side World Bank API enrichment for country context.
 - Six-digit HS product observations with yearly growth, CAGR and explainable percentile scoring.
@@ -40,11 +41,13 @@ Edit `config/markets.json` to set ISO-3 reporter markets. Optional environment v
 - `COMTRADE_MAX_RECORDS` — per-call maximum records.
 - `market-context.js` — fetches public World Bank country/indicator context directly from the browser and caches it for 12 hours.
 - `local-home.js` — location-first opportunity preview. Location and radius pass into `enterprise.html` so visitors do not have to enter them again.
+- `i18n.js` — browser-side interface localisation for Indonesian, English, Spanish, French, Arabic, Chinese and Russian. It detects browser language, offers a manual selector, and stores the preference locally.
 - `MARKET_ISO3` — comma-separated market override.
 - `REQUEST_SLEEP_SECONDS` — pause between calls.
 
 ## Interpretation
 - Import values are trade statistics, not marketplace sales, consumer spending, or profit.
+- Commodity/HS source descriptions and raw provider observations are preserved when no curated translation is available. Language defaults follow browser preferences, not inferred location or identity.
 - There is no completed-sales/retail feed connected yet. The current annual trade feed cannot produce a rolling 30-day sales trend. See the opportunity finder documentation for a safe 30-day data model and access requirements.
 - The first market set is a subset, not a complete census of global trade.
 - HS classification revisions, missing years, reporter updates and price effects can affect trend comparisons.

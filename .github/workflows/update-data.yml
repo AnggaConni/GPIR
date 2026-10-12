@@ -9,6 +9,7 @@ on:
       - "app.js"
       - "market-context.js"
       - "local-home.js"
+      - "i18n.js"
       - "enterprise.html"
       - "enterprise.js"
       - "data/**"
@@ -44,7 +45,7 @@ jobs:
       - name: Run transformation tests
         run: python -m unittest discover -s tests -v
       - name: Check frontend JavaScript syntax
-        run: node --check app.js && node --check market-context.js && node --check local-home.js && node --check enterprise.js
+        run: node --check app.js && node --check market-context.js && node --check local-home.js && node --check i18n.js && node --check enterprise.js
       - name: Validate JSON data files
         run: python -c "import json,pathlib; [json.loads(p.read_text(encoding='utf-8')) for p in pathlib.Path('data').glob('*.json')]; print('All data JSON files are valid')"
 

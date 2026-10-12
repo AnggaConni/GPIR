@@ -16,12 +16,27 @@
 @media(max-width:1050px){.location-controls{grid-template-columns:minmax(200px,1.6fr) auto auto}.location-controls #nearbyBtn{grid-column:3}}
 @media(max-width:620px){main{padding:12px 10px 28px}.location-controls{grid-template-columns:1fr 1fr;padding:12px}.location-search-field{grid-column:1/-1}.location-controls .location-action{width:100%;min-width:0}.location-controls .field{min-width:0}.location-controls #nearbyBtn{grid-column:auto}.location-summary{align-items:flex-start;flex-direction:column;gap:5px}.location-summary>div{min-width:0}.form-grid{grid-template-columns:1fr}.inventory-form{grid-template-columns:1fr 1fr}.rec-detail-grid{grid-template-columns:1fr!important}.relationship-flow{grid-template-columns:1fr;gap:0;padding:12px}.flow-step{min-height:0;padding:11px}.flow-arrow{min-height:25px;font-size:0}.flow-arrow:after{content:"↓";font-size:20px}.relationship-flow .flow-step:nth-of-type(4),.relationship-flow .flow-step:nth-of-type(5){grid-column:auto}.relationship-flow .flow-arrow:nth-of-type(6){display:flex}.rec-list{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.stat{padding:9px}.stat strong{font-size:18px;overflow-wrap:anywhere}.stat span{font-size:9px}.panel-head{padding:12px}.pad{padding:12px}.section-title h2{font-size:16px}#poiMap{height:330px;min-height:300px}.poi-results{max-height:none}.poi-item{padding:11px}.rec .external-links a{min-height:36px;display:inline-flex;align-items:center}.header-actions{width:100%}.header-actions .btn{flex:1}.field input,.field select,.field textarea{font-size:16px;min-height:42px}}
 
+
+.language-picker{display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid #ffffff55;border-radius:9px;background:#ffffff10;color:#fff;min-width:0}
+.language-picker .language-label{font-size:10px;font-weight:750;white-space:nowrap;color:#fff}
+.language-picker select{font:inherit;font-size:11px;font-weight:700;max-width:145px;min-width:102px;border:1px solid #ffffff55;border-radius:6px;padding:7px 6px;color:#fff;background:#142f52}
+.language-picker select option{background:#fff;color:#17243b}
+.language-picker button{font-size:10px;min-height:31px;padding:6px 8px;background:#ffffff15;color:#fff;border-color:#ffffff55;white-space:nowrap}
+.language-picker button:focus-visible,.language-picker select:focus-visible{outline:2px solid #facc15;outline-offset:2px}
+html[dir="rtl"] body{text-align:right}html[dir="rtl"] .language-picker{direction:rtl}html[dir="rtl"] input,html[dir="rtl"] textarea{text-align:right}
+@media(max-width:620px){.language-picker{width:100%;justify-content:space-between;order:-1}.language-picker select{flex:1;max-width:none}.language-picker button{min-height:39px}}
+
 </style>
 </head>
 <body>
 <header>
   <div class="brand"><div class="logo">⌁</div><div><div class="eyebrow">GPIR · Local Enterprise</div><h1>Local Enterprise Opportunity Finder</h1><p>Temukan ide usaha dari potensi lokal dan validasi dengan sinyal pasar</p></div></div>
-  <div class="header-actions"><a class="btn" href="./index.html">← Global Product Radar</a><a class="btn" href="https://github.com/AnggaConni/GPIR" target="_blank" rel="noopener">Source code ↗</a></div>
+  <div class="header-actions"><div class="language-picker" id="gpirLanguagePicker" aria-label="Language controls">
+  <span aria-hidden="true">🌐</span><label class="language-label" for="gpirLanguage">Language / Idioma</label>
+  <select id="gpirLanguage" aria-label="Choose interface language">
+    <option value="id">Bahasa Indonesia</option><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="ar">العربية</option><option value="zh">中文</option><option value="ru">Русский</option>
+  </select><button id="gpirLanguageAuto" type="button" title="Detect language from browser settings">Auto</button>
+</div><a class="btn" href="./index.html">← Global Product Radar</a><a class="btn" href="https://github.com/AnggaConni/GPIR" target="_blank" rel="noopener">Source code ↗</a></div>
 </header>
 <main>
   <div class="notice"><b>Alat bantu keputusan, bukan ramalan penjualan.</b> Rekomendasi di halaman ini adalah hipotesis awal berdasarkan kecocokan input pengguna dan katalog ide usaha. Sinyal impor, listing, lokasi, dan statistik produksi memiliki makna berbeda. Tidak ada jaminan produk akan laku atau usaha untung.</div>
@@ -129,6 +144,7 @@
   <footer><span>GPIR · Local Enterprise Opportunity Finder · Prototype v0.1</span><span>Ide usaha ≠ permintaan terverifikasi ≠ keuntungan.</span></footer>
 </main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="./i18n.js"></script>
 <script src="./enterprise.js"></script>
 </body>
 </html>

@@ -17,10 +17,25 @@ header{background:linear-gradient(115deg,#10264a,#1b4a7a 65%,#116d77);color:whit
 @media(max-width:1100px){.home-local-controls{grid-template-columns:minmax(200px,2fr) auto auto}.home-local-controls .field:nth-last-child(-n+2){min-width:110px}.home-local-grid{grid-template-columns:1fr 1fr}.home-flow{grid-template-columns:repeat(5,minmax(105px,1fr));overflow-x:auto}}
 @media(max-width:760px){.home-local-heading{align-items:flex-start;flex-direction:column;padding:15px}.home-local-heading h2{font-size:17px}.home-local-heading .btn{width:100%;justify-content:center}.home-local-controls{grid-template-columns:1fr 1fr;padding:12px}.home-local-controls .field:first-child{grid-column:1/-1}.home-local-controls button{width:100%;min-width:0}.home-local-status{align-items:flex-start;flex-direction:column;gap:4px}.home-local-status strong{max-width:none}.home-local-grid{grid-template-columns:1fr}.home-local-map-column{border-right:0;border-bottom:1px solid var(--line)}#homeLocalMap{height:300px}.home-recommendations{grid-template-columns:1fr}.home-flow{grid-template-columns:1fr;gap:0}.home-flow-step{padding:10px;margin-bottom:8px}.home-flow-step:not(:last-child):after{content:"↓";right:auto;left:50%;top:auto;bottom:-15px}.home-local-footer span{min-width:100%}}
 
+
+.language-picker{display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid #ffffff55;border-radius:9px;background:#ffffff10;color:#fff;min-width:0}
+.language-picker .language-label{font-size:10px;font-weight:750;white-space:nowrap;color:#fff}
+.language-picker select{font:inherit;font-size:11px;font-weight:700;max-width:145px;min-width:102px;border:1px solid #ffffff55;border-radius:6px;padding:7px 6px;color:#fff;background:#142f52}
+.language-picker select option{background:#fff;color:#17243b}
+.language-picker button{font-size:10px;min-height:31px;padding:6px 8px;background:#ffffff15;color:#fff;border-color:#ffffff55;white-space:nowrap}
+.language-picker button:focus-visible,.language-picker select:focus-visible{outline:2px solid #facc15;outline-offset:2px}
+html[dir="rtl"] body{text-align:right}html[dir="rtl"] .language-picker{direction:rtl}html[dir="rtl"] input,html[dir="rtl"] textarea{text-align:right}
+@media(max-width:620px){.language-picker{width:100%;justify-content:space-between;order:-1}.language-picker select{flex:1;max-width:none}.language-picker button{min-height:39px}}
+
 </style>
 </head>
 <body>
-<header><div class="brand"><div class="logo">⌁</div><div><div class="eyebrow">Horizon Scanning · Market Signals</div><h1>Global Product Intelligence Radar</h1><p>Discover product–market signals across the world</p></div></div><div class="actions"><a class="btn" href="./enterprise.html">Local Enterprise Finder ↗</a><a class="btn" href="https://comtradeapi.un.org/" target="_blank" rel="noopener">UN Comtrade ↗</a><a class="btn" href="https://api.worldbank.org/v2/" target="_blank" rel="noopener">World Bank ↗</a><button id="reload">Reload data ↻</button></div></header>
+<header><div class="brand"><div class="logo">⌁</div><div><div class="eyebrow">Horizon Scanning · Market Signals</div><h1>Global Product Intelligence Radar</h1><p>Discover product–market signals across the world</p></div></div><div class="actions"><div class="language-picker" id="gpirLanguagePicker" aria-label="Language controls">
+  <span aria-hidden="true">🌐</span><label class="language-label" for="gpirLanguage">Language / Idioma</label>
+  <select id="gpirLanguage" aria-label="Choose interface language">
+    <option value="id">Bahasa Indonesia</option><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="ar">العربية</option><option value="zh">中文</option><option value="ru">Русский</option>
+  </select><button id="gpirLanguageAuto" type="button" title="Detect language from browser settings">Auto</button>
+</div><a class="btn" href="./enterprise.html">Local Enterprise Finder ↗</a><a class="btn" href="https://comtradeapi.un.org/" target="_blank" rel="noopener">UN Comtrade ↗</a><a class="btn" href="https://api.worldbank.org/v2/" target="_blank" rel="noopener">World Bank ↗</a><button id="reload">Reload data ↻</button></div></header>
 <main>
 <div id="dataNotice" class="notice">Loading data status…</div>
 
@@ -61,5 +76,5 @@ header{background:linear-gradient(115deg,#10264a,#1b4a7a 65%,#116d77);color:whit
 <div class="panel"><div class="panel-head"><div><h2>Data sources & interpretation</h2><p>Observed trade data, not global retail sales</p></div></div><div class="source-list"><div class="source"><div class="source-icon">⇄</div><div><b>UN Comtrade</b><p>Reported merchandise imports/exports by product and period; data may be revised or delayed.</p><a href="https://comtradeapi.un.org/" target="_blank" rel="noopener">API documentation ↗</a></div></div><div class="source"><div class="source-icon">◎</div><div><b>World Bank Indicators API</b><p>GDP per capita and population offer market context, not product demand evidence.</p><a href="https://api.worldbank.org/v2/" target="_blank" rel="noopener">API documentation ↗</a></div></div><div class="source"><div class="source-icon">!</div><div><b>Exploratory ranking</b><p>A high score does not prove unmet demand, sales, or profitability. Validate tariffs, logistics, competition and regulation.</p></div></div></div></div></section>
 <footer><span>GPIR · Open-data product opportunity screening</span><span id="updatedAt">Data build: unknown</span></footer>
 </main>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="market-context.js"></script><script src="app.js"></script><script src="local-home.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="i18n.js"></script><script src="market-context.js"></script><script src="app.js"></script><script src="local-home.js"></script>
 </body></html>
