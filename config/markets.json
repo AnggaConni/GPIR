@@ -1,0 +1,6 @@
+{
+  "description": "Initial diversified reporter market set. Use ISO-3 codes; the pipeline resolves official UN Comtrade reporter codes dynamically.",
+  "markets": [
+    "USA", "CHN", "DEU", "JPN", "GBR", "IND", "KOR", "BRA", "IDN", "ARE"
+  ]
+}
