@@ -176,30 +176,41 @@ def run(url: str = DEFAULT_URL, archive: Path = DEFAULT_ARCHIVE, output_dir: Pat
 
         final_extract, final_json = output_dir / "extracted", output_dir / "sheets"
         old_extract, old_json = output_dir / "extracted.previous", output_dir / "sheets.previous"
-        for old in (old_extract, old_json):
+        old_manifest = output_dir / "manifest.json.previous"
+        manifest_path = output_dir / "manifest.json"
+        manifest_tmp_path = output_dir / "manifest.json.tmp"
+        for old in (old_extract, old_json, old_manifest):
             if old.exists():
-                shutil.rmtree(old)
-        # Move old snapshots aside before promotion; restore them if anything fails.
+                if old.is_dir():
+                    shutil.rmtree(old)
+                else:
+                    old.unlink()
+        # Move the prior snapshot aside, then restore all prior components if promotion fails.
         if final_extract.exists():
             final_extract.replace(old_extract)
         if final_json.exists():
             final_json.replace(old_json)
+        if manifest_path.exists():
+            manifest_path.replace(old_manifest)
         try:
             temp_extract.replace(final_extract)
             temp_json.replace(final_json)
-            shutil.copy2(manifest_tmp, output_dir / "manifest.json.tmp")
-            (output_dir / "manifest.json.tmp").replace(output_dir / "manifest.json")
+            shutil.copy2(manifest_tmp, manifest_tmp_path)
+            manifest_tmp_path.replace(manifest_path)
         except Exception:
             shutil.rmtree(final_extract, ignore_errors=True)
             shutil.rmtree(final_json, ignore_errors=True)
-            (output_dir / "manifest.json.tmp").unlink(missing_ok=True)
+            manifest_tmp_path.unlink(missing_ok=True)
             if old_extract.exists():
                 old_extract.replace(final_extract)
             if old_json.exists():
                 old_json.replace(final_json)
+            if old_manifest.exists():
+                old_manifest.replace(manifest_path)
             raise
         shutil.rmtree(old_extract, ignore_errors=True)
         shutil.rmtree(old_json, ignore_errors=True)
+        old_manifest.unlink(missing_ok=True)
     LOG.info("Exported %d worksheets from %d workbooks to %s", len(report), len(workbooks), output_dir / "sheets")
     return manifest
 
