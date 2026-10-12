@@ -60,7 +60,14 @@
         <div class="side-heading"><h3>01 · Lokasi & filter</h3><span class="pill">PIN DRAGGABLE</span></div>
         <div class="field"><label for="locationSearch">Cari lokasi</label><input id="locationSearch" type="search" placeholder="Contoh: Aceh, Indonesia" autocomplete="off"></div>
         <div class="btn-row"><button id="searchLocationBtn" class="primary" type="button">Cari lokasi</button><button id="myLocationBtn" type="button">◎ Lokasi saya</button></div>
-<div class="tourism-picker-section" aria-label="Cari situs wisata dan destinasi UNESCO">
+<div class="tourism-picker-section" aria-label="Cari destinasi wisata dan situs UNESCO">
+          <div class="field">
+            <label for="destinationSourceFilter">Sumber destinasi</label>
+            <select id="destinationSourceFilter">
+              <option value="tourism">Tourism destinations</option>
+              <option value="unesco">UNESCO designated sites</option>
+            </select>
+          </div>
           <div class="field">
             <label for="designatedSiteSearch">Go to tourism / UNESCO site</label>
             <div class="destination-combo">
@@ -72,7 +79,7 @@
           </div>
           <div class="two-fields tourism-filter-row">
             <div class="field"><label for="designationFilter">Jenis destinasi</label><select id="designationFilter">
-              <option value="all">Semua situs UNESCO</option>
+              <option value="all">Semua destinasi</option>
               <option value="world_heritage">World Heritage Site</option>
               <option value="geopark">Global Geopark</option>
               <option value="biosphere_reserve">Biosphere Reserve</option>
@@ -80,6 +87,7 @@
             <div class="field"><label for="designationCountryFilter">Negara</label><select id="designationCountryFilter"><option value="all">Semua negara</option></select></div>
           </div>
           <p class="field-help">Pilih hasil untuk memindahkan pin langsung ke koordinat destinasi, lalu analisis peluang di sekitarnya.</p>
+          <p id="destinationSourceNote" class="field-help">Koordinat Tourism berasal dari katalog tempat/panduan wisata. <a href="https://www.untourism.int/tourism-statistics/tourism-statistics-database" target="_blank" rel="noopener noreferrer">UN Tourism Statistics ↗</a> menyediakan statistik negara/region, bukan koordinat atraksi.</p>
         </div>
         <div class="field" style="margin-top:9px"><label for="resourceInput">Potensi / sumber daya lokal</label><input id="resourceInput" type="text" placeholder="Contoh: singkong, kopi, bambu"></div>
         <div class="btn-row" style="margin-bottom:9px"><button id="exampleCassavaBtn" type="button">Contoh: singkong</button><button id="exampleCraftBtn" type="button">Contoh: kerajinan</button></div>
