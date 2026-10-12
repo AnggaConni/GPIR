@@ -40,6 +40,40 @@ class TourismNormalizationTests(unittest.TestCase):
         self.assertEqual(got["inscription_year"], 2022)
         self.assertEqual(got["license"], "CC BY-SA 4.0")
 
+    def test_unesco_designated_site_normalizes_coordinates_and_country(self):
+        dataset = {
+            "dataset": "whc001",
+            "category": "world_heritage",
+            "designation": "UNESCO World Heritage Site",
+            "dataset_url": "https://data.unesco.org/explore/dataset/whc001/api/",
+            "license": "CC BY-SA 4.0",
+        }
+        got = TOURISM.normalize_designated_site({
+            "id_no": "592",
+            "name_en": "Borobudur Temple Compounds",
+            "states_names_en": "Indonesia",
+            "coordinates": [-7.6079, 110.2038],
+        }, dataset)
+        self.assertEqual(got["id"], "whc001:592")
+        self.assertEqual(got["category"], "world_heritage")
+        self.assertEqual(got["country"], "Indonesia")
+        self.assertAlmostEqual(got["lat"], -7.6079)
+        self.assertAlmostEqual(got["lon"], 110.2038)
+        self.assertEqual(got["source"], "UNESCO DataHub")
+
+    def test_unesco_designated_site_requires_valid_coordinates(self):
+        dataset = {
+            "dataset": "mab001", "category": "biosphere_reserve",
+            "designation": "UNESCO Biosphere Reserve", "dataset_url": "https://example.org",
+            "license": "CC BY-SA 4.0",
+        }
+        self.assertIsNone(TOURISM.normalize_designated_site({
+            "title_en": "Reserve without point", "country_title_en": "Exampleland"
+        }, dataset))
+        self.assertIsNone(TOURISM.normalize_designated_site({
+            "title_en": "Invalid point", "coordinates": [120, 300]
+        }, dataset))
+
     def test_openfoodfacts_record_is_not_sales_evidence(self):
         got = TOURISM.normalize_food_product({
             "code": "899999", "product_name": "Local snack", "brands": "Example", "quantity": "80 g",
