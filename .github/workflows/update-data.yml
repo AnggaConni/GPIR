@@ -105,7 +105,11 @@ jobs:
             echo "No data changes to commit."
           else
             git commit -m "chore(data): refresh global product signals"
-            git push
+            # Data collection can take several minutes; main may advance while it runs.
+            # Rebase this generated snapshot onto the latest main before pushing.
+            git fetch --no-tags --deepen=50 origin +refs/heads/main:refs/remotes/origin/main
+            git rebase origin/main
+            git push origin HEAD:main
           fi
 
 
@@ -141,7 +145,9 @@ jobs:
             echo "No bilateral flow changes."
           else
             git commit -m "chore(data): bootstrap bilateral import flow snapshot"
-            git push
+            git fetch --no-tags --deepen=50 origin +refs/heads/main:refs/remotes/origin/main
+            git rebase origin/main
+            git push origin HEAD:main
           fi
 
   refresh-tourism:
@@ -176,5 +182,7 @@ jobs:
             echo "No tourism snapshot changes."
           else
             git commit -m "chore(data): refresh tourism and culture snapshots"
-            git push
+            git fetch --no-tags --deepen=50 origin +refs/heads/main:refs/remotes/origin/main
+            git rebase origin/main
+            git push origin HEAD:main
           fi
