@@ -82,7 +82,22 @@ function renderMarkers(){
   const marker=L.circleMarker([entry.lat,entry.lon],{radius:Math.min(14,5+Math.log2(count+1)),weight:1,color:"#fff",fillColor:"#168b7d",fillOpacity:.9});
   marker.bindTooltip(esc(entry.rows[0]._country)+" · "+count+" product signals");
   marker.bindPopup('<b>'+esc(entry.rows[0]._country)+'</b><br>'+count+' product signals<br><small>Approximate country reference point</small>');
-  marker.on("click",()=>selectRecord(entry.rows[0]));marker.addTo(markers);
+  marker.on("click",()=>{
+   const marketName=entry.rows[0]._country;
+   const countrySelect=$("country");
+   // The right-hand ranking uses this same country selector, so map clicks
+   // become a real filter rather than only selecting the first record.
+   if(countrySelect&&[...countrySelect.options].some(option=>option.value===marketName)){
+    countrySelect.value=marketName;
+    selected=null;
+    applyFilters();
+    const matching=filtered.find(row=>row._id===entry.rows[0]._id)||filtered.find(row=>row._iso===iso);
+    if(matching)selectRecord(matching);
+   }else{
+    selectRecord(entry.rows[0]);
+   }
+  });
+  marker.addTo(markers);
  });
  const mapStatus=$("mapStatus");
  const totalMarkets=new Set(filtered.map(r=>r._iso).filter(Boolean)).size;
