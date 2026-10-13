@@ -43,7 +43,7 @@ function normalize(raw,marketContext=null){
 }
 function initMap(){
  if(!window.L){$("map").innerHTML='<div class="empty">Map library did not load. Check your connection.</div>';return;}
- map=L.map("map",{scrollWheelZoom:false}).setView([20,5],2);
+ map=L.map("map",{scrollWheelZoom:true}).setView([20,5],2);
  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
  flowRenderer=L.svg({padding:.5}).addTo(map);
  flowLayer=L.layerGroup().addTo(map);
@@ -158,6 +158,7 @@ function connectionPopup(connection){
  const sum=connection.flows.reduce((total,flow)=>total+valueOfFlow(flow),0);
  return '<div class="flow-popup"><h3>'+esc(connection.supplierName)+' → '+esc(connection.buyerName)+'</h3>'+
   '<p>Declared origin / supplier → importing market / buyer</p>'+
+  '<p>Dominant product group: <b>'+esc(connection.dominantSection?.label||"Other product groups")+'</b></p>'+
   '<p class="flow-total">Selected import value: <b>'+esc(fmtMoney(sum))+'</b></p>'+
   '<h4>Products reported</h4><ul>'+tradeFlowProducts(connection.flows,8)+'</ul>'+
   '<p class="flow-section-note">Values are reported imports for selected product codes, not retail sales or a verified company-to-company order.</p></div>';
@@ -179,19 +180,98 @@ function makeArcPoints(from,to){
  }
  return points;
 }
-function addFlowArrow(point,previous){
+function addFlowArrow(point,previous,color){
  const a=map.latLngToLayerPoint(previous),b=map.latLngToLayerPoint(point);
  const angle=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
  const icon=L.divIcon({
   className:"flow-arrow-icon",
-  html:'<svg viewBox="0 0 16 16" aria-hidden="true" style="transform:rotate('+angle+'deg)"><path d="M2 2 L14 8 L2 14 L5 8 Z" fill="#0f766e" stroke="#ffffff" stroke-width="1"/></svg>',
+  html:'<svg viewBox="0 0 16 16" aria-hidden="true" style="transform:rotate('+angle+'deg)"><path d="M2 2 L14 8 L2 14 L5 8 Z" fill="'+color+'" stroke="#ffffff" stroke-width="1"/></svg>',
   iconSize:[14,14],iconAnchor:[7,7]
  });
  L.marker(point,{icon,interactive:false,keyboard:false}).addTo(flowNodes);
 }
+const HS_SECTIONS=[
+ {min:1,max:5,id:"animal",label:"Animal products",color:"#e76f51"},
+ {min:6,max:14,id:"vegetable",label:"Vegetable products",color:"#2a9d8f"},
+ {min:15,max:15,id:"fats",label:"Animal / vegetable fats",color:"#e9c46a"},
+ {min:16,max:24,id:"prepared-food",label:"Prepared food & beverages",color:"#f4a261"},
+ {min:25,max:27,id:"minerals",label:"Mineral products",color:"#e63946"},
+ {min:28,max:38,id:"chemicals",label:"Chemicals",color:"#9b5de5"},
+ {min:39,max:40,id:"plastics",label:"Plastics & rubber",color:"#f15bb5"},
+ {min:41,max:43,id:"leather",label:"Leather & hides",color:"#bc6c25"},
+ {min:44,max:49,id:"wood-paper",label:"Wood & paper",color:"#8d6e63"},
+ {min:50,max:63,id:"textiles",label:"Textiles",color:"#4361ee"},
+ {min:64,max:67,id:"footwear",label:"Footwear & headgear",color:"#7209b7"},
+ {min:68,max:70,id:"stone-glass",label:"Stone, ceramic & glass",color:"#4d908e"},
+ {min:71,max:71,id:"precious-metals",label:"Precious metals & gems",color:"#f8961e"},
+ {min:72,max:83,id:"base-metals",label:"Base metals",color:"#277da1"},
+ {min:84,max:85,id:"machinery",label:"Machinery & electronics",color:"#0077b6"},
+ {min:86,max:89,id:"transport",label:"Transport equipment",color:"#f94144"},
+ {min:90,max:92,id:"instruments",label:"Optical & medical instruments",color:"#577590"},
+ {min:93,max:93,id:"arms",label:"Arms & ammunition",color:"#6c757d"},
+ {min:94,max:96,id:"manufactures",label:"Miscellaneous manufactures",color:"#43aa8b"},
+ {min:97,max:97,id:"art",label:"Art & antiques",color:"#bc6c25"}
+];
+const OTHER_FLOW_COLOR="#8793a2";
+function hsSection(productCode){
+ const chapter=Number(String(productCode||"").slice(0,2));
+ return HS_SECTIONS.find(section=>chapter>=section.min&&chapter<=section.max)||{
+  id:"other",label:"Other / unclassified",color:OTHER_FLOW_COLOR
+ };
+}
+function assignFlowCategories(connections){
+ const totals=new Map();
+ connections.forEach(connection=>{
+  const sectorValues=new Map();
+  connection.flows.forEach(flow=>{
+   const sector=hsSection(flow.product_code);
+   sectorValues.set(sector.id,(sectorValues.get(sector.id)||0)+valueOfFlow(flow));
+  });
+  const dominantId=[...sectorValues.entries()].sort((a,b)=>b[1]-a[1])[0]?.[0]||"other";
+  const dominant=HS_SECTIONS.find(section=>section.id===dominantId)||{
+   id:"other",label:"Other / unclassified",color:OTHER_FLOW_COLOR
+  };
+  connection.dominantSection=dominant;
+  connection.dominantSectionValue=sectorValues.get(dominantId)||0;
+  totals.set(dominantId,(totals.get(dominantId)||0)+connection.total);
+ });
+ const topIds=new Set([...totals.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5).map(entry=>entry[0]));
+ const legend=[...topIds].map(id=>{
+  const section=HS_SECTIONS.find(item=>item.id===id)||{id:"other",label:"Other / unclassified",color:OTHER_FLOW_COLOR};
+  return {...section,total:totals.get(id)||0};
+ }).sort((a,b)=>b.total-a.total);
+ const otherTotal=[...totals.entries()].filter(([id])=>!topIds.has(id)).reduce((sum,entry)=>sum+entry[1],0);
+ if(otherTotal>0)legend.push({id:"other",label:"Other product groups",color:OTHER_FLOW_COLOR,total:otherTotal});
+ connections.forEach(connection=>{
+  connection.lineColor=topIds.has(connection.dominantSection.id)?connection.dominantSection.color:OTHER_FLOW_COLOR;
+ });
+ return legend;
+}
+function renderFlowLegend(legend){
+ const target=$("mapLegend");
+ if(!target)return;
+ if(mapMode!=="flows"){target.hidden=true;target.innerHTML="";return;}
+ target.hidden=false;
+ const sectorItems=legend.map(item=>
+  '<span class="map-legend-item"><i class="legend-swatch" style="--legend-color:'+item.color+'"></i><span>'+esc(item.label)+'</span></span>'
+ ).join("");
+ target.innerHTML=
+  '<div class="legend-group"><b>Line colour · dominant product group (HS)</b><div class="legend-items">'+(sectorItems||'<span class="legend-muted">No mapped product categories.</span>')+'</div></div>'+
+  '<div class="legend-group"><b>Country markers</b><div class="legend-items">'+
+   '<span class="map-legend-item"><i class="legend-dot" style="--legend-color:#d97706"></i>Declared supplier</span>'+
+   '<span class="map-legend-item"><i class="legend-dot" style="--legend-color:#0f8b82"></i>Importing buyer</span>'+
+   '<span class="map-legend-item"><i class="legend-dot" style="--legend-color:#6750a4"></i>Both roles</span>'+
+  '</div></div>'+
+  '<div class="legend-group"><b>Direction & value</b><div class="legend-items">'+
+   '<span class="map-legend-item"><i class="legend-arrow">➜</i>Origin → importer</span>'+
+   '<span class="map-legend-item"><i class="legend-line legend-line-thin"></i>Lower value</span>'+
+   '<span class="map-legend-item"><i class="legend-line legend-line-thick"></i>Higher value</span>'+
+  '</div></div>'+
+  '<p class="legend-footnote">Line colour uses the highest-value HS product group on each country pair. Grey lines represent other groups. Width reflects total selected import value on that link.</p>';
+}
 function updateFlowStatus(){
  const status=$("mapStatus"),note=$("mapNote");
- if(note)note.textContent="Lines show reported imports: declared origin → importing market. Thicker lines indicate larger value among selected products.";
+ if(note)note.textContent="Arrow = declared origin → importer · colour = dominant HS product group · width = combined reported import value.";
  if(status){
   if(!tradeFlows.length){
    const state=String(tradeFlowMeta.status||"").toLowerCase();
@@ -234,6 +314,8 @@ function renderFlowMap(){
  if(!flowLayer||!flowNodes||!markers)return;
  markers.clearLayers();flowLayer.clearLayers();flowNodes.clearLayers();
  const connections=collectConnections();
+ const legend=assignFlowCategories(connections);
+ renderFlowLegend(legend);
  const nodeMap=new Map();
  connections.forEach(connection=>{
   for(const [iso,name,point,role] of [
@@ -248,12 +330,13 @@ function renderFlowMap(){
  connections.forEach(connection=>{
   const weight=Math.min(7,Math.max(1.5,1.25+Math.log10(Math.max(1,connection.total))*.43));
   const points=makeArcPoints(connection.from,connection.to);
-  const line=L.polyline(points,{renderer:flowRenderer,color:"#0f8b82",weight,opacity:.63,lineCap:"round",lineJoin:"round",className:"trade-flow-path"});
+  const color=connection.lineColor||OTHER_FLOW_COLOR;
+  const line=L.polyline(points,{renderer:flowRenderer,color,weight,opacity:.78,lineCap:"round",lineJoin:"round",className:"trade-flow-path"});
   line.bindPopup(connectionPopup(connection),{maxWidth:340});
-  line.on("mouseover",()=>line.setStyle({opacity:.95,weight:Math.min(9,weight+1.5)}));
-  line.on("mouseout",()=>line.setStyle({opacity:.63,weight}));
+  line.on("mouseover",()=>line.setStyle({opacity:1,weight:Math.min(9,weight+1.5)}));
+  line.on("mouseout",()=>line.setStyle({opacity:.78,weight}));
   flowLayer.addLayer(line);
-  if(points.length>1)addFlowArrow(points[points.length-1],points[points.length-2]);
+  if(points.length>1)addFlowArrow(points[points.length-1],points[points.length-2],color);
  });
  nodeMap.forEach(node=>{
   const both=node.roles.has("buyer")&&node.roles.has("supplier");
@@ -297,7 +380,26 @@ function setMapMode(mode){
    if(status)status.textContent="Loading bilateral import relationships…";
    loadBilateralFlows();
   }
- }else renderMapMode();
+ }else{
+  renderFlowLegend([]);
+  renderMapMode();
+ }
+}
+function toggleMapFullscreen(force){
+ const panel=$("mapPanel"),button=$("mapFullscreenBtn");
+ if(!panel)return;
+ const shouldOpen=typeof force==="boolean"?force:!panel.classList.contains("map-panel-fullscreen");
+ panel.classList.toggle("map-panel-fullscreen",shouldOpen);
+ document.body.classList.toggle("map-fullscreen-open",shouldOpen);
+ if(button){
+  button.setAttribute("aria-pressed",String(shouldOpen));
+  button.textContent=shouldOpen?"✕ Exit full screen":"⛶ Full screen";
+  button.title=shouldOpen?"Exit full-screen map (Esc)":"Open map in full screen";
+ }
+ if(map)requestAnimationFrame(()=>map.invalidateSize({pan:false}));
+}
+function loadFullscreenKeyHandler(event){
+ if(event.key==="Escape"&&$("mapPanel")?.classList.contains("map-panel-fullscreen"))toggleMapFullscreen(false);
 }
 async function loadBilateralFlows(){
  if(tradeFlowsLoaded){if(mapMode==="flows")renderFlowMap();return;}
@@ -381,5 +483,8 @@ async function loadData(){
 $("search").addEventListener("input",applyFilters);$("country").addEventListener("change",applyFilters);$("category").addEventListener("change",applyFilters);$("reload").addEventListener("click",loadData);$("reset").addEventListener("click",()=>{$("search").value="";$("country").value="";$("category").value="";applyFilters()});
 $("mapModeSignals").addEventListener("click",()=>setMapMode("signals"));
 $("mapModeFlows").addEventListener("click",()=>setMapMode("flows"));
+$("mapFullscreenBtn").addEventListener("click",()=>toggleMapFullscreen());
+document.addEventListener("keydown",loadFullscreenKeyHandler);
+window.addEventListener("resize",()=>{if(map)map.invalidateSize({pan:false});});
 initMap();loadData();
 })();
