@@ -220,8 +220,9 @@ function collectConnections(){
 }
 function filterRankingToCountry(iso){
  const countrySelect=$("country");
- if(!countrySelect||![...countrySelect.options].some(option=>option.value===allRows.find(row=>row._iso===iso)?._country))return;
- const country=allRows.find(row=>row._iso===iso)?._country;
+ const marketRecord=allRows.find(row=>row._iso===iso);
+ if(!countrySelect||!marketRecord)return;
+ const country=marketRecord._country;
  if(!country||![...countrySelect.options].some(option=>option.value===country))return;
  countrySelect.value=country;
  selected=null;
@@ -301,7 +302,6 @@ async function loadBilateralFlows(){
   console.warn("Bilateral trade-flow file unavailable",error);
  }
  if(mapMode==="flows")renderFlowMap();
- else updateFlowStatus();
 }
 
 function selectRecord(r){if(!r)return;selected=r;showDetails(r);document.querySelectorAll("#rankBody tr").forEach(tr=>tr.style.background=tr.dataset.id===r._id?"#eaf2fc":"");}
