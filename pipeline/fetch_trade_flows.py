@@ -164,6 +164,8 @@ def build_flow_records(
         # Partner code 0 / ISO W00 is the world aggregate, not a bilateral edge.
         if partner_code == "0" or supplier_iso in {"W00", "WORLD", "UNK"} or not valid_iso3(supplier_iso):
             continue
+        if supplier_iso == buyer_iso3:
+            continue
         product_code = normalise_hs_code(row.get("cmdCode"))
         value = as_float(row.get("primaryValue"))
         if not product_code or value is None or value <= 0:
@@ -185,10 +187,6 @@ def build_flow_records(
             "import_value_usd": value,
             "quantity": as_float(row.get("qty")),
             "net_weight_kg": as_float(row.get("netWgt")),
-            "source_name": "UN Comtrade",
-            "source_url": SOURCE_URL,
-            "evidence_type": "reported_import_by_partner",
-            "interpretation": "Buyer-reported import; partner is the declared origin, not a named supplier company.",
         }
         previous = dedup.get(key)
         # Some releases include repeated observations under different HS revisions.
@@ -201,7 +199,8 @@ def atomic_write(payload: dict[str, Any]) -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     temp = OUTPUT.with_suffix(".json.tmp")
     with temp.open("w", encoding="utf-8") as handle:
-        json.dump(payload, handle, ensure_ascii=False, indent=2)
+        # This is a frontend feed; compact JSON avoids repeating whitespace across thousands of observations.
+        json.dump(payload, handle, ensure_ascii=False, separators=(",", ":"))
         handle.write("\n")
     temp.replace(OUTPUT)
 
