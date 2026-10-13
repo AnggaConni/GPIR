@@ -2,7 +2,17 @@
 "use strict";
 const DATA_URL="./data/data.json";
 const $=id=>document.getElementById(id);
-let allRows=[],filtered=[],map=null,markers=null,selected=null;
+let allRows=[],filtered=[],map=null,markers=null,selected=null,mapHasAutoFit=false;
+// Stable fallback locations (capital/reference points) keep market markers available
+// even when the optional World Bank context request is blocked or unavailable.
+const MARKET_COORDINATES = Object.freeze({
+ ARE:{lat:24.4539,lon:54.3773}, BRA:{lat:-15.7939,lon:-47.8828},
+ CHN:{lat:39.9042,lon:116.4074}, DEU:{lat:52.5200,lon:13.4050},
+ GBR:{lat:51.5072,lon:-0.1276}, IDN:{lat:-6.2088,lon:106.8456},
+ IND:{lat:28.6139,lon:77.2090}, JPN:{lat:35.6762,lon:139.6503},
+ KOR:{lat:37.5665,lon:126.9780}, NLD:{lat:52.3676,lon:4.9041},
+ USA:{lat:38.9072,lon:-77.0369}
+});
 const fmtMoney=v=>v==null||!Number.isFinite(Number(v))?"—":new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",notation:"compact",maximumFractionDigits:2}).format(Number(v));
 const fmtPct=v=>v==null||!Number.isFinite(Number(v))?"—":(Number(v)>0?"+":"")+Number(v).toFixed(1)+"%";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -13,8 +23,9 @@ function normalize(raw,marketContext=null){
  const contextCountries=marketContext&&marketContext.countries?marketContext.countries:{};
  return rows.map((r,i)=>{
   const product=r.product||{},market=r.market||{},trade=r.trade||{},assessment=r.assessment||{},evidence=r.evidence||{};
-  const iso=market.country_iso3||r.market_iso3||"";
+  const iso=String(market.country_iso3||r.market_iso3||"").trim().toUpperCase();
   const ctx=contextCountries[iso]||{};
+  const fallback=MARKET_COORDINATES[iso]||{};
   return {...r,_id:r.id||[product.hs_code||r.product_code,iso,trade.period||r.latest_year,i].join("-"),
    _productName:product.name||r.product_name||"Unknown product",_hs:String(product.hs_code??r.product_code??r.hs_code??""),
    _country:market.country_name||r.market_name||ctx.name||"Unknown market",_iso:iso,
@@ -22,7 +33,7 @@ function normalize(raw,marketContext=null){
    _growth:num(trade.yoy_growth_pct??r.yoy_growth_pct),_score:num(assessment.opportunity_score??r.opportunity_score),
    _source:evidence.source||r.source_name||r.source||"Unknown source",_sourceUrl:evidence.source_url||r.source_url||"",
    _status:evidence.data_status||r.data_mode||meta.mode||"unknown",
-   _lat:num(market.latitude??market.lat??r.market_latitude??r.latitude??ctx.latitude),_lon:num(market.longitude??market.lon??r.market_longitude??r.longitude??ctx.longitude),
+   _lat:num(market.latitude??market.lat??r.market_latitude??r.latitude??ctx.latitude??fallback.lat),_lon:num(market.longitude??market.lon??r.market_longitude??r.longitude??ctx.longitude??fallback.lon),
    _gdpPerCapita:num(ctx.gdp_per_capita_usd),_gdpPerCapitaYear:ctx.gdp_per_capita_year||null,
    _population:num(ctx.population),_populationYear:ctx.population_year||null,
    _quantity:num(trade.quantity??r.quantity),_cagr:num(trade.three_year_cagr_pct??r.cagr_pct),
@@ -61,13 +72,33 @@ function render(){
 function renderMarkers(){
  if(!markers)return;markers.clearLayers();
  const byCountry=new Map();
- filtered.forEach(r=>{if(r._lat==null||r._lon==null)return;const x=byCountry.get(r._iso)||{lat:r._lat,lon:r._lon,rows:[]};x.rows.push(r);byCountry.set(r._iso,x);});
+ filtered.forEach(r=>{
+  if(!r._iso||r._lat==null||r._lon==null||r._lat < -90||r._lat > 90||r._lon < -180||r._lon > 180)return;
+  const x=byCountry.get(r._iso)||{lat:r._lat,lon:r._lon,rows:[]};
+  x.rows.push(r);byCountry.set(r._iso,x);
+ });
  byCountry.forEach((entry,iso)=>{
-  const count=entry.rows.length,marker=L.circleMarker([entry.lat,entry.lon],{radius:Math.min(14,5+Math.log2(count+1)),weight:1,color:"#fff",fillColor:"#168b7d",fillOpacity:.85});
+  const count=entry.rows.length;
+  const marker=L.circleMarker([entry.lat,entry.lon],{radius:Math.min(14,5+Math.log2(count+1)),weight:1,color:"#fff",fillColor:"#168b7d",fillOpacity:.9});
   marker.bindTooltip(esc(entry.rows[0]._country)+" · "+count+" product signals");
-  marker.bindPopup('<b>'+esc(entry.rows[0]._country)+'</b><br>'+count+' product signals');
+  marker.bindPopup('<b>'+esc(entry.rows[0]._country)+'</b><br>'+count+' product signals<br><small>Approximate country reference point</small>');
   marker.on("click",()=>selectRecord(entry.rows[0]));marker.addTo(markers);
  });
+ const mapStatus=$("mapStatus");
+ const totalMarkets=new Set(filtered.map(r=>r._iso).filter(Boolean)).size;
+ if(mapStatus){
+  mapStatus.textContent=!filtered.length
+   ?"No trade records match the current filters."
+   :byCountry.size
+    ?byCountry.size+" of "+totalMarkets+" reporting markets mapped"
+    :"Market coordinates unavailable. Check market country codes and data.";
+ }
+ // Fit once when the first usable markers become available; don't repeatedly
+ // zoom while the user types in search or changes filters.
+ if(!mapHasAutoFit&&byCountry.size&&map){
+  const bounds=markers.getBounds();
+  if(bounds.isValid()){map.fitBounds(bounds.pad(.18),{maxZoom:4});mapHasAutoFit=true;}
+ }
 }
 function selectRecord(r){if(!r)return;selected=r;showDetails(r);document.querySelectorAll("#rankBody tr").forEach(tr=>tr.style.background=tr.dataset.id===r._id?"#eaf2fc":"");}
 function showDetails(r){
