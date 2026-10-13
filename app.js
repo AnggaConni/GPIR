@@ -3,7 +3,7 @@
 const DATA_URL="./data/data.json";
 const $=id=>document.getElementById(id);
 let allRows=[],filtered=[],map=null,markers=null,selected=null,mapHasAutoFit=false;
-let tradeFlows=[],tradeFlowMeta={},marketContextData=null,mapMode="signals",flowLayer=null,flowNodes=null,flowRenderer=null,flowMapHasAutoFit=false;
+let tradeFlows=[],tradeFlowMeta={},marketContextData=null,mapMode="signals",flowLayer=null,flowNodes=null,flowRenderer=null,flowMapHasAutoFit=false,tradeFlowsLoaded=false,tradeFlowsLoading=false;
 // Stable fallback locations (capital/reference points) keep market markers available
 // even when the optional World Bank context request is blocked or unavailable.
 const MARKET_COORDINATES = Object.freeze({
@@ -288,20 +288,37 @@ function setMapMode(mode){
  if(subtitle)subtitle.textContent=mapMode==="flows"?"Explore which countries report imports from other countries":"Select a marker to inspect a product–market signal";
  if(badge)badge.textContent=mapMode==="flows"?"BILATERAL IMPORT LINKS":"TRADE SIGNALS";
  if(note)note.textContent=mapMode==="flows"?"Lines show reported imports: declared origin → importing market. Thicker lines indicate larger value among selected products.":"Country markers show approximate reference locations; trade values are not retail sales.";
- renderMapMode();
+ if(mapMode==="flows"){
+  markers.clearLayers();
+  flowLayer.clearLayers();flowNodes.clearLayers();
+  if(tradeFlowsLoaded)renderFlowMap();
+  else{
+   const status=$("mapStatus");
+   if(status)status.textContent="Loading bilateral import relationships…";
+   loadBilateralFlows();
+  }
+ }else renderMapMode();
 }
 async function loadBilateralFlows(){
+ if(tradeFlowsLoaded){if(mapMode==="flows")renderFlowMap();return;}
+ if(tradeFlowsLoading)return;
+ tradeFlowsLoading=true;
+ const status=$("mapStatus");
+ if(status&&mapMode==="flows")status.textContent="Loading bilateral import relationships…";
  try{
   const response=await fetch("./data/trade_flows.json?t="+Date.now(),{cache:"no-store"});
   if(!response.ok)throw new Error("HTTP "+response.status);
   const payload=await response.json();
   tradeFlows=Array.isArray(payload.flows)?payload.flows:[];
   tradeFlowMeta=payload.meta||{};
+  tradeFlowsLoaded=true;
  }catch(error){
-  tradeFlows=[];tradeFlowMeta={status:"unavailable",error:error.message};
+  tradeFlows=[];tradeFlowMeta={status:"unavailable",error:error.message};tradeFlowsLoaded=false;
   console.warn("Bilateral trade-flow file unavailable",error);
+ }finally{
+  tradeFlowsLoading=false;
+  if(mapMode==="flows")renderFlowMap();
  }
- if(mapMode==="flows")renderFlowMap();
 }
 
 function selectRecord(r){if(!r)return;selected=r;showDetails(r);document.querySelectorAll("#rankBody tr").forEach(tr=>tr.style.background=tr.dataset.id===r._id?"#eaf2fc":"");}
@@ -348,7 +365,6 @@ async function loadData(){
    : " World Bank context unavailable; trade data still works without it.";
   $("dataNotice").textContent=baseNotice+contextNote;
   $("updatedAt").textContent="Trade build: "+(raw.generated_at||meta.generated_at||"unknown")+" · Mode: "+status+" · Context: "+(contextCount?"World Bank/browser":"unavailable");
-  await loadBilateralFlows();
  }catch(e){
   console.error("GPIR dashboard loading/rendering error",e);
   if(feedLoaded){
