@@ -3,6 +3,7 @@
 const DATA_URL="./data/data.json";
 const $=id=>document.getElementById(id);
 let allRows=[],filtered=[],map=null,markers=null,selected=null,mapHasAutoFit=false;
+let tradeFlows=[],tradeFlowMeta={},marketContextData=null,mapMode="signals",flowLayer=null,flowNodes=null,flowRenderer=null,flowMapHasAutoFit=false;
 // Stable fallback locations (capital/reference points) keep market markers available
 // even when the optional World Bank context request is blocked or unavailable.
 const MARKET_COORDINATES = Object.freeze({
@@ -44,6 +45,9 @@ function initMap(){
  if(!window.L){$("map").innerHTML='<div class="empty">Map library did not load. Check your connection.</div>';return;}
  map=L.map("map",{scrollWheelZoom:false}).setView([20,5],2);
  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+ flowRenderer=L.svg({padding:.5}).addTo(map);
+ flowLayer=L.layerGroup().addTo(map);
+ flowNodes=L.layerGroup().addTo(map);
  markers=L.layerGroup().addTo(map);
 }
 function setupFilters(){
@@ -67,7 +71,9 @@ function render(){
  const sorted=[...filtered].sort((a,b)=>(score(b)??-1)-(score(a)??-1));
  $("rankBody").innerHTML=sorted.length?sorted.slice(0,250).map(r=>'<tr data-id="'+esc(r._id)+'"><td><span class="product">'+esc(r._productName)+'</span><span class="sub">HS '+esc(r._hs)+' · '+esc(r._country)+'</span></td><td>'+fmtMoney(r._value)+'</td><td class="'+(r._growth!=null&&r._growth<0?"negative":"")+'">'+fmtPct(r._growth)+'</td><td class="score">'+(score(r)==null?"—":score(r).toFixed(0)+"/100")+'</td></tr>').join(""):'<tr><td colspan="4" class="empty">No records match these filters.</td></tr>';
  [...$("rankBody").querySelectorAll("tr[data-id]")].forEach(tr=>tr.addEventListener("click",()=>selectRecord(filtered.find(r=>r._id===tr.dataset.id))));
- renderMarkers(); if(selected&&!filtered.some(r=>r._id===selected._id))selected=null;if(selected&&filtered.some(r=>r._id===selected._id))showDetails(selected);
+ if(mapMode==="signals")renderMarkers();
+ else updateFlowStatus();
+ if(selected&&!filtered.some(r=>r._id===selected._id))selected=null;if(selected&&filtered.some(r=>r._id===selected._id))showDetails(selected);
 }
 function renderMarkers(){
  if(!markers)return;markers.clearLayers();
@@ -117,6 +123,187 @@ function renderMarkers(){
   if(bounds.isValid()){map.fitBounds(bounds.pad(.18),{maxZoom:4});mapHasAutoFit=true;}
  }
 }
+
+function countryPoint(iso){
+ const ctx=marketContextData&&marketContextData.countries?marketContextData.countries[iso]||{}:{};
+ const fallback=MARKET_COORDINATES[iso]||{};
+ const lat=num(ctx.latitude??fallback.lat),lon=num(ctx.longitude??fallback.lon);
+ if(lat==null||lon==null||lat < -90||lat > 90||lon < -180||lon > 180)return null;
+ return {lat,lon};
+}
+function valueOfFlow(flow){return num(flow.import_value_usd)??0;}
+function tradeFlowProducts(flows,limit=6){
+ return [...flows].sort((a,b)=>valueOfFlow(b)-valueOfFlow(a)).slice(0,limit).map(flow=>
+  '<li><b>'+esc(flow.product_code||"HS")+'</b> · '+esc(flow.product_name||"Product")+
+  '<span class="flow-value">'+esc(fmtMoney(valueOfFlow(flow)))+'</span></li>'
+ ).join("");
+}
+function countryFlowPopup(iso){
+ const related=tradeFlows.filter(flow=>flow.buyer_iso3===iso||flow.supplier_iso3===iso);
+ if(!related.length)return '<div class="flow-popup"><b>No bilateral details</b><p>No partner-level product observations were returned for this country.</p></div>';
+ const incoming=related.filter(flow=>flow.buyer_iso3===iso).sort((a,b)=>valueOfFlow(b)-valueOfFlow(a));
+ const outgoing=related.filter(flow=>flow.supplier_iso3===iso).sort((a,b)=>valueOfFlow(b)-valueOfFlow(a));
+ const name=(incoming[0]&&incoming[0].buyer_name)||(outgoing[0]&&outgoing[0].supplier_name)||iso;
+ const suppliers=[...new Set(incoming.map(flow=>flow.supplier_iso3))].length;
+ const buyers=[...new Set(outgoing.map(flow=>flow.buyer_iso3))].length;
+ return '<div class="flow-popup"><h3>'+esc(name)+' ('+esc(iso)+')</h3>'+
+  '<p>Based on selected UN Comtrade import reports; partners are declared origins, not named companies.</p>'+
+  '<h4>Buys / reported imports <span>'+incoming.length+'</span></h4>'+
+  (incoming.length?'<p class="flow-section-note">Partner countries reporting supply to '+esc(name)+' · '+suppliers+' origins</p><ul>'+tradeFlowProducts(incoming,5)+'</ul>':'<p>No selected import observations.</p>')+
+  '<h4>Supplies / declared origins <span>'+outgoing.length+'</span></h4>'+
+  (outgoing.length?'<p class="flow-section-note">Destinations reporting imports from '+esc(name)+' · '+buyers+' destinations</p><ul>'+tradeFlowProducts(outgoing,5)+'</ul>':'<p>No selected partner reports list this country as origin.</p>')+
+  '</div>';
+}
+function connectionPopup(connection){
+ const sum=connection.flows.reduce((total,flow)=>total+valueOfFlow(flow),0);
+ return '<div class="flow-popup"><h3>'+esc(connection.supplierName)+' → '+esc(connection.buyerName)+'</h3>'+
+  '<p>Declared origin / supplier → importing market / buyer</p>'+
+  '<p class="flow-total">Selected import value: <b>'+esc(fmtMoney(sum))+'</b></p>'+
+  '<h4>Products reported</h4><ul>'+tradeFlowProducts(connection.flows,8)+'</ul>'+
+  '<p class="flow-section-note">Values are reported imports for selected product codes, not retail sales or a verified company-to-company order.</p></div>';
+}
+function makeArcPoints(from,to){
+ if(!map||!window.L)return [L.latLng(from.lat,from.lon),L.latLng(to.lat,to.lon)];
+ const zoom=map.getZoom();
+ const start=map.project([from.lat,from.lon],zoom);
+ const end=map.project([to.lat,to.lon],zoom);
+ const dx=end.x-start.x,dy=end.y-start.y,dist=Math.sqrt(dx*dx+dy*dy)||1;
+ const bend=Math.min(90,Math.max(18,dist*.16));
+ const side=((from.lon+to.lon)>=0)?-1:1;
+ const control=L.point((start.x+end.x)/2+(-dy/dist)*bend*side,(start.y+end.y)/2+(dx/dist)*bend*side);
+ const points=[];
+ for(let i=0;i<=24;i++){
+  const t=i/24,u=1-t;
+  const point=L.point(u*u*start.x+2*u*t*control.x+t*t*end.x,u*u*start.y+2*u*t*control.y+t*t*end.y);
+  points.push(map.unproject(point,zoom));
+ }
+ return points;
+}
+function addFlowArrow(point,previous){
+ const a=map.latLngToLayerPoint(previous),b=map.latLngToLayerPoint(point);
+ const angle=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
+ const icon=L.divIcon({
+  className:"flow-arrow-icon",
+  html:'<svg viewBox="0 0 16 16" aria-hidden="true" style="transform:rotate('+angle+'deg)"><path d="M2 2 L14 8 L2 14 L5 8 Z" fill="#0f766e" stroke="#ffffff" stroke-width="1"/></svg>',
+  iconSize:[14,14],iconAnchor:[7,7]
+ });
+ L.marker(point,{icon,interactive:false,keyboard:false}).addTo(flowNodes);
+}
+function updateFlowStatus(){
+ const status=$("mapStatus"),note=$("mapNote");
+ if(note)note.textContent="Lines show reported imports: declared origin → importing market. Thicker lines indicate larger value among selected products.";
+ if(status){
+  if(!tradeFlows.length){
+   const state=String(tradeFlowMeta.status||"").toLowerCase();
+   status.textContent=state==="awaiting-refresh"
+    ?"Route data awaits the first bilateral refresh. Run GPIR CI and data refresh in GitHub Actions."
+    :"No bilateral trade-flow records available. Check the trade-flow refresh status.";
+  }else{
+   const shown=collectConnections().length;
+   status.textContent=shown+" supplier → buyer links · "+tradeFlows.length.toLocaleString()+" product-level observations";
+  }
+ }
+}
+function collectConnections(){
+ const pairs=new Map();
+ for(const flow of tradeFlows){
+  const supplier=String(flow.supplier_iso3||"").toUpperCase(),buyer=String(flow.buyer_iso3||"").toUpperCase();
+  if(!supplier||!buyer||supplier===buyer)continue;
+  const from=countryPoint(supplier),to=countryPoint(buyer);
+  if(!from||!to)continue;
+  const key=supplier+"|"+buyer;
+  let pair=pairs.get(key);
+  if(!pair){pair={key,supplier,buyer,supplierName:flow.supplier_name||supplier,buyerName:flow.buyer_name||buyer,from,to,total:0,flows:[]};pairs.set(key,pair);}
+  pair.total+=valueOfFlow(flow);pair.flows.push(flow);
+ }
+ return [...pairs.values()].sort((a,b)=>b.total-a.total).slice(0,90);
+}
+function filterRankingToCountry(iso){
+ const countrySelect=$("country");
+ if(!countrySelect||![...countrySelect.options].some(option=>option.value===allRows.find(row=>row._iso===iso)?._country))return;
+ const country=allRows.find(row=>row._iso===iso)?._country;
+ if(!country||![...countrySelect.options].some(option=>option.value===country))return;
+ countrySelect.value=country;
+ selected=null;
+ applyFilters();
+ const record=filtered.find(row=>row._iso===iso);
+ if(record)selectRecord(record);
+}
+function renderFlowMap(){
+ if(!flowLayer||!flowNodes||!markers)return;
+ markers.clearLayers();flowLayer.clearLayers();flowNodes.clearLayers();
+ const connections=collectConnections();
+ const nodeMap=new Map();
+ connections.forEach(connection=>{
+  for(const [iso,name,point,role] of [
+   [connection.supplier,connection.supplierName,connection.from,"supplier"],
+   [connection.buyer,connection.buyerName,connection.to,"buyer"]
+  ]){
+   let node=nodeMap.get(iso);
+   if(!node){node={iso,name,point,roles:new Set()};nodeMap.set(iso,node);}
+   node.roles.add(role);
+  }
+ });
+ connections.forEach(connection=>{
+  const weight=Math.min(7,Math.max(1.5,1.25+Math.log10(Math.max(1,connection.total))*.43));
+  const points=makeArcPoints(connection.from,connection.to);
+  const line=L.polyline(points,{renderer:flowRenderer,color:"#0f8b82",weight,opacity:.63,lineCap:"round",lineJoin:"round",className:"trade-flow-path"});
+  line.bindPopup(connectionPopup(connection),{maxWidth:340});
+  line.on("mouseover",()=>line.setStyle({opacity:.95,weight:Math.min(9,weight+1.5)}));
+  line.on("mouseout",()=>line.setStyle({opacity:.63,weight}));
+  flowLayer.addLayer(line);
+  if(points.length>1)addFlowArrow(points[points.length-1],points[points.length-2]);
+ });
+ nodeMap.forEach(node=>{
+  const both=node.roles.has("buyer")&&node.roles.has("supplier");
+  const marker=L.circleMarker([node.point.lat,node.point.lon],{
+   radius:both?7:6,weight:2,color:"#ffffff",
+   fillColor:both?"#6750a4":node.roles.has("supplier")?"#d97706":"#0f8b82",fillOpacity:.95
+  });
+  marker.bindPopup(countryFlowPopup(node.iso),{maxWidth:360});
+  marker.bindTooltip(esc(node.name)+" ("+esc(node.iso)+")");
+  marker.on("click",()=>filterRankingToCountry(node.iso));
+  flowNodes.addLayer(marker);
+ });
+ if(!flowMapHasAutoFit&&connections.length){
+  const bounds=L.latLngBounds([...nodeMap.values()].map(node=>[node.point.lat,node.point.lon]));
+  if(bounds.isValid()){map.fitBounds(bounds.pad(.12),{maxZoom:4});flowMapHasAutoFit=true;}
+ }
+ updateFlowStatus();
+}
+function renderMapMode(){
+ if(mapMode==="flows")renderFlowMap();
+ else{
+  if(flowLayer)flowLayer.clearLayers();
+  if(flowNodes)flowNodes.clearLayers();
+  renderMarkers();
+ }
+}
+function setMapMode(mode){
+ mapMode=mode==="flows"?"flows":"signals";
+ const signals=$("mapModeSignals"),flows=$("mapModeFlows"),subtitle=$("mapSubtitle"),badge=$("mapPanelBadge"),note=$("mapNote");
+ if(signals){signals.classList.toggle("active",mapMode==="signals");signals.setAttribute("aria-pressed",String(mapMode==="signals"));}
+ if(flows){flows.classList.toggle("active",mapMode==="flows");flows.setAttribute("aria-pressed",String(mapMode==="flows"));}
+ if(subtitle)subtitle.textContent=mapMode==="flows"?"Explore which countries report imports from other countries":"Select a marker to inspect a product–market signal";
+ if(badge)badge.textContent=mapMode==="flows"?"BILATERAL IMPORT LINKS":"TRADE SIGNALS";
+ if(note)note.textContent=mapMode==="flows"?"Lines show reported imports: declared origin → importing market. Thicker lines indicate larger value among selected products.":"Country markers show approximate reference locations; trade values are not retail sales.";
+ renderMapMode();
+}
+async function loadBilateralFlows(){
+ try{
+  const response=await fetch("./data/trade_flows.json?t="+Date.now(),{cache:"no-store"});
+  if(!response.ok)throw new Error("HTTP "+response.status);
+  const payload=await response.json();
+  tradeFlows=Array.isArray(payload.flows)?payload.flows:[];
+  tradeFlowMeta=payload.meta||{};
+ }catch(error){
+  tradeFlows=[];tradeFlowMeta={status:"unavailable",error:error.message};
+  console.warn("Bilateral trade-flow file unavailable",error);
+ }
+ if(mapMode==="flows")renderFlowMap();
+ else updateFlowStatus();
+}
+
 function selectRecord(r){if(!r)return;selected=r;showDetails(r);document.querySelectorAll("#rankBody tr").forEach(tr=>tr.style.background=tr.dataset.id===r._id?"#eaf2fc":"");}
 function showDetails(r){
  $("evidencePill").textContent=(r._status||"unknown").replaceAll("_"," ").toUpperCase();
@@ -149,6 +336,7 @@ async function loadData(){
   let context=null;
   try{context=await contextPromise;}catch(error){console.warn("World Bank context unavailable",error);}
   const contextCount=context&&context.countries?Object.keys(context.countries).length:0;
+  marketContextData=context;
   if(contextCount){
    const selectedCountry=$("country").value;
    allRows=normalize(raw,context);setupFilters();
@@ -160,6 +348,7 @@ async function loadData(){
    : " World Bank context unavailable; trade data still works without it.";
   $("dataNotice").textContent=baseNotice+contextNote;
   $("updatedAt").textContent="Trade build: "+(raw.generated_at||meta.generated_at||"unknown")+" · Mode: "+status+" · Context: "+(contextCount?"World Bank/browser":"unavailable");
+  await loadBilateralFlows();
  }catch(e){
   console.error("GPIR dashboard loading/rendering error",e);
   if(feedLoaded){
@@ -174,5 +363,7 @@ async function loadData(){
  }
 }
 $("search").addEventListener("input",applyFilters);$("country").addEventListener("change",applyFilters);$("category").addEventListener("change",applyFilters);$("reload").addEventListener("click",loadData);$("reset").addEventListener("click",()=>{$("search").value="";$("country").value="";$("category").value="";applyFilters()});
+$("mapModeSignals").addEventListener("click",()=>setMapMode("signals"));
+$("mapModeFlows").addEventListener("click",()=>setMapMode("flows"));
 initMap();loadData();
 })();
