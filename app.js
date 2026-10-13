@@ -95,8 +95,10 @@ function renderMarkers(){
  }
  // Fit once when the first usable markers become available; don't repeatedly
  // zoom while the user types in search or changes filters.
- if(!mapHasAutoFit&&byCountry.size&&map){
-  const bounds=markers.getBounds();
+ if(!mapHasAutoFit&&byCountry.size&&map&&window.L){
+  // L.layerGroup does not implement getBounds(); build bounds from marker coordinates.
+  const coordinates=[...byCountry.values()].map(entry=>[entry.lat,entry.lon]);
+  const bounds=L.latLngBounds(coordinates);
   if(bounds.isValid()){map.fitBounds(bounds.pad(.18),{maxZoom:4});mapHasAutoFit=true;}
  }
 }
@@ -112,9 +114,11 @@ function showDetails(r){
 async function loadData(){
  $("dataNotice").textContent="Loading trade feed…";
  const contextPromise=window.GPIRMarketContext?window.GPIRMarketContext.load():Promise.resolve(null);
+ let feedLoaded=false;
  try{
   const res=await fetch(DATA_URL+"?t="+Date.now(),{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);
   const raw=await res.json();
+  feedLoaded=true;
   // Share the already-loaded trade feed with the homepage SME Finder; avoid a second large JSON download.
   window.GPIRTradeItems=Array.isArray(raw.items)?raw.items:(Array.isArray(raw.records)?raw.records:(Array.isArray(raw.data)?raw.data:[]));
   window.dispatchEvent(new Event("gpir-trade-feed-ready"));
@@ -142,9 +146,16 @@ async function loadData(){
   $("dataNotice").textContent=baseNotice+contextNote;
   $("updatedAt").textContent="Trade build: "+(raw.generated_at||meta.generated_at||"unknown")+" · Mode: "+status+" · Context: "+(contextCount?"World Bank/browser":"unavailable");
  }catch(e){
-  allRows=[];filtered=[];render();
-  $("dataNotice").textContent="Could not load data/data.json ("+e.message+"). Check that the JSON file exists in the deployed branch.";
-  $("dataNotice").style.background="#feeceb";$("dataNotice").style.color="#9a2424";
+  console.error("GPIR dashboard loading/rendering error",e);
+  if(feedLoaded){
+   // Do not report a fetched JSON feed as missing when a later UI step fails.
+   $("dataNotice").textContent="Trade data loaded, but the dashboard could not finish rendering ("+e.message+"). Reload the page; the JSON feed was fetched successfully.";
+  }else{
+   allRows=[];filtered=[];
+   try{render();}catch(renderError){console.error("Unable to render empty dashboard",renderError);}
+   $("dataNotice").textContent="Could not load data/data.json ("+e.message+"). Check the network response and deployed file path.";
+  }
+  $("dataNotice").style.background="#feeceb";$("dataNotice").style.borderColor="#f1b8b5";$("dataNotice").style.color="#9a2424";
  }
 }
 $("search").addEventListener("input",applyFilters);$("country").addEventListener("change",applyFilters);$("category").addEventListener("change",applyFilters);$("reload").addEventListener("click",loadData);$("reset").addEventListener("click",()=>{$("search").value="";$("country").value="";$("category").value="";applyFilters()});
