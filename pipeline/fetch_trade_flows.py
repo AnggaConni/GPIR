@@ -130,7 +130,8 @@ def fetch_import_rows(
         mode = "preview"
     params = {
         "reporterCode": reporter_code,
-        "partnerCode": "ALL",
+        # Omit partnerCode to request the partner breakdown; the current API
+        # rejects the UI-only "ALL" sentinel on this endpoint.
         "flowCode": "M",
         "period": year,
         "cmdCode": ",".join(product_codes[:20]),
@@ -138,7 +139,9 @@ def fetch_import_rows(
         "includeDesc": "true",
     }
     response = session.get(url, params=params, headers=headers, timeout=60)
-    response.raise_for_status()
+    if not response.ok:
+        detail = response.text.strip().replace("\\n", " ")[:500]
+        raise RuntimeError(f"UN Comtrade HTTP {response.status_code}: {detail}")
     payload = response.json()
     rows = payload.get("data", []) if isinstance(payload, dict) else []
     if not isinstance(rows, list):
