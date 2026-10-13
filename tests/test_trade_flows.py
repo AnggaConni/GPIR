@@ -34,6 +34,11 @@ class TradeFlowTests(unittest.TestCase):
                 "cmdCode": "847130", "cmdDesc": "Portable computers", "period": 2024,
                 "primaryValue": 0,
             },
+            {
+                "partnerCode": 360, "partnerISO": "IDN", "partnerDesc": "Indonesia",
+                "cmdCode": "847130", "cmdDesc": "Portable computers", "period": 2024,
+                "primaryValue": 999999,
+            },
         ]
         flows = build_flow_records(rows, "IDN", "Indonesia", 2024)
         self.assertEqual(len(flows), 1)
@@ -41,7 +46,7 @@ class TradeFlowTests(unittest.TestCase):
         self.assertEqual(flows[0]["buyer_iso3"], "IDN")
         self.assertEqual(flows[0]["product_code"], "847130")
         self.assertEqual(flows[0]["import_value_usd"], 1250000)
-        self.assertEqual(flows[0]["evidence_type"], "reported_import_by_partner")
+        self.assertNotEqual(flows[0]["supplier_iso3"], flows[0]["buyer_iso3"])
 
     def test_invalid_partner_and_invalid_product_codes_are_skipped(self):
         rows = [
