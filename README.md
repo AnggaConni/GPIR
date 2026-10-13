@@ -7,7 +7,8 @@ An open-data starter to screen product–market opportunities using UN Comtrade 
 - Integrated SME Finder ranking: user resources/skills and stage (start or grow), tourism proximity within 3 km, mapped buyer/supplier/retail leads within 5 km, and matching trade/import records all contribute to a transparent opportunity ranking.
 - Shared language selector for Indonesian, English, and the six official UN languages; users may choose manually or use browser-language detection.
 - Responsive global dashboard, interactive map, product search, country filters and opportunity rankings.
-- Python pipelines for quota-limited UN Comtrade trade data and scheduled tourism/heritage/context snapshots.
+- **SVG trade-flow map mode:** curved supplier-to-buyer links from partner-level UN Comtrade import reports. Click a country to inspect the products it reports buying and the products other reporting markets declare as originating there.
+- Python pipelines for quota-limited UN Comtrade trade data, selected bilateral import relationships, and scheduled tourism/heritage/context snapshots.
 - UN Tourism bulk ZIP importer: downloads official Excel workbooks, safely extracts them, and exports every non-empty worksheet to JSON with source metadata and a manifest.
 - Potential Explorer (`potential.html` + `potential.js`): world map occupying roughly three quarters of the desktop workspace with a compact filter/results sidebar. Users can click the map or drag a pin; the map draws glowing dashed links to mapped local businesses/attractions within 5 km and to international countries with matching UN Comtrade import observations.
 - Six-digit HS product observations with yearly growth, CAGR and explainable percentile scoring.
@@ -44,7 +45,9 @@ Open `http://localhost:8080`.
 Edit `config/markets.json` to set ISO-3 reporter markets. Optional environment variables:
 - `COMTRADE_API_KEY` — environment variable read by Python; in GitHub Actions it is populated from the `UN_COMTRADE_API_KEY` repository secret (or the legacy `COMTRADE_API_KEY` secret).
 - `COMTRADE_START_YEAR` / `COMTRADE_END_YEAR` — requested annual range.
-- `COMTRADE_MAX_RECORDS` — per-call maximum records.
+- `COMTRADE_MAX_RECORDS` — per-call maximum records for the market product snapshot.
+- `COMTRADE_FLOW_PRODUCTS_PER_MARKET` — number of leading product codes queried per reporting market for bilateral route visualization (default 8 with an API key; 2 in public preview mode).
+- `COMTRADE_FLOW_MAX_RECORDS` — maximum records requested per bilateral flow call (default 50,000 when authenticated; preview remains capped at 500 by the source).
 - `UN_TOURISM_BULK_URL` — optional URL override for the UN Tourism bulk archive; the default is the supplied May 2026 ZIP.
 - `OPENTRIPMAP_API_KEY` — optional OpenTripMap source key.
 - `market-context.js` — fetches public World Bank country/indicator context directly from the browser and caches it for 12 hours.
@@ -54,6 +57,16 @@ Edit `config/markets.json` to set ISO-3 reporter markets. Optional environment v
 - `REQUEST_SLEEP_SECONDS` — pause between calls.
 
 The default reporter-market set in `config/markets.json` includes the Netherlands (NLD) to support international Potential Explorer links. Run **Actions → GPIR CI and data refresh → Run workflow** after changing market coverage so `data/data.json` includes fresh observations for NLD. Without refreshed NLD rows, the map intentionally shows no Dutch link when the snapshot has no matching data.
+
+## Bilateral trade-flow map
+
+The map has two layers: **Market signals** (the existing product-market ranking) and **Trade flows** (an SVG-rendered network of selected bilateral import observations).
+
+- `pipeline/fetch_trade_flows.py` reads the existing product-market snapshot, selects a limited number of high-value HS product codes for each configured reporting market, and requests partner-level imports from UN Comtrade using `partnerCode=ALL`.
+- Each route is oriented from the reporting partner's declared origin (`supplier_iso3`) to the reporting importer/buyer (`buyer_iso3`). A country popup separates the products it reports importing from partners from products that other reporting markets declare as originating there.
+- The route snapshot is written separately to `data/trade_flows.json`; this avoids inflating `data/data.json` or changing the existing scoring dataset. The scheduled/manual data workflow refreshes both files, and the bootstrap workflow populates the first route snapshot.
+- With no API key, the public preview is limited to 500 records per request and the routes are clearly marked as incomplete. Authenticated runs also remain a selected-product snapshot, not a complete trade matrix.
+- Country relationships are based on reported imports, not named businesses or verified orders. Import-reported values can differ from mirror exports. Line thickness represents the summed value of the selected product observations for that pair, not transport volume or sales.
 
 ## Interpretation
 - Import values are trade statistics, not marketplace sales, consumer spending, or profit.
