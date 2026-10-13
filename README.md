@@ -62,7 +62,7 @@ The default reporter-market set in `config/markets.json` includes the Netherland
 
 The map has two layers: **Market signals** (the existing product-market ranking) and **Trade flows** (an SVG-rendered network of selected bilateral import observations).
 
-- `pipeline/fetch_trade_flows.py` reads the existing product-market snapshot, selects a limited number of high-value HS product codes for each configured reporting market, and requests partner-level imports from UN Comtrade using `partnerCode=ALL`.
+- `pipeline/fetch_trade_flows.py` reads the existing product-market snapshot, selects a limited number of high-value HS product codes for each configured reporting market, and requests partner-level imports from UN Comtrade with the partner filter omitted so the API returns its partner breakdown.
 - Each route is oriented from the reporting partner's declared origin (`supplier_iso3`) to the reporting importer/buyer (`buyer_iso3`). A country popup separates the products it reports importing from partners from products that other reporting markets declare as originating there.
 - The route snapshot is written separately to `data/trade_flows.json`; this avoids inflating `data/data.json` or changing the existing scoring dataset. The scheduled/manual data workflow refreshes both files, and the bootstrap workflow populates the first route snapshot.
 - With no API key, the public preview is limited to 500 records per request and the routes are clearly marked as incomplete. Authenticated runs also remain a selected-product snapshot, not a complete trade matrix.
